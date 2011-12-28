@@ -21,6 +21,28 @@ Sequence *sequence_new ()
   return s;
 }
 
+Sequence *sequence_parse (const char *data)
+{
+  int value;
+  Sequence *rv = sequence_new ();
+
+  if (rv == NULL)
+    return NULL;
+
+  while (*data && *data != '[')
+    ++data;
+  ++data;
+
+  while ((value = strtoul (data, (char **) &data, 0)))
+    if (!sequence_append(rv, value))
+      {
+        sequence_delete (rv);
+        return NULL;
+      }
+
+  return rv;
+}
+
 int sequence_append (Sequence *s, int value)
 {
   if (s->length == s->_max_length)

@@ -7,6 +7,8 @@
 
 #include "sequence.h"
 #include "recurse.h"
+#include "filters.h"
+#include "check.h"
 
 #define strmatch(s, r) (!strcasecmp ((s), (r)))
 #define MATCH_THEN_SET(tok, text)		\
@@ -18,10 +20,14 @@
 
 int main (int argc, char *argv[])
 {
+  /* Runtime data */
   int min_gap = 1;
   int max_gap = 1;
   int n_colors = 3;
   int ap_length = 3;
+  Sequence *alphabet = NULL;
+  filter_func filter = cheap_check_sequence3;
+  /* END Runtime data */
 
   char buf[1024];
   FILE *fh;
@@ -53,6 +59,20 @@ int main (int argc, char *argv[])
           else if MATCH_THEN_SET (tok, max_gap)
           else if MATCH_THEN_SET (tok, n_colors)
           else if MATCH_THEN_SET (tok, ap_length)
+          else if (strmatch (tok, "alphabet"))
+            {
+              tok = strtok (NULL, "\n");
+              alphabet = sequence_parse (tok);
+            }
+        }
+      /* filter <no-double-3-aps|no-additive-squares> */
+      else if (strmatch (tok, "filter"))
+        {
+          tok = strtok (NULL, " \t\n");
+          if (tok && strmatch (tok, "no-double-3-aps"))
+            filter = cheap_check_sequence3;
+          if (tok && strmatch (tok, "no-additive-squares"))
+            filter = cheap_check_additive_square;
         }
       /* search <seqences|colorings> [seed] */
       else if (strmatch (tok, "search"))
@@ -61,6 +81,7 @@ int main (int argc, char *argv[])
           if (tok && strmatch (tok, "sequences"))
             {
               Sequence *seek = sequence_new ();
+              sequence_append (seek, 1);
 
               tok = strtok (NULL, " \t\n");
               if (tok && *tok != '#')
@@ -70,17 +91,16 @@ int main (int argc, char *argv[])
               printf ("  Minimum gap:\t%d\n", min_gap);
               printf ("  Maximum gap:\t%d\n", max_gap);
               printf ("  AP length:\t%d\n", ap_length);
-              printf ("  Seed Seq.:\t[1 2]\n\n");
+              printf ("  Seed Seq.:\t"); sequence_print (seek);
+              puts("");
 
               if (seek == NULL)
                 {
                   fprintf (stderr, "Failed to allocate sequence.");
                   exit (EXIT_FAILURE);
                 }
-              sequence_append (seek, 1);
-              sequence_append (seek, 2);
 
-              recurse_sequence3 (seek, min_gap, max_gap);
+              recurse_sequence (seek, min_gap, max_gap, filter);
 
               sequence_delete (seek);
             }
@@ -88,6 +108,23 @@ int main (int argc, char *argv[])
             {
               puts ("Sorry, coloring search not yet supported.");
             }
+          else if (tok && strmatch (tok, "words"))
+            {
+              Sequence *seek = sequence_new ();
+              sequence_append (seek, 1);
+
+              puts ("#### Starting word search ####");
+              printf ("  Alphabet:\t"); sequence_print (alphabet);
+              printf ("  Seed Seq.:\t"); sequence_print (seek);
+              puts("");
+
+              recurse_words (seek, alphabet, filter);
+
+              sequence_delete (alphabet);
+              sequence_delete (seek);
+            }
+          else
+            fprintf (stderr, "Unrecognized search space ``%s''\n", tok);
         }
     }
 
