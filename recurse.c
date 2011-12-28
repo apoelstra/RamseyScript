@@ -75,6 +75,11 @@ void recurse_colorings (Coloring *seed, int max_value, int min,
 
   for (j = 0; j < seed->n_colors; ++j)
     {
+      if (max)
+        if (seed->sequences[j]->length > 0)
+          if (max_value + 1 - sequence_max (seed->sequences[j]) > max)
+            continue;
+
       coloring_append (seed, max_value + 1, j);
       recurse_colorings (seed, max_value + 1, min, max, filter);
       coloring_deappend (seed, j);
