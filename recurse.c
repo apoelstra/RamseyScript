@@ -29,6 +29,8 @@ void recurse_sequence (Sequence *seed, int min, int max, filter_func filter, lon
     {
       printf ("Got new maximum length %d. Sequence: ", seed->length);
       sequence_print (seed);
+      puts ("");
+      fflush (stdout);
       max_length = seed->length;
     }
 
@@ -54,6 +56,8 @@ void recurse_words (Sequence *seed, Sequence *alphabet, filter_func filter, long
     {
       printf ("Got new maximum length %d. Word: ", seed->length);
       sequence_print (seed);
+      puts ("");
+      fflush (stdout);
       max_length = seed->length;
     }
 
@@ -85,6 +89,8 @@ void recurse_colorings (Coloring *seed, int max_value, int min,
     {
       printf ("Got new maximum length %d. Coloring: ", length);
       coloring_print (seed);
+      puts ("");
+      fflush (stdout);
       max_length = length;
     }
 

@@ -46,7 +46,7 @@ void coloring_print (Coloring *c)
       printf (" ");
       sequence_print (c->sequences[i]);
     }
-  puts ("]");
+  printf ("]");
 }
 
 void coloring_delete (Coloring *c)
