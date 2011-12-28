@@ -71,7 +71,7 @@ void sequence_print (Sequence *s)
     printf ("%d", s->values[0]);
   for (i = 1; i < s->length; ++i)
     printf (", %d", s->values[i]);
-  printf ("]\n");
+  printf ("]");
 }
 
 void sequence_delete (Sequence *s)

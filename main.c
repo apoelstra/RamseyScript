@@ -100,7 +100,7 @@ int main (int argc, char *argv[])
               printf ("  Maximum gap:\t%d\n", max_gap);
               printf ("  AP length:\t%d\n", ap_length);
               printf ("  Seed Seq.:\t"); sequence_print (seek);
-              puts("");
+              puts("\n");
 
               if (seek == NULL)
                 {
@@ -129,7 +129,7 @@ int main (int argc, char *argv[])
               printf ("  Minimum gap:\t%d\n", min_gap);
               printf ("  Maximum gap:\t%d\n", max_gap);
               printf ("  AP length:\t%d\n", ap_length);
-              printf ("  Seed Coloring.:\t"); coloring_print (seek);
+              printf ("  Seed Col.:\t"); coloring_print (seek);
               puts("");
 
               puts ("Sorry, coloring search not yet supported.");
@@ -140,8 +140,8 @@ int main (int argc, char *argv[])
 
               puts ("#### Starting word search ####");
               printf ("  Alphabet:\t"); sequence_print (alphabet);
-              printf ("  Seed Seq.:\t"); sequence_print (seek);
-              puts("");
+              printf ("\n  Seed Seq.:\t"); sequence_print (seek);
+              puts("\n");
 
               recurse_words (seek, alphabet, filter);
 
