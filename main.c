@@ -6,6 +6,7 @@
 #include <strings.h>
 
 #include "sequence.h"
+#include "coloring.h"
 #include "recurse.h"
 #include "filters.h"
 #include "check.h"
@@ -114,22 +115,21 @@ int main (int argc, char *argv[])
           else if (strmatch (tok, "colorings") ||
                    strmatch (tok, "partitions"))
             {
-              Sequence *seek;
+              Coloring *seek;
 
+/*
               tok = strtok (NULL, " \t\n");
               if (tok && *tok == '[')
                 seek = sequence_parse (tok);
               else
-                seek = sequence_new ();
-
-              if (seek->length == 0)
-                sequence_append (seek, 1);
+*/
+                seek = coloring_new (n_colors);
 
               puts ("#### Starting coloring search ####");
               printf ("  Minimum gap:\t%d\n", min_gap);
               printf ("  Maximum gap:\t%d\n", max_gap);
               printf ("  AP length:\t%d\n", ap_length);
-              printf ("  Seed Coloring.:\t"); sequence_print (seek);
+              printf ("  Seed Coloring.:\t"); coloring_print (seek);
               puts("");
 
               puts ("Sorry, coloring search not yet supported.");
