@@ -1,0 +1,71 @@
+LANGUAGE SPECIFICATION
+=======================
+
+  set <min_gap | max_gap | n_colors | ap_length | alphabet> <value>
+
+Sets a variable. Not all variables are effective for each search space.
+
+   min_gap: The minimum gap size for sequences and colorings
+            Default value: 1
+
+   max_gap: The maximum gap size for sequences and colorings, or 0 for
+            no maximum.
+            Default value: 0
+
+  n_colors: The number of colors to use when searching colorings.
+            Default value: 3
+
+ ap_length: The length of arithemetic progressions to check when using
+            AP-related filters. (This may be broken up into a min/max
+            pair if needed. But for now the only supported value is 3,
+            so this would be superfluous.)
+            Default value: 3
+
+  alphabet: The alphabet to use when searching words. Specified in the
+            format [c1 c2 c3 ... cn].
+            Default value: [1 2 3 4]
+
+
+
+  filter <no-double-3-aps | no-additive-squares>
+
+Chooses which filter to when searching spaces. If you choose a filter
+that doesn't make sense for your search space (i.e., searching for
+strictly increasing sequences with no additive squares), the program
+will not catch this and simply recurse indefinitely (since every
+strictly increasing sequence is additive-square-free).
+
+The default filter is no-double-3-aps, but it is not recommended to
+rely on this.
+
+      no-double-3-aps: Only recurse on sequences or colorings with no
+                       double 3-AP's.
+
+  no-additive-squares: Only recurse on words with no additive squares
+
+
+
+  search <sequences | colorings | words> [seed]
+
+Selects a search space and recursively explores it, looking for longer
+and longer elements which satisfy the given filter. There is no default
+value. If you do not specify a 'search' line, the program will do
+nothing.
+
+
+   sequences: The space of strictly increasing sequences
+              Default seed: [1]
+
+   colorings: The space of r-colorings of integers, for some given r.
+              Default seed: [[1] [] []]
+
+  partitions: synonym of 'colorings'
+
+       words: The space of words on some given alphabet
+              Default seed: []
+
+
+
+
+
+

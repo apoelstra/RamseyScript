@@ -25,7 +25,7 @@ int main (int argc, char *argv[])
   int max_gap = 0;
   int n_colors = 3;
   int ap_length = 3;
-  Sequence *alphabet = NULL;
+  Sequence *alphabet = sequence_parse ("[1 2 3 4]");
   filter_func filter = cheap_check_sequence3;
   /* END Runtime data */
 
@@ -51,7 +51,7 @@ int main (int argc, char *argv[])
       if (tok == NULL || *tok == '#')
         continue;
 
-      /* set <min_gap|max_gap|n_colors|ap_length> <N> */
+      /* set <min_gap|max_gap|n_colors|ap_length|alphabet> <N> */
       if (strmatch (tok, "set"))
         {
           tok = strtok (NULL, " \t\n");
@@ -62,6 +62,7 @@ int main (int argc, char *argv[])
           else if (strmatch (tok, "alphabet"))
             {
               tok = strtok (NULL, "\n");
+              sequence_delete (alphabet);
               alphabet = sequence_parse (tok);
             }
         }
@@ -76,7 +77,7 @@ int main (int argc, char *argv[])
           else
             fprintf (stderr, "Unknown filter ``%s''\n", tok);
         }
-      /* search <seqences|colorings> [seed] */
+      /* search <seqences|colorings|words> [seed] */
       else if (strmatch (tok, "search"))
         {
           tok = strtok (NULL, " \t\n");
@@ -110,14 +111,32 @@ int main (int argc, char *argv[])
 
               sequence_delete (seek);
             }
-          else if (tok && strmatch (tok, "colorings"))
+          else if (strmatch (tok, "colorings") ||
+                   strmatch (tok, "partitions"))
             {
+              Sequence *seek;
+
+              tok = strtok (NULL, " \t\n");
+              if (tok && *tok == '[')
+                seek = sequence_parse (tok);
+              else
+                seek = sequence_new ();
+
+              if (seek->length == 0)
+                sequence_append (seek, 1);
+
+              puts ("#### Starting coloring search ####");
+              printf ("  Minimum gap:\t%d\n", min_gap);
+              printf ("  Maximum gap:\t%d\n", max_gap);
+              printf ("  AP length:\t%d\n", ap_length);
+              printf ("  Seed Coloring.:\t"); sequence_print (seek);
+              puts("");
+
               puts ("Sorry, coloring search not yet supported.");
             }
           else if (tok && strmatch (tok, "words"))
             {
               Sequence *seek = sequence_new ();
-              sequence_append (seek, 1);
 
               puts ("#### Starting word search ####");
               printf ("  Alphabet:\t"); sequence_print (alphabet);
