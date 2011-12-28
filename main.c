@@ -83,6 +83,8 @@ int main (int argc, char *argv[])
       else if (strmatch (tok, "search"))
         {
           time_t start = time (NULL);
+          reset_max ();
+
           tok = strtok (NULL, " \t\n");
           if (tok && strmatch (tok, "sequences"))
             {

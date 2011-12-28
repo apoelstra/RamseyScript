@@ -6,9 +6,15 @@
 #include "recurse.h"
 #include "filters.h"
 
+static long int max_length;
+
+void reset_max ()
+{
+  max_length = 0;
+}
+
 void recurse_sequence (Sequence *seed, int min, int max, filter_func filter)
 {
-  static int max_length;
   int i;
 
   if (!filter (seed))
@@ -31,7 +37,6 @@ void recurse_sequence (Sequence *seed, int min, int max, filter_func filter)
 
 void recurse_words (Sequence *seed, Sequence *alphabet, filter_func filter)
 {
-  static int max_length;
   int i;
 
   if (!filter (seed))
@@ -55,7 +60,6 @@ void recurse_words (Sequence *seed, Sequence *alphabet, filter_func filter)
 void recurse_colorings (Coloring *seed, int max_value, int min,
                         int max, filter_func filter)
 {
-  static int max_length;
   int length = 0;
   int i, j;
 
