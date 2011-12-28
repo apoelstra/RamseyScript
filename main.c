@@ -23,6 +23,7 @@
 int main (int argc, char *argv[])
 {
   /* Runtime data */
+  long iterations = 0;
   int min_gap = 1;
   int max_gap = 0;
   int n_colors = 3;
@@ -61,6 +62,7 @@ int main (int argc, char *argv[])
           else if MATCH_THEN_SET (tok, max_gap)
           else if MATCH_THEN_SET (tok, n_colors)
           else if MATCH_THEN_SET (tok, ap_length)
+          else if MATCH_THEN_SET (tok, iterations)
           else if (strmatch (tok, "alphabet"))
             {
               tok = strtok (NULL, "\n");
@@ -100,6 +102,8 @@ int main (int argc, char *argv[])
                 }
 
               puts ("#### Starting sequence search ####");
+              if (iterations > 0)
+                printf ("  Stop after: \t%ld iterations\n", iterations);
               printf ("  Minimum gap:\t%d\n", min_gap);
               printf ("  Maximum gap:\t%d\n", max_gap);
               printf ("  AP length:\t%d\n", ap_length);
@@ -112,7 +116,7 @@ int main (int argc, char *argv[])
                   exit (EXIT_FAILURE);
                 }
 
-              recurse_sequence (seek, min_gap, max_gap, filter);
+              recurse_sequence (seek, min_gap, max_gap, filter, iterations);
 
               sequence_delete (seek);
             }
@@ -133,13 +137,15 @@ int main (int argc, char *argv[])
                 }
 
               puts ("#### Starting coloring search ####");
+              if (iterations > 0)
+                printf ("  Stop after: \t%ld iterations\n", iterations);
               printf ("  Minimum gap:\t%d\n", min_gap);
               printf ("  Maximum gap:\t%d\n", max_gap);
               printf ("  AP length:\t%d\n", ap_length);
               printf ("  Seed Col.:\t"); coloring_print (seek);
               puts("");
 
-              recurse_colorings (seek, 1, min_gap, max_gap, filter);
+              recurse_colorings (seek, 1, min_gap, max_gap, filter, iterations);
 
               coloring_delete (seek);
             }
@@ -148,11 +154,13 @@ int main (int argc, char *argv[])
               Sequence *seek = sequence_new ();
 
               puts ("#### Starting word search ####");
+              if (iterations > 0)
+                printf ("  Stop after: \t%ld iterations\n", iterations);
               printf ("  Alphabet:\t"); sequence_print (alphabet);
               printf ("\n  Seed Seq.:\t"); sequence_print (seek);
               puts("\n");
 
-              recurse_words (seek, alphabet, filter);
+              recurse_words (seek, alphabet, filter, iterations);
 
               sequence_delete (alphabet);
               sequence_delete (seek);

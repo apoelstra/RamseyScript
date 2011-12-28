@@ -7,18 +7,23 @@
 #include "filters.h"
 
 static long int max_length;
+static long int iterations;
 
 void reset_max ()
 {
   max_length = 0;
+  iterations = 0;
 }
 
-void recurse_sequence (Sequence *seed, int min, int max, filter_func filter)
+void recurse_sequence (Sequence *seed, int min, int max, filter_func filter, long max_iterations)
 {
   int i;
 
   if (!filter (seed))
     return;
+  if (max_iterations && iterations >= max_iterations)
+    return;
+  ++iterations;
 
   if (seed->length > max_length)
     {
@@ -30,17 +35,20 @@ void recurse_sequence (Sequence *seed, int min, int max, filter_func filter)
   for (i = sequence_max (seed) + min; max == 0 || i <= sequence_max(seed) + max; ++i)
     {
       sequence_append (seed, i);
-      recurse_sequence (seed, min, max, filter);
+      recurse_sequence (seed, min, max, filter, max_iterations);
       sequence_deappend (seed);
     }
 }
 
-void recurse_words (Sequence *seed, Sequence *alphabet, filter_func filter)
+void recurse_words (Sequence *seed, Sequence *alphabet, filter_func filter, long max_iterations)
 {
   int i;
 
   if (!filter (seed))
     return;
+  if (max_iterations && iterations >= max_iterations)
+    return;
+  ++iterations;
 
   if (seed->length > max_length)
     {
@@ -52,13 +60,13 @@ void recurse_words (Sequence *seed, Sequence *alphabet, filter_func filter)
   for (i = 0; i < alphabet->length; ++i)
     {
       sequence_append (seed, alphabet->values[i]);
-      recurse_words (seed, alphabet, filter);
+      recurse_words (seed, alphabet, filter, max_iterations);
       sequence_deappend (seed);
     }
 }
 
 void recurse_colorings (Coloring *seed, int max_value, int min,
-                        int max, filter_func filter)
+                        int max, filter_func filter, long max_iterations)
 {
   int length = 0;
   int i, j;
@@ -69,6 +77,9 @@ void recurse_colorings (Coloring *seed, int max_value, int min,
         return;
       length += seed->sequences[i]->length;
     }
+  if (max_iterations && iterations >= max_iterations)
+    return;
+  ++iterations;
 
   if (length > max_length)
     {
@@ -86,7 +97,7 @@ void recurse_colorings (Coloring *seed, int max_value, int min,
             continue;
 
       coloring_append (seed, max_value + 1, j);
-      recurse_colorings (seed, max_value + 1, min, max, filter);
+      recurse_colorings (seed, max_value + 1, min, max, filter, max_iterations);
       coloring_deappend (seed, j);
 
       /* Only bother with one empty cell, since by symmetry they'll

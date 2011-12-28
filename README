@@ -1,9 +1,13 @@
 LANGUAGE SPECIFICATION
 =======================
 
-  set <min_gap | max_gap | n_colors | ap_length | alphabet> <value>
+  set <iterations | min_gap | max_gap | n_colors | ap_length | alphabet> <value>
 
 Sets a variable. Not all variables are effective for each search space.
+
+iterations: The number of iterations to run before stopping, or 0 to
+            search the entire space.
+            Default value: 0
 
    min_gap: The minimum gap size for sequences and colorings
             Default value: 1
