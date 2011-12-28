@@ -1,0 +1,6 @@
+
+set min_gap 1     # minimum gap between entries
+set max_gap 17    # maximum gap between entries
+
+search sequences
+
