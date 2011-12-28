@@ -15,6 +15,11 @@ void reset_max ()
   iterations = 0;
 }
 
+long int get_iterations ()
+{
+  return iterations;
+}
+
 void recurse_sequence (Sequence *seed, int min, int max, filter_func filter, long max_iterations)
 {
   int i;

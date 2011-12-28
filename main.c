@@ -167,7 +167,7 @@ int main (int argc, char *argv[])
             }
           else
             fprintf (stderr, "Unrecognized search space ``%s''\n", tok);
-          printf ("Done. Time taken: %ds.\n", (int) (time (NULL) - start));
+          printf ("Done. Time taken: %ds. Iterations: %ld\n", (int) (time (NULL) - start), get_iterations());
           puts("\n");
         }
     }

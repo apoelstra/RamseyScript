@@ -5,6 +5,7 @@
 #include "filters.h"
 
 void reset_max ();
+long int get_iterations ();
 
 void recurse_sequence (Sequence *seed, int min, int max, filter_func filter, long max_iterations);
 void recurse_words (Sequence *seed, Sequence *alphabet, filter_func filter, long max_iterations);
