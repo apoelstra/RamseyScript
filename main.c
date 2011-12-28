@@ -125,7 +125,10 @@ int main (int argc, char *argv[])
                 seek = sequence_parse (tok);
               else
 */
-                seek = coloring_new (n_colors);
+                {
+                  seek = coloring_new (n_colors);
+                  coloring_append (seek, 1, 0);
+                }
 
               puts ("#### Starting coloring search ####");
               printf ("  Minimum gap:\t%d\n", min_gap);
@@ -134,7 +137,7 @@ int main (int argc, char *argv[])
               printf ("  Seed Col.:\t"); coloring_print (seek);
               puts("");
 
-              recurse_colorings (seek, 0, min_gap, max_gap, filter);
+              recurse_colorings (seek, 1, min_gap, max_gap, filter);
 
               coloring_delete (seek);
             }
