@@ -152,6 +152,8 @@ int main (int argc, char *argv[])
             }
           else
             fprintf (stderr, "Unrecognized search space ``%s''\n", tok);
+          puts("\n");
+          puts("\n");
         }
     }
 
