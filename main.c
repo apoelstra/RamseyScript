@@ -22,7 +22,7 @@ int main (int argc, char *argv[])
 {
   /* Runtime data */
   int min_gap = 1;
-  int max_gap = 1;
+  int max_gap = 0;
   int n_colors = 3;
   int ap_length = 3;
   Sequence *alphabet = NULL;
@@ -71,8 +71,10 @@ int main (int argc, char *argv[])
           tok = strtok (NULL, " \t\n");
           if (tok && strmatch (tok, "no-double-3-aps"))
             filter = cheap_check_sequence3;
-          if (tok && strmatch (tok, "no-additive-squares"))
+          else if (tok && strmatch (tok, "no-additive-squares"))
             filter = cheap_check_additive_square;
+          else
+            fprintf (stderr, "Unknown filter ``%s''\n", tok);
         }
       /* search <seqences|colorings> [seed] */
       else if (strmatch (tok, "search"))
@@ -80,8 +82,16 @@ int main (int argc, char *argv[])
           tok = strtok (NULL, " \t\n");
           if (tok && strmatch (tok, "sequences"))
             {
-              Sequence *seek = sequence_new ();
-              sequence_append (seek, 1);
+              Sequence *seek;
+
+              tok = strtok (NULL, " \t\n");
+              if (tok && *tok == '[')
+                seek = sequence_parse (tok);
+              else
+                {
+                  seek = sequence_new ();
+                  sequence_append (seek, 1);
+                }
 
               tok = strtok (NULL, " \t\n");
               if (tok && *tok != '#')

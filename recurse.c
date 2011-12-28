@@ -20,7 +20,7 @@ void recurse_sequence (Sequence *seed, int min, int max, filter_func filter)
       max_length = seed->length;
     }
 
-  for (i = sequence_max (seed) + min; i <= sequence_max(seed) + max; ++i)
+  for (i = sequence_max (seed) + min; max == 0 || i <= sequence_max(seed) + max; ++i)
     {
       sequence_append (seed, i);
       recurse_sequence (seed, min, max, filter);
