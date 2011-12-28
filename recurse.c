@@ -2,6 +2,7 @@
 #include <stdio.h>
 
 #include "sequence.h"
+#include "coloring.h"
 #include "recurse.h"
 #include "filters.h"
 
@@ -50,4 +51,36 @@ void recurse_words (Sequence *seed, Sequence *alphabet, filter_func filter)
       sequence_deappend (seed);
     }
 }
+
+void recurse_colorings (Coloring *seed, int max_value, int min,
+                        int max, filter_func filter)
+{
+  static int max_length;
+  int length = 0;
+  int i, j;
+
+  for (i = 0; i < seed->n_colors; ++i)
+    {
+      if (!filter (seed->sequences[i]))
+        return;
+      length += seed->sequences[i]->length;
+    }
+
+  if (length > max_length)
+    {
+      printf ("Got new maximum length %d. Coloring: ", length);
+      coloring_print (seed);
+      max_length = length;
+    }
+
+  for (j = 0; j < seed->n_colors; ++j)
+    {
+      coloring_append (seed, max_value + 1, j);
+      recurse_colorings (seed, max_value + 1, min, max, filter);
+      coloring_deappend (seed, j);
+    }
+
+}
+
+
 

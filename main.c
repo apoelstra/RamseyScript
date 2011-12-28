@@ -132,7 +132,9 @@ int main (int argc, char *argv[])
               printf ("  Seed Col.:\t"); coloring_print (seek);
               puts("");
 
-              puts ("Sorry, coloring search not yet supported.");
+              recurse_colorings (seek, 1, min_gap, max_gap, filter);
+
+              coloring_delete (seek);
             }
           else if (tok && strmatch (tok, "words"))
             {
