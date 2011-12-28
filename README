@@ -29,14 +29,11 @@ Sets a variable. Not all variables are effective for each search space.
 
   filter <no-double-3-aps | no-additive-squares>
 
-Chooses which filter to when searching spaces. If you choose a filter
-that doesn't make sense for your search space (i.e., searching for
+Chooses which filter to when searching spaces. WARNING: If you choose a
+filter that doesn't make sense for your search space (e.g., looking for
 strictly increasing sequences with no additive squares), the program
-will not catch this and simply recurse indefinitely (since every
-strictly increasing sequence is additive-square-free).
-
-The default filter is no-double-3-aps, but it is not recommended to
-rely on this.
+won't catch this. (Since no strictly increasing sequence has an additive
+square, in this case it would simply recurse indefinitely.)
 
       no-double-3-aps: Only recurse on sequences or colorings with no
                        double 3-AP's.
