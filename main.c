@@ -93,10 +93,6 @@ int main (int argc, char *argv[])
                   sequence_append (seek, 1);
                 }
 
-              tok = strtok (NULL, " \t\n");
-              if (tok && *tok != '#')
-                fputs ("Warning: using seed values not yet supported.\n", stderr);
-
               puts ("#### Starting sequence search ####");
               printf ("  Minimum gap:\t%d\n", min_gap);
               printf ("  Maximum gap:\t%d\n", max_gap);
