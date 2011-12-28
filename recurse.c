@@ -77,12 +77,18 @@ void recurse_colorings (Coloring *seed, int max_value, int min,
     {
       if (max)
         if (seed->sequences[j]->length > 0)
-          if (max_value + 1 - sequence_max (seed->sequences[j]) > max)
+          if (max_value + 1 - sequence_max (seed->sequences[j]) > max ||
+              max_value + 1 - sequence_max (seed->sequences[j]) < min)
             continue;
 
       coloring_append (seed, max_value + 1, j);
       recurse_colorings (seed, max_value + 1, min, max, filter);
       coloring_deappend (seed, j);
+
+      /* Only bother with one empty cell, since by symmetry they'll
+       *  all behave the same. */
+      if (seed->sequences[j]->length == 0)
+        break;
     }
 
 }
