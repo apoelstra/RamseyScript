@@ -1,4 +1,5 @@
 
+#include <time.h>
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -81,6 +82,7 @@ int main (int argc, char *argv[])
       /* search <seqences|colorings|words> [seed] */
       else if (strmatch (tok, "search"))
         {
+          time_t start = time (NULL);
           tok = strtok (NULL, " \t\n");
           if (tok && strmatch (tok, "sequences"))
             {
@@ -132,7 +134,7 @@ int main (int argc, char *argv[])
               printf ("  Seed Col.:\t"); coloring_print (seek);
               puts("");
 
-              recurse_colorings (seek, 1, min_gap, max_gap, filter);
+              recurse_colorings (seek, 0, min_gap, max_gap, filter);
 
               coloring_delete (seek);
             }
@@ -152,7 +154,7 @@ int main (int argc, char *argv[])
             }
           else
             fprintf (stderr, "Unrecognized search space ``%s''\n", tok);
-          puts("\n");
+          printf ("Done. Time taken: %ds.\n", (int) (time (NULL) - start));
           puts("\n");
         }
     }
