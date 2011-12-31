@@ -1,7 +1,8 @@
 LANGUAGE SPECIFICATION
 =======================
 
-  set <iterations | min_gap | max_gap | n_colors | ap_length | alphabet> <value>
+  set <iterations | min-gap | max_gap | n-colors | ap-length |
+       alphabet | dump-file> <value>
 
 Sets a variable. Not all variables are effective for each search space.
 
@@ -9,18 +10,18 @@ iterations: The number of iterations to run before stopping, or 0 to
             search the entire space.
             Default value: 0
 
-   min_gap: The minimum gap size for sequences and colorings. Ignored
+   min-gap: The minimum gap size for sequences and colorings. Ignored
             if gap_set is set.
             Default value: 1
 
-   max_gap: The maximum gap size for sequences and colorings, or 0 for
+   max-gap: The maximum gap size for sequences and colorings, or 0 for
             no maximum. Ignored if gap_set is set.
             Default value: 0
 
-  n_colors: The number of colors to use when searching colorings.
+  n-colors: The number of colors to use when searching colorings.
             Default value: 3
 
- ap_length: The length of arithemetic progressions to check when using
+ ap-length: The length of arithemetic progressions to check when using
             AP-related filters. (This may be broken up into a min/max
             pair if needed. But for now the only supported value is 3,
             so this would be superfluous.)
@@ -30,7 +31,7 @@ iterations: The number of iterations to run before stopping, or 0 to
             format [c1 c2 c3 ... cn].
             Default value: [1 2 3 4]
 
-   gap_set: The set of allowable gap sizes when searching sequences. If
+   gap-set: The set of allowable gap sizes when searching sequences. If
             unset, all gaps between min_gap and max_gap (inclusive) will
             be allowed.
             format [g1 g2 g3 ... gn].

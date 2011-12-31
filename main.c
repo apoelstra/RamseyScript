@@ -54,7 +54,14 @@ int main (int argc, char *argv[])
   /* Parse */
   while (fgets (buf, sizeof buf, fh))
     {
-      char *tok = strtok (buf, " \t\n");
+      char *tok;
+      /* Convert all - signs to _ so lispers can feel at home */
+      for (i = 0; buf[i]; ++i)
+        if (buf[i] == '-')
+          buf[i] = '_';
+
+      tok = strtok (buf, " \t\n");
+
       /* skip comments and blank lines */
       if (tok == NULL || *tok == '#')
         continue;
@@ -84,13 +91,13 @@ int main (int argc, char *argv[])
       else if (strmatch (tok, "filter"))
         {
           tok = strtok (NULL, " \t\n");
-          if (tok && strmatch (tok, "no-double-3-aps"))
+          if (tok && strmatch (tok, "no_double_3_aps"))
             global.filter = cheap_check_sequence3;
-          else if (tok && strmatch (tok, "no-additive-squares"))
+          else if (tok && strmatch (tok, "no_additive_squares"))
             global.filter = cheap_check_additive_square;
           else
             fprintf (stderr, "Unknown filter ``%s''\n", tok);
-        }
+	}
       /* search <seqences|colorings|words> [seed] */
       else if (strmatch (tok, "search"))
         {
