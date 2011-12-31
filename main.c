@@ -29,11 +29,13 @@ int main (int argc, char *argv[])
   int n_colors = 3;
   int ap_length = 3;
   Sequence *alphabet = sequence_parse ("[1 2 3 4]");
+  Sequence *gap_set = NULL;
   filter_func filter = cheap_check_sequence3;
   /* END Runtime data */
 
   char buf[1024];
   FILE *fh;
+  int i;
   /* Open script */
   if (argc > 1)
     {
@@ -54,7 +56,7 @@ int main (int argc, char *argv[])
       if (tok == NULL || *tok == '#')
         continue;
 
-      /* set <min_gap|max_gap|n_colors|ap_length|alphabet> <N> */
+      /* set <min_gap|max_gap|n_colors|ap_length|alphabet|gap_set> <N> */
       if (strmatch (tok, "set"))
         {
           tok = strtok (NULL, " \t\n");
@@ -68,6 +70,11 @@ int main (int argc, char *argv[])
               tok = strtok (NULL, "\n");
               sequence_delete (alphabet);
               alphabet = sequence_parse (tok);
+            }
+          else if (strmatch (tok, "gap_set"))
+            {
+              tok = strtok (NULL, "\n");
+              gap_set = sequence_parse (tok);
             }
         }
       /* filter <no-double-3-aps|no-additive-squares> */
@@ -116,7 +123,13 @@ int main (int argc, char *argv[])
                   exit (EXIT_FAILURE);
                 }
 
-              recurse_sequence (seek, min_gap, max_gap, filter, iterations);
+              if (gap_set == NULL)
+                {
+                  gap_set = sequence_new ();
+                  for (i = min_gap; i <= max_gap; ++i)
+                    sequence_append (gap_set, i);
+                }
+              recurse_sequence (seek, gap_set, filter, iterations);
 
               sequence_delete (seek);
             }

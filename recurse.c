@@ -20,7 +20,7 @@ long int get_iterations ()
   return iterations;
 }
 
-void recurse_sequence (Sequence *seed, int min, int max, filter_func filter, long max_iterations)
+void recurse_sequence (Sequence *seed, Sequence *gap_set, filter_func filter, long max_iterations)
 {
   int i;
 
@@ -39,10 +39,10 @@ void recurse_sequence (Sequence *seed, int min, int max, filter_func filter, lon
       max_length = seed->length;
     }
 
-  for (i = sequence_max (seed) + min; max == 0 || i <= sequence_max(seed) + max; ++i)
+  for (i = 0; i < gap_set->length; ++i)
     {
-      sequence_append (seed, i);
-      recurse_sequence (seed, min, max, filter, max_iterations);
+      sequence_append (seed, sequence_max (seed) + gap_set->values[i]);
+      recurse_sequence (seed, gap_set, filter, max_iterations);
       sequence_deappend (seed);
     }
 }
