@@ -1,6 +1,7 @@
 
 #include <stdio.h>
 
+#include "global.h"
 #include "sequence.h"
 #include "coloring.h"
 #include "recurse.h"
@@ -20,13 +21,13 @@ long int get_iterations ()
   return iterations;
 }
 
-void recurse_sequence (Sequence *seed, Sequence *gap_set, filter_func filter, long max_iterations)
+void recurse_sequence (Sequence *seed)
 {
   int i;
 
-  if (!filter (seed))
+  if (!global.filter (seed))
     return;
-  if (max_iterations && iterations >= max_iterations)
+  if (global.iterations && iterations >= global.iterations)
     return;
   ++iterations;
 
@@ -39,21 +40,21 @@ void recurse_sequence (Sequence *seed, Sequence *gap_set, filter_func filter, lo
       max_length = seed->length;
     }
 
-  for (i = 0; i < gap_set->length; ++i)
+  for (i = 0; i < global.gap_set->length; ++i)
     {
-      sequence_append (seed, sequence_max (seed) + gap_set->values[i]);
-      recurse_sequence (seed, gap_set, filter, max_iterations);
+      sequence_append (seed, sequence_max (seed) + global.gap_set->values[i]);
+      recurse_sequence (seed);
       sequence_deappend (seed);
     }
 }
 
-void recurse_words (Sequence *seed, Sequence *alphabet, filter_func filter, long max_iterations)
+void recurse_words (Sequence *seed)
 {
   int i;
 
-  if (!filter (seed))
+  if (!global.filter (seed))
     return;
-  if (max_iterations && iterations >= max_iterations)
+  if (global.iterations && iterations >= global.iterations)
     return;
   ++iterations;
 
@@ -66,27 +67,26 @@ void recurse_words (Sequence *seed, Sequence *alphabet, filter_func filter, long
       max_length = seed->length;
     }
 
-  for (i = 0; i < alphabet->length; ++i)
+  for (i = 0; i < global.alphabet->length; ++i)
     {
-      sequence_append (seed, alphabet->values[i]);
-      recurse_words (seed, alphabet, filter, max_iterations);
+      sequence_append (seed, global.alphabet->values[i]);
+      recurse_words (seed);
       sequence_deappend (seed);
     }
 }
 
-void recurse_colorings (Coloring *seed, int max_value, int min,
-                        int max, filter_func filter, long max_iterations)
+void recurse_colorings (Coloring *seed, int max_value)
 {
   int length = 0;
   int i, j;
 
   for (i = 0; i < seed->n_colors; ++i)
     {
-      if (!filter (seed->sequences[i]))
+      if (!global.filter (seed->sequences[i]))
         return;
       length += seed->sequences[i]->length;
     }
-  if (max_iterations && iterations >= max_iterations)
+  if (global.iterations && iterations >= global.iterations)
     return;
   ++iterations;
 
@@ -101,14 +101,13 @@ void recurse_colorings (Coloring *seed, int max_value, int min,
 
   for (j = 0; j < seed->n_colors; ++j)
     {
-      if (max)
-        if (seed->sequences[j]->length > 0)
-          if (max_value + 1 - sequence_max (seed->sequences[j]) > max ||
-              max_value + 1 - sequence_max (seed->sequences[j]) < min)
-            continue;
+      if (seed->sequences[j]->length > 0)
+        if ((global.max_gap && max_value + 1 - sequence_max (seed->sequences[j]) > global.max_gap) ||
+            max_value + 1 - sequence_max (seed->sequences[j]) < global.min_gap)
+          continue;
 
       coloring_append (seed, max_value + 1, j);
-      recurse_colorings (seed, max_value + 1, min, max, filter, max_iterations);
+      recurse_colorings (seed, max_value + 1);
       coloring_deappend (seed, j);
 
       /* Only bother with one empty cell, since by symmetry they'll

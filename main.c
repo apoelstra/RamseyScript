@@ -6,6 +6,7 @@
 #include <string.h>
 #include <strings.h>
 
+#include "global.h"
 #include "sequence.h"
 #include "coloring.h"
 #include "recurse.h"
@@ -17,22 +18,24 @@
   ((tok) != NULL && strmatch ((tok), #text))	\
     {						\
       char *new_tok = strtok (NULL, " \t\n");	\
-      (text) = strtoul (new_tok, NULL, 0);	\
+      global.text = strtoul (new_tok, NULL, 0);	\
     }
+
+struct _global_data global;
+void set_defaults ()
+{
+  global.iterations = 0;
+  global.min_gap = 1;
+  global.max_gap = 0;
+  global.n_colors = 3;
+  global.ap_length = 3;
+  global.alphabet = sequence_parse ("[1 2 3 4]");
+  global.gap_set = NULL;
+  global.filter = cheap_check_sequence3;
+}
 
 int main (int argc, char *argv[])
 {
-  /* Runtime data */
-  long iterations = 0;
-  int min_gap = 1;
-  int max_gap = 0;
-  int n_colors = 3;
-  int ap_length = 3;
-  Sequence *alphabet = sequence_parse ("[1 2 3 4]");
-  Sequence *gap_set = NULL;
-  filter_func filter = cheap_check_sequence3;
-  /* END Runtime data */
-
   char buf[1024];
   FILE *fh;
   int i;
@@ -68,13 +71,13 @@ int main (int argc, char *argv[])
           else if (strmatch (tok, "alphabet"))
             {
               tok = strtok (NULL, "\n");
-              sequence_delete (alphabet);
-              alphabet = sequence_parse (tok);
+              sequence_delete (global.alphabet);
+              global.alphabet = sequence_parse (tok);
             }
           else if (strmatch (tok, "gap_set"))
             {
               tok = strtok (NULL, "\n");
-              gap_set = sequence_parse (tok);
+              global.gap_set = sequence_parse (tok);
             }
         }
       /* filter <no-double-3-aps|no-additive-squares> */
@@ -82,9 +85,9 @@ int main (int argc, char *argv[])
         {
           tok = strtok (NULL, " \t\n");
           if (tok && strmatch (tok, "no-double-3-aps"))
-            filter = cheap_check_sequence3;
+            global.filter = cheap_check_sequence3;
           else if (tok && strmatch (tok, "no-additive-squares"))
-            filter = cheap_check_additive_square;
+            global.filter = cheap_check_additive_square;
           else
             fprintf (stderr, "Unknown filter ``%s''\n", tok);
         }
@@ -109,11 +112,11 @@ int main (int argc, char *argv[])
                 }
 
               puts ("#### Starting sequence search ####");
-              if (iterations > 0)
-                printf ("  Stop after: \t%ld iterations\n", iterations);
-              printf ("  Minimum gap:\t%d\n", min_gap);
-              printf ("  Maximum gap:\t%d\n", max_gap);
-              printf ("  AP length:\t%d\n", ap_length);
+              if (global.iterations > 0)
+                printf ("  Stop after: \t%ld iterations\n", global.iterations);
+              printf ("  Minimum gap:\t%d\n", global.min_gap);
+              printf ("  Maximum gap:\t%d\n", global.max_gap);
+              printf ("  AP length:\t%d\n", global.ap_length);
               printf ("  Seed Seq.:\t"); sequence_print (seek);
               puts("\n");
 
@@ -123,14 +126,13 @@ int main (int argc, char *argv[])
                   exit (EXIT_FAILURE);
                 }
 
-              if (gap_set == NULL)
+              if (global.gap_set == NULL)
                 {
-                  gap_set = sequence_new ();
-                  for (i = min_gap; i <= max_gap; ++i)
-                    sequence_append (gap_set, i);
+                  global.gap_set = sequence_new ();
+                  for (i = global.min_gap; i <= global.max_gap; ++i)
+                    sequence_append (global.gap_set, i);
                 }
-              recurse_sequence (seek, gap_set, filter, iterations);
-
+              recurse_sequence (seek);
               sequence_delete (seek);
             }
           else if (strmatch (tok, "colorings") ||
@@ -145,20 +147,20 @@ int main (int argc, char *argv[])
               else
 */
                 {
-                  seek = coloring_new (n_colors);
+                  seek = coloring_new (global.n_colors);
                   coloring_append (seek, 1, 0);
                 }
 
               puts ("#### Starting coloring search ####");
-              if (iterations > 0)
-                printf ("  Stop after: \t%ld iterations\n", iterations);
-              printf ("  Minimum gap:\t%d\n", min_gap);
-              printf ("  Maximum gap:\t%d\n", max_gap);
-              printf ("  AP length:\t%d\n", ap_length);
+              if (global.iterations > 0)
+                printf ("  Stop after: \t%ld iterations\n", global.iterations);
+              printf ("  Minimum gap:\t%d\n", global.min_gap);
+              printf ("  Maximum gap:\t%d\n", global.max_gap);
+              printf ("  AP length:\t%d\n", global.ap_length);
               printf ("  Seed Col.:\t"); coloring_print (seek);
               puts("");
 
-              recurse_colorings (seek, 1, min_gap, max_gap, filter, iterations);
+              recurse_colorings (seek, 1);
 
               coloring_delete (seek);
             }
@@ -167,15 +169,15 @@ int main (int argc, char *argv[])
               Sequence *seek = sequence_new ();
 
               puts ("#### Starting word search ####");
-              if (iterations > 0)
-                printf ("  Stop after: \t%ld iterations\n", iterations);
-              printf ("  Alphabet:\t"); sequence_print (alphabet);
+              if (global.iterations > 0)
+                printf ("  Stop after: \t%ld iterations\n", global.iterations);
+              printf ("  Alphabet:\t"); sequence_print (global.alphabet);
               printf ("\n  Seed Seq.:\t"); sequence_print (seek);
               puts("\n");
 
-              recurse_words (seek, alphabet, filter, iterations);
+              recurse_words (seek);
 
-              sequence_delete (alphabet);
+              sequence_delete (global.alphabet);
               sequence_delete (seek);
             }
           else
