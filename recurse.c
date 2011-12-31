@@ -29,6 +29,8 @@ void recurse_sequence (Sequence *seed)
     return;
   if (global.iterations && iterations >= global.iterations)
     return;
+  if (global.dump_iters && seed->length < global.dump_depth)
+    ++global.iters_data->values[seed->length];
   ++iterations;
 
   if (seed->length > max_length)
@@ -56,6 +58,8 @@ void recurse_words (Sequence *seed)
     return;
   if (global.iterations && iterations >= global.iterations)
     return;
+  if (global.dump_iters && seed->length < global.dump_depth)
+    ++global.iters_data->values[seed->length];
   ++iterations;
 
   if (seed->length > max_length)
@@ -88,6 +92,8 @@ void recurse_colorings (Coloring *seed, int max_value)
     }
   if (global.iterations && iterations >= global.iterations)
     return;
+  if (global.dump_iters && length < global.dump_depth)
+    ++global.iters_data->values[length];
   ++iterations;
 
   if (length > max_length)

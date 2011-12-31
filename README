@@ -21,7 +21,7 @@ iterations: The number of iterations to run before stopping, or 0 to
   n-colors: The number of colors to use when searching colorings.
             Default value: 3
 
- ap-length: The length of arithemetic progressions to check when using
+ ap-length: The length of arithmetic progressions to check when using
             AP-related filters. (This may be broken up into a min/max
             pair if needed. But for now the only supported value is 3,
             so this would be superfluous.)
@@ -37,7 +37,11 @@ iterations: The number of iterations to run before stopping, or 0 to
             format [g1 g2 g3 ... gn].
             Default value: [min_gap ... max_gap]
 
+ dump-file: Unused for now.
 
+dump-depth: The maximum depth to output iteration counts for, if this
+            output is enabled. (See 'dump'.)
+            Default value: 400
 
   filter <no-double-3-aps | no-additive-squares>
 
@@ -75,6 +79,11 @@ nothing.
 
 
 
+  dump <iterations-per-length>
 
+Output auxiliary data about the search space or program operation.
+
+iterations-per-length: dump the number of iterations spent at each
+                       search-space depth
 
 

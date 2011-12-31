@@ -32,6 +32,10 @@ void set_defaults ()
   global.alphabet = sequence_parse ("[1 2 3 4]");
   global.gap_set = NULL;
   global.filter = cheap_check_sequence3;
+
+  global.dump_iters = 0;
+  global.dump_depth = 400;
+  global.iters_data = NULL;
 }
 
 int main (int argc, char *argv[])
@@ -50,6 +54,8 @@ int main (int argc, char *argv[])
         }
     }
   else fh = stdin;
+
+  set_defaults ();
 
   /* Parse */
   while (fgets (buf, sizeof buf, fh))
@@ -75,6 +81,7 @@ int main (int argc, char *argv[])
           else if MATCH_THEN_SET (tok, n_colors)
           else if MATCH_THEN_SET (tok, ap_length)
           else if MATCH_THEN_SET (tok, iterations)
+          else if MATCH_THEN_SET (tok, dump_depth)
           else if (strmatch (tok, "alphabet"))
             {
               tok = strtok (NULL, "\n");
@@ -98,11 +105,26 @@ int main (int argc, char *argv[])
           else
             fprintf (stderr, "Unknown filter ``%s''\n", tok);
 	}
+      /* dump <iterations-per-length> */
+      else if (strmatch (tok, "dump"))
+        {
+          tok = strtok (NULL, " \t\n");
+          if (strmatch (tok, "iterations_per_length"))
+            global.dump_iters = 1;
+          else
+            fprintf (stderr, "Unknown dump format ``%s''\n", tok);
+        }
       /* search <seqences|colorings|words> [seed] */
       else if (strmatch (tok, "search"))
         {
           time_t start = time (NULL);
           reset_max ();
+
+          if (global.dump_iters)
+            {
+              free (global.iters_data);
+              global.iters_data = sequence_new_zeros (global.dump_depth);
+            }
 
           tok = strtok (NULL, " \t\n");
           if (tok && strmatch (tok, "sequences"))
@@ -190,6 +212,11 @@ int main (int argc, char *argv[])
           else
             fprintf (stderr, "Unrecognized search space ``%s''\n", tok);
           printf ("Done. Time taken: %ds. Iterations: %ld\n", (int) (time (NULL) - start), get_iterations());
+          if (global.dump_iters)
+            {
+              sequence_print (global.iters_data);
+              puts ("");
+            }
           puts("\n");
         }
     }

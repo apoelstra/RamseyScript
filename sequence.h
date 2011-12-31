@@ -10,6 +10,7 @@ typedef struct {
 } Sequence;
 
 Sequence *sequence_new ();
+Sequence *sequence_new_zeros (int size);
 Sequence *sequence_parse (const char *data);
 int sequence_append (Sequence *s, int value);
 void sequence_deappend (Sequence *s);

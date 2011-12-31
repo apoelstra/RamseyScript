@@ -21,6 +21,18 @@ Sequence *sequence_new ()
   return s;
 }
 
+Sequence *sequence_new_zeros (int size)
+{
+  Sequence *rv = sequence_new ();
+printf ("Created sequence len %d\n It is ", size);
+  if (rv != NULL)
+    while (size--)
+      sequence_append (rv, 0);
+sequence_print (rv);
+puts ("");
+  return rv;
+}
+
 Sequence *sequence_parse (const char *data)
 {
   int value;
