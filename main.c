@@ -33,6 +33,7 @@ void set_defaults ()
   global.gap_set = NULL;
   global.filter = cheap_check_sequence3;
 
+  global.dump_fh = stdout;
   global.dump_iters = 0;
   global.dump_depth = 400;
   global.iters_data = NULL;
@@ -92,6 +93,23 @@ int main (int argc, char *argv[])
             {
               tok = strtok (NULL, "\n");
               global.gap_set = sequence_parse (tok);
+            }
+          else if (strmatch (tok, "dump_file"))
+            {
+              tok = strtok (NULL, "\n");
+              if (global.dump_fh && global.dump_fh != stdout)
+                fclose (global.dump_fh);
+              if (strmatch (tok, "_"))
+                global.dump_fh = stdout;
+              else
+                {
+                  global.dump_fh = fopen (tok, "a");
+                  if (global.dump_fh == NULL)
+                    {
+                      fprintf (stderr, "Failed to open ``%s'' for writing. Using stdout instead.\n", tok);
+                      global.dump_fh = stdout;
+                    }
+                }
             }
         }
       /* filter <no-double-3-aps|no-additive-squares> */
@@ -214,14 +232,16 @@ int main (int argc, char *argv[])
           printf ("Done. Time taken: %ds. Iterations: %ld\n", (int) (time (NULL) - start), get_iterations());
           if (global.dump_iters)
             {
-              sequence_print (global.iters_data);
-              puts ("");
+              sequence_print_real (global.iters_data, 1, global.dump_fh);
+              fputs ("\n", global.dump_fh);
             }
           puts("\n");
         }
     }
 
   /* Cleanup */
+  if (global.dump_fh && global.dump_fh != stdout)
+    fclose (global.dump_fh);
   if (fh != NULL && fh != stdin)
     fclose (fh);
   return 0;

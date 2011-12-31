@@ -75,7 +75,7 @@ void sequence_deappend (Sequence *s)
 void sequence_print_real (Sequence *s, int start, FILE *out)
 {
   int i;
-  printf ("[");
+  fprintf (out, "[");
   if (start >= 0 && start < s->length)
     fprintf (out, "%d", s->values[start]);
   for (i = start + 1; i < s->length; ++i)

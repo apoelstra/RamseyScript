@@ -37,7 +37,9 @@ iterations: The number of iterations to run before stopping, or 0 to
             format [g1 g2 g3 ... gn].
             Default value: [min_gap ... max_gap]
 
- dump-file: Unused for now.
+ dump-file: The file to output dump output (see 'dump'), or "-" to use
+            stdout.
+            Default value: -
 
 dump-depth: The maximum depth to output iteration counts for, if this
             output is enabled. (See 'dump'.)
