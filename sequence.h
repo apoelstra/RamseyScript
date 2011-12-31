@@ -1,6 +1,8 @@
 #ifndef SEQUENCE_H
 #define SEQUENCE_H
 
+#include <stdio.h>
+
 #define DEFAULT_MAX_LENGTH	400
 
 typedef struct {
@@ -14,6 +16,7 @@ Sequence *sequence_new_zeros (int size);
 Sequence *sequence_parse (const char *data);
 int sequence_append (Sequence *s, int value);
 void sequence_deappend (Sequence *s);
+void sequence_print_real (Sequence *s, int start, FILE *out);
 void sequence_print (Sequence *s);
 void sequence_delete (Sequence *s);
 

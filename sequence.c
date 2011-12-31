@@ -24,12 +24,9 @@ Sequence *sequence_new ()
 Sequence *sequence_new_zeros (int size)
 {
   Sequence *rv = sequence_new ();
-printf ("Created sequence len %d\n It is ", size);
   if (rv != NULL)
     while (size--)
       sequence_append (rv, 0);
-sequence_print (rv);
-puts ("");
   return rv;
 }
 
@@ -75,15 +72,20 @@ void sequence_deappend (Sequence *s)
     --s->length;
 }
 
-void sequence_print (Sequence *s)
+void sequence_print_real (Sequence *s, int start, FILE *out)
 {
   int i;
   printf ("[");
-  if (s->length)
-    printf ("%d", s->values[0]);
-  for (i = 1; i < s->length; ++i)
-    printf (", %d", s->values[i]);
-  printf ("]");
+  if (start >= 0 && start < s->length)
+    fprintf (out, "%d", s->values[start]);
+  for (i = start + 1; i < s->length; ++i)
+    fprintf (out, ", %d", s->values[i]);
+  fprintf (out, "]");
+}
+
+void sequence_print (Sequence *s)
+{
+  sequence_print_real (s, 0, stdout);
 }
 
 void sequence_delete (Sequence *s)
