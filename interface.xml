@@ -1,0 +1,8 @@
+<ui>
+  <menubar name="main-menu">
+    <menu name="File" action="file-menu-action">
+      <menuitem name="Quit" action="quit-action" />
+    </menu>
+  </menubar>
+</ui>
+
