@@ -6,6 +6,7 @@
 
 #include "global.h"
 #include "ramsey.h"
+#include "gtk-text-buffer-stream.h"
 
 struct {
   GtkWidget *window, *script_view, *output_view;
@@ -13,10 +14,20 @@ struct {
 
 static void start_callback ()
 {
+  Stream *input_stream;
+  GtkTextBuffer *input;
   GtkTextBuffer *tb = gtk_text_buffer_new (NULL);
-
   gtk_text_view_set_buffer (GTK_TEXT_VIEW (gui_data.output_view),
                             tb);
+
+  /* run script */
+  input = gtk_text_view_get_buffer (GTK_TEXT_VIEW (gui_data.script_view));
+  input_stream = text_buffer_stream_new (input);
+  input_stream->open (input_stream, "r");
+  set_defaults ();
+  process (input_stream);
+  text_buffer_stream_delete (input_stream);
+
   g_object_unref (G_OBJECT (tb));
 }
 
