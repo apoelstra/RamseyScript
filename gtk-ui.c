@@ -67,14 +67,9 @@ static void open_callback ()
         {
           GtkTextBuffer *tb = gtk_text_buffer_new (NULL);
           Stream *tb_writer = text_buffer_stream_new (tb);
-          char *buf;
 
           tb_writer->open (tb_writer, "w");
-          while ((buf = file_reader->read_line (file_reader)))
-            {
-              tb_writer->write_line (tb_writer, buf);
-              free (buf);
-            }
+          stream_line_copy (tb_writer, file_reader);
           gtk_text_view_set_buffer (GTK_TEXT_VIEW (gui_data.script_view),
                                     tb);
           g_object_unref (G_OBJECT (tb));

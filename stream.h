@@ -21,5 +21,6 @@ typedef struct _stream {
 
 Stream *file_stream_new (const char *mode);
 void file_stream_delete (Stream *stream);
+void stream_line_copy (Stream *output, Stream *input);
 
 #endif

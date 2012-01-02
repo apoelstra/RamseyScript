@@ -89,3 +89,13 @@ void file_stream_delete (Stream *stream)
   free (stream);
 }
 
+void stream_line_copy (Stream *output, Stream *input)
+{
+  char *buf;
+  while ((buf = input->read_line (input)))
+    {
+      output->write_line (output, buf);
+      free (buf);
+    }
+}
+
