@@ -7,6 +7,7 @@
 #include <strings.h>
 
 #include "global.h"
+#include "ramsey.h"
 #include "sequence.h"
 #include "coloring.h"
 #include "recurse.h"
@@ -38,13 +39,13 @@ void set_defaults ()
   global.iters_data = NULL;
 }
 
-void process (FILE *fh)
+void process (Stream *stm)
 {
   char buf[1024];
   int i;
 
   /* Parse */
-  while (fgets (buf, sizeof buf, fh))
+  while (stm->read_line (buf, sizeof buf, stm))
     {
       char *tok;
       /* Convert all - signs to _ so lispers can feel at home */
