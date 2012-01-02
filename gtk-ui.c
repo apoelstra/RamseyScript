@@ -12,9 +12,17 @@ struct {
   GtkWidget *window, *script_view, *output_view;
 } gui_data;
 
+static void *process_thread (void *input)
+{
+  Stream *input_stream = text_buffer_stream_new (input);
+  input_stream->open (input_stream, "r");
+  process (input_stream);
+  text_buffer_stream_delete (input_stream);
+  return NULL;
+}
+
 static void start_callback ()
 {
-  Stream *input_stream;
   GtkTextBuffer *input;
   GtkTextBuffer *tb = gtk_text_buffer_new (NULL);
   gtk_text_view_set_buffer (GTK_TEXT_VIEW (gui_data.output_view),
@@ -22,11 +30,8 @@ static void start_callback ()
 
   /* run script */
   input = gtk_text_view_get_buffer (GTK_TEXT_VIEW (gui_data.script_view));
-  input_stream = text_buffer_stream_new (input);
-  input_stream->open (input_stream, "r");
   set_defaults ();
-  process (input_stream);
-  text_buffer_stream_delete (input_stream);
+  g_thread_create (process_thread, input, FALSE, NULL);
 
   g_object_unref (G_OBJECT (tb));
 }
@@ -94,6 +99,8 @@ int run_gtk_ui (int argc, char *argv[])
   GtkWidget *start_btn;
   GtkActionGroup *action_group;
 
+  g_thread_init (NULL);
+  gdk_threads_init ();
   gtk_init (&argc, &argv);
 
   /* Build window and UI */
@@ -160,7 +167,9 @@ int run_gtk_ui (int argc, char *argv[])
   gtk_window_add_accel_group (GTK_WINDOW (gui_data.window),
                               gtk_ui_manager_get_accel_group (ui));
   gtk_widget_show_all (gui_data.window);
+  gdk_threads_enter ();
   gtk_main ();
+  gdk_threads_leave ();
 
   return 0;
 }
