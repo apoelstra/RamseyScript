@@ -26,10 +26,20 @@ static void _file_stream_close (Stream *obj)
 static char *_file_stream_read_line (Stream *obj)
 {
   /* TODO: fix this */
-  char *rv = malloc (1000);
-  if (fgets (rv, 1000, obj->_data))
-    return rv;
+  if (obj->type == STREAM_READ)
+    {
+      char *rv = malloc (1000);
+      if (fgets (rv, 1000, obj->_data))
+        return rv;
+    }
   return NULL;
+}
+
+static int _file_stream_write_line (Stream *obj, char *line)
+{
+  if (obj->type == STREAM_WRITE)
+    return fputs (line, obj->_data);
+  return 0;
 }
 
 static int _file_stream_eof (Stream *obj)
@@ -66,6 +76,7 @@ Stream *file_stream_new (const char *mode)
   rv->open = _file_stream_open;
   rv->close = _file_stream_close;
   rv->read_line = _file_stream_read_line;
+  rv->write_line = _file_stream_write_line;
   rv->eof = _file_stream_eof;
   rv->_data = NULL;
 

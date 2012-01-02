@@ -61,21 +61,28 @@ static void open_callback ()
 
   if (check_save() && gtk_dialog_run (GTK_DIALOG (dialog)) == GTK_RESPONSE_OK)
     {
+      Stream *file_reader = file_stream_new ("r");
       gchar *result = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (dialog));
-      FILE *fh = fopen (result, "r");
-      if (fh != NULL)
+      if (file_reader->open (file_reader, result))
         {
-          char buf[1000];
           GtkTextBuffer *tb = gtk_text_buffer_new (NULL);
-          while (fgets (buf, sizeof buf, fh))
+          Stream *tb_writer = text_buffer_stream_new (tb);
+          char *buf;
+
+          tb_writer->open (tb_writer, "w");
+          while ((buf = file_reader->read_line (file_reader)))
             {
-              gtk_text_buffer_insert_at_cursor (tb, buf, -1);
+              tb_writer->write_line (tb_writer, buf);
+              free (buf);
             }
           gtk_text_view_set_buffer (GTK_TEXT_VIEW (gui_data.script_view),
                                     tb);
           g_object_unref (G_OBJECT (tb));
-          fclose (fh);
+          text_buffer_stream_delete (tb_writer);
         }
+      else
+        fprintf (stderr, "Failed to open file ``%s''\n", result);
+      file_stream_delete (file_reader);
     }
   gtk_widget_destroy (dialog);
 }

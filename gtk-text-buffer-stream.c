@@ -21,7 +21,13 @@ static void *_text_buffer_open (Stream *obj, void *data)
   gtk_text_buffer_get_start_iter (pd->tb, &pd->startln);
   gtk_text_buffer_get_start_iter (pd->tb, &pd->endln);
   pd->alive = TRUE;
-  (void) data;
+
+  switch (((char *)data) [0])
+    {
+    case 'r': obj->type = STREAM_READ;  break;
+    case 'w': obj->type = STREAM_WRITE; break;
+    }
+
   return obj->_data;
 }
 
@@ -45,6 +51,15 @@ static char *_text_buffer_read_line (Stream *obj)
 
   return rv;
 }
+
+static int _text_buffer_write_line (Stream *obj, char *line)
+{
+  struct priv_data *pd = obj->_data;
+  if (obj->type == STREAM_WRITE)
+    gtk_text_buffer_insert_at_cursor (pd->tb, line, -1);
+  return 0;
+}
+
 
 static int _text_buffer_eof (Stream *obj)
 {
@@ -74,6 +89,7 @@ Stream *text_buffer_stream_new (GtkTextBuffer *buff)
   rv->open = _text_buffer_open;
   rv->close = _text_buffer_close;
   rv->read_line = _text_buffer_read_line;
+  rv->write_line = _text_buffer_write_line;
   rv->eof = _text_buffer_eof;
   rv->_data = pd;
 
