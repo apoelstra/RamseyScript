@@ -8,7 +8,7 @@ FIND_PACKAGE(GTK2 COMPONENTS gtk)
 INCLUDE_DIRECTORIES(${GTK2_INCLUDE_DIRS})
 
 IF(GTK2_FOUND)
-  ADD_EXECUTABLE(ramsey main.c check.c coloring.c ramsey.c recurse.c sequence.c)
+  ADD_EXECUTABLE(ramsey main.c check.c coloring.c ramsey.c recurse.c sequence.c gtk-ui.c)
   TARGET_LINK_LIBRARIES(ramsey ${GTK2_LIBRARIES})
 ENDIF()
 
