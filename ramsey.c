@@ -41,11 +41,11 @@ void set_defaults ()
 
 void process (Stream *stm)
 {
-  char buf[1024];
+  char *buf;
   int i;
 
   /* Parse */
-  while (stm->read_line (buf, sizeof buf, stm))
+  while ((buf = stm->read_line (stm)))
     {
       char *tok;
       /* Convert all - signs to _ so lispers can feel at home */
@@ -59,7 +59,10 @@ void process (Stream *stm)
 
       /* skip comments and blank lines */
       if (tok == NULL || *tok == '#')
-        continue;
+        {
+          free (buf);
+          continue;
+        }
 
       /* set <min_gap|max_gap|n_colors|ap_length|alphabet|gap_set> <N> */
       if (strmatch (tok, "set"))
@@ -225,6 +228,7 @@ void process (Stream *stm)
             }
           puts("\n");
         }
+      free (buf);
     }
 
   /* Cleanup */
