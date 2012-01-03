@@ -10,6 +10,8 @@
 #include "string-stream.h"
 #include "gtk-text-buffer-stream.h"
 
+static void new_callback ();
+
 struct _script
 {
   char *filename;
@@ -106,7 +108,7 @@ static void open_callback ()
   GtkWidget *dialog;
   GtkFileFilter *scripts_only, *all_files;
 
-  dialog = gtk_file_chooser_dialog_new ("Open Ramsey Script",
+  dialog = gtk_file_chooser_dialog_new ("Open script",
                                         GTK_WINDOW (gui_data.window),
                                         GTK_FILE_CHOOSER_ACTION_OPEN,
                                         GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
@@ -129,36 +131,14 @@ static void open_callback ()
       gchar *result = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (dialog));
       if (file_reader->open (file_reader, result))
         {
-          struct _script *new_script = malloc (sizeof *new_script);
+          new_callback ();
+          gui_data.active_script->filename = result;
+          gtk_notebook_set_tab_label (GTK_NOTEBOOK (gui_data.notebook),
+                                      gui_data.active_script->page,
+                                      gtk_label_new (_find_last_slash(result)));
 
-          new_script->is_running = FALSE;
-          new_script->modified = FALSE;
-          new_script->filename = result;
-          new_script->page = gtk_scrolled_window_new (NULL, NULL);
-          gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (new_script->page),
-                                          GTK_POLICY_AUTOMATIC,
-                                          GTK_POLICY_AUTOMATIC);
-          new_script->text_view = gtk_text_view_new ();
-          new_script->stream = text_buffer_stream_new (gtk_text_view_get_buffer
-                                               (GTK_TEXT_VIEW (new_script->text_view)));
-          gtk_container_add (GTK_CONTAINER (new_script->page),
-                             new_script->text_view);
-          new_script->page_index =
-              gtk_notebook_insert_page (GTK_NOTEBOOK (gui_data.notebook),
-                                        new_script->page,
-                                        gtk_label_new (_find_last_slash(result)),
-                                        gtk_notebook_get_n_pages (GTK_NOTEBOOK (gui_data.notebook)) - 1);
-
-          gtk_text_view_set_editable (GTK_TEXT_VIEW (new_script->text_view), TRUE);
-          gtk_widget_show_all (new_script->page);
-
-          gui_data.script_list = g_list_append (gui_data.script_list, new_script);
-          gui_data.active_script = new_script;
-          gtk_notebook_set_current_page (GTK_NOTEBOOK (gui_data.notebook),
-                                         new_script->page_index);
-
-          new_script->stream->open (new_script->stream, "w");
-          stream_line_copy (new_script->stream, file_reader);
+          gui_data.active_script->stream->open (gui_data.active_script->stream, "w");
+          stream_line_copy (gui_data.active_script->stream, file_reader);
         }
       else
         fprintf (stderr, "Failed to open file ``%s''\n", result);
@@ -167,20 +147,89 @@ static void open_callback ()
   gtk_widget_destroy (dialog);
 }
 
+static void new_callback ()
+{
+  struct _script *new_script = malloc (sizeof *new_script);
+
+  new_script->modified = FALSE;
+  new_script->filename = NULL;
+  new_script->page = gtk_scrolled_window_new (NULL, NULL);
+  gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (new_script->page),
+                                  GTK_POLICY_AUTOMATIC,
+                                  GTK_POLICY_AUTOMATIC);
+  new_script->text_view = gtk_text_view_new ();
+  new_script->stream = text_buffer_stream_new (gtk_text_view_get_buffer
+                                       (GTK_TEXT_VIEW (new_script->text_view)));
+  gtk_container_add (GTK_CONTAINER (new_script->page),
+                     new_script->text_view);
+  new_script->page_index =
+      gtk_notebook_insert_page (GTK_NOTEBOOK (gui_data.notebook),
+                                new_script->page,
+                                gtk_label_new ("New script"),
+                                gtk_notebook_get_n_pages (GTK_NOTEBOOK (gui_data.notebook)) - 1);
+
+  gtk_text_view_set_editable (GTK_TEXT_VIEW (new_script->text_view), TRUE);
+  gtk_widget_show_all (new_script->page);
+
+  gui_data.script_list = g_list_append (gui_data.script_list, new_script);
+  gui_data.active_script = new_script;
+  gtk_notebook_set_current_page (GTK_NOTEBOOK (gui_data.notebook),
+                                 new_script->page_index);
+}
+
 static void save_callback ()
 {
   if (gui_data.active_script)
     {
-      Stream *file_writer = file_stream_new ("w");
-
-      if (file_writer->open (file_writer, gui_data.active_script->filename))
+      if (gui_data.active_script->filename == NULL)
+        save_as_callback ();
+      else
         {
-          gui_data.active_script->stream->open (gui_data.active_script->stream, "r");
-          stream_line_copy (file_writer, gui_data.active_script->stream);
+          Stream *file_writer = file_stream_new ("w");
+
+          if (file_writer->open (file_writer, gui_data.active_script->filename))
+            {
+              gui_data.active_script->stream->open (gui_data.active_script->stream, "r");
+              stream_line_copy (file_writer, gui_data.active_script->stream);
+              file_stream_delete (file_writer);
+            }
+          else
+            fprintf (stderr, "Failed to save file ``%s''\n", gui_data.active_script->filename);
+        }
+    }
+}
+
+static void save_as_callback ()
+{
+  GtkWidget *dialog;
+  if (gui_data.active_script)
+    {
+      dialog = gtk_file_chooser_dialog_new ("Save script",
+                                            GTK_WINDOW (gui_data.window),
+                                            GTK_FILE_CHOOSER_ACTION_SAVE,
+                                            GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
+                                            GTK_STOCK_OK, GTK_RESPONSE_OK,
+                                            NULL);
+      gtk_file_chooser_set_do_overwrite_confirmation (GTK_FILE_CHOOSER (dialog),
+                                                    TRUE);
+      gtk_dialog_set_default_response (GTK_DIALOG (dialog), GTK_RESPONSE_OK);
+
+      if (gtk_dialog_run (GTK_DIALOG (dialog)) == GTK_RESPONSE_OK)
+        {
+          Stream *file_writer = file_stream_new ("w");
+          gchar *result = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (dialog));
+          if (file_writer->open (file_writer, result))
+            {
+              gui_data.active_script->filename = result;
+              gui_data.active_script->stream->open (gui_data.active_script->stream, "r");
+              stream_line_copy (file_writer, gui_data.active_script->stream);
+            }
+          else
+            fprintf (stderr, "Failed to save file ``%s''\n", result);
           file_stream_delete (file_writer);
         }
-      else
-        fprintf (stderr, "Failed to open file ``%s''\n", gui_data.active_script->filename);
+
+      gtk_widget_destroy (dialog);
     }
 }
 /* end MENU CALLBACKS */
@@ -188,12 +237,14 @@ static void save_callback ()
 static GtkActionEntry entries[] = 
 {
   { "file-menu-action", NULL, "_File", NULL, NULL, NULL },
-  { "new-action", NULL, "_New", NULL, NULL, NULL },
+  { "new-action", GTK_STOCK_NEW, "_New", "<control>N",
+    "Create a new script", G_CALLBACK (new_callback) },
   { "open-action", GTK_STOCK_OPEN, "_Open", "<control>O",    
     "Open a script", G_CALLBACK (open_callback) },
   { "save-action", GTK_STOCK_SAVE, "_Save", "<control>S",
      "Save the script", G_CALLBACK (save_callback) },
-  { "save-as-action", NULL, "Save _As...", NULL, NULL, NULL },
+  { "save-as-action", NULL, "Save _As...", "<control><shift>S",
+     "Save the scrit...", G_CALLBACK (save_as_callback) },
   { "close-action", GTK_STOCK_CLOSE, "_Close", NULL, NULL, NULL },
   { "quit-action", GTK_STOCK_QUIT, "_Quit", "<control>Q",    
     "Quit", G_CALLBACK (gtk_main_quit) },
@@ -277,7 +328,9 @@ int run_gtk_ui (int argc, char *argv[])
   gtk_window_add_accel_group (GTK_WINDOW (gui_data.window),
                               gtk_ui_manager_get_accel_group (ui));
   gtk_widget_show_all (gui_data.window);
+
   gdk_threads_enter ();
+  new_callback ();
   gtk_main ();
   gdk_threads_leave ();
 
