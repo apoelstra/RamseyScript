@@ -1,6 +1,7 @@
 #ifndef GLOBAL_H
 #define GLOBAL_H
 
+#include "stream.h"
 #include "sequence.h"
 #include "filters.h"
 
@@ -20,6 +21,10 @@ struct _global_data {
   bool dump_iters;
   int dump_depth;
   Sequence *iters_data;
+
+  Stream *out_stream;
+  Stream *in_stream;
+  Stream *err_stream;
 };
 
 #endif

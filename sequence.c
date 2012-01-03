@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "stream.h"
 #include "sequence.h"
 
 Sequence *sequence_new ()
@@ -72,20 +73,20 @@ void sequence_deappend (Sequence *s)
     --s->length;
 }
 
-void sequence_print_real (Sequence *s, int start, FILE *out)
+void sequence_print_real (Sequence *s, int start, Stream *out)
 {
   int i;
-  fprintf (out, "[");
+  out->write_line (out, "[");
   if (start >= 0 && start < s->length)
-    fprintf (out, "%d", s->values[start]);
+    stream_printf (out, "%d", s->values[start]);
   for (i = start + 1; i < s->length; ++i)
-    fprintf (out, ", %d", s->values[i]);
-  fprintf (out, "]");
+    stream_printf (out, ", %d", s->values[i]);
+  out->write_line (out, "]");
 }
 
-void sequence_print (Sequence *s)
+void sequence_print (Sequence *s, Stream *out)
 {
-  sequence_print_real (s, 0, stdout);
+  sequence_print_real (s, 0, out);
 }
 
 void sequence_delete (Sequence *s)

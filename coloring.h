@@ -2,6 +2,7 @@
 #define COLORING_H
 
 #include "sequence.h"
+#include "stream.h"
 
 typedef struct {
   Sequence **sequences;
@@ -11,7 +12,7 @@ typedef struct {
 Coloring *coloring_new (int n_colors);
 int coloring_append (Coloring *s, int value, int position);
 void coloring_deappend (Coloring *s, int position);
-void coloring_print (Coloring *s);
+void coloring_print (Coloring *s, Stream *out);
 void coloring_delete (Coloring *s);
 
 #endif

@@ -11,7 +11,7 @@ PKG_CHECK_MODULES(GTHREAD REQUIRED gthread-2.0)
 INCLUDE_DIRECTORIES(${GTK2_INCLUDE_DIRS} ${GTHREAD_INCLUDE_DIRS})
 
 IF(GTK2_FOUND)
-  ADD_EXECUTABLE(ramsey main.c check.c coloring.c ramsey.c recurse.c sequence.c gtk-ui.c gtk-text-buffer-stream.c stream.c)
+  ADD_EXECUTABLE(ramsey main.c check.c coloring.c ramsey.c recurse.c sequence.c gtk-ui.c gtk-text-buffer-stream.c stream.c string-stream.c)
   TARGET_LINK_LIBRARIES(ramsey ${GTK2_LIBRARIES} ${GTHREAD_LIBRARIES})
 ENDIF()
 

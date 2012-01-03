@@ -36,7 +36,7 @@ void recurse_sequence (Sequence *seed, const struct _global_data *state)
   if (seed->length > max_length)
     {
       printf ("Got new maximum length %d. Sequence: ", seed->length);
-      sequence_print (seed);
+      sequence_print (seed, state->out_stream);
       puts ("");
       fflush (stdout);
       max_length = seed->length;
@@ -64,8 +64,8 @@ void recurse_words (Sequence *seed, const struct _global_data *state)
 
   if (seed->length > max_length)
     {
-      printf ("Got new maximum length %d. Word: ", seed->length);
-      sequence_print (seed);
+      stream_printf (state->out_stream, "Got new maximum length %d. Word: ", seed->length);
+      sequence_print (seed, state->out_stream);
       puts ("");
       fflush (stdout);
       max_length = seed->length;
@@ -98,8 +98,8 @@ void recurse_colorings (Coloring *seed, int max_value, const struct _global_data
 
   if (length > max_length)
     {
-      printf ("Got new maximum length %d. Coloring: ", length);
-      coloring_print (seed);
+      stream_printf (state->out_stream, "Got new maximum length %d. Coloring: ", length);
+      coloring_print (seed, state->out_stream);
       puts ("");
       fflush (stdout);
       max_length = length;

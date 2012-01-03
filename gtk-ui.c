@@ -6,12 +6,15 @@
 
 #include "global.h"
 #include "ramsey.h"
+#include "stream.h"
+#include "string-stream.h"
 #include "gtk-text-buffer-stream.h"
 
 struct _script
 {
   char *filename;
   GtkWidget *page, *text_view;
+  Stream *stream;
   gint page_index;
   gboolean modified;
   gboolean is_running;
@@ -27,9 +30,15 @@ static void *process_thread (void *is)
 {
   Stream *input_stream = is;
   struct _global_data *defs = set_defaults ();
+  Stream *output_stream = file_stream_new ("w");
+  output_stream->_data = stdout;
   input_stream->open (input_stream, "r");
-  process (input_stream, defs);
+
+  defs->out_stream = output_stream;
+  defs->in_stream = input_stream;
+  process (defs);
   string_stream_delete (input_stream);
+  file_stream_delete (output_stream);
   free (defs);
   return NULL;
 }
@@ -44,17 +53,12 @@ static void start_callback ()
   /* run script */
   if (gui_data.active_script)
     {
-      GtkTextBuffer *tb = gtk_text_view_get_buffer
-                            (GTK_TEXT_VIEW (gui_data.active_script->text_view));
-      Stream *tb_stream;
       Stream *input_stream = string_stream_new ();
-      tb_stream = text_buffer_stream_new (tb);
 
       /* Copy text-buffer into thread-specific buffer */
-      tb_stream->open (tb_stream, "r");
+      gui_data.active_script->stream->open (gui_data.active_script->stream, "r");
       input_stream->open (input_stream, "w");
-      stream_line_copy (input_stream, tb_stream);
-      text_buffer_stream_delete (tb_stream);
+      stream_line_copy (input_stream, gui_data.active_script->stream);
       /* Run */
       g_thread_create (process_thread, input_stream, FALSE, NULL);
     }
@@ -66,6 +70,10 @@ static gboolean switch_page_callback (GtkNotebook *notebook, gpointer page,
                                       int page_index, gpointer data)
 {
   GList *scan;
+  (void) notebook;
+  (void) page;
+  (void) data;
+
   gui_data.active_script = NULL;
   for (scan = gui_data.script_list; scan; scan = scan->next)
     {
@@ -118,7 +126,6 @@ static void open_callback ()
       if (file_reader->open (file_reader, result))
         {
           struct _script *new_script = malloc (sizeof *new_script);
-          Stream *tb_writer;
 
           new_script->is_running = FALSE;
           new_script->modified = FALSE;
@@ -128,6 +135,8 @@ static void open_callback ()
                                           GTK_POLICY_AUTOMATIC,
                                           GTK_POLICY_AUTOMATIC);
           new_script->text_view = gtk_text_view_new ();
+          new_script->stream = text_buffer_stream_new (gtk_text_view_get_buffer
+                                               (GTK_TEXT_VIEW (new_script->text_view)));
           gtk_container_add (GTK_CONTAINER (new_script->page),
                              new_script->text_view);
           new_script->page_index =
@@ -144,11 +153,8 @@ static void open_callback ()
           gtk_notebook_set_current_page (GTK_NOTEBOOK (gui_data.notebook),
                                          new_script->page_index);
 
-          tb_writer = text_buffer_stream_new (gtk_text_view_get_buffer
-                                               (GTK_TEXT_VIEW (new_script->text_view)));
-          tb_writer->open (tb_writer, "w");
-          stream_line_copy (tb_writer, file_reader);
-          text_buffer_stream_delete (tb_writer);
+          new_script->stream->open (new_script->stream, "w");
+          stream_line_copy (new_script->stream, file_reader);
         }
       else
         fprintf (stderr, "Failed to open file ``%s''\n", result);
@@ -162,14 +168,11 @@ static void save_callback ()
   if (gui_data.active_script)
     {
       Stream *file_writer = file_stream_new ("w");
-      Stream *tb_reader = text_buffer_stream_new (gtk_text_view_get_buffer
-                            (GTK_TEXT_VIEW (gui_data.active_script->text_view)));
 
       if (file_writer->open (file_writer, gui_data.active_script->filename))
         {
-          tb_reader->open (tb_reader, "r");
-          stream_line_copy (file_writer, tb_reader);
-          text_buffer_stream_delete (tb_reader);
+          gui_data.active_script->stream->open (gui_data.active_script->stream, "r");
+          stream_line_copy (file_writer, gui_data.active_script->stream);
           file_stream_delete (file_writer);
         }
       else

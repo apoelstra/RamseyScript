@@ -44,13 +44,13 @@ struct _global_data *set_defaults ()
   return rv;
 }
 
-void process (Stream *stm, struct _global_data *state)
+void process (struct _global_data *state)
 {
   char *buf;
   int i;
 
   /* Parse */
-  while ((buf = stm->read_line (stm)))
+  while ((buf = state->in_stream->read_line (state->in_stream)))
     {
       char *tok;
       /* Convert all - signs to _ so lispers can feel at home */
@@ -154,14 +154,17 @@ void process (Stream *stm, struct _global_data *state)
                   sequence_append (seek, 1);
                 }
 
-              puts ("#### Starting sequence search ####");
+              state->out_stream->write_line (state->out_stream, "#### Starting sequence search ####\n");
               if (state->iterations > 0)
-                printf ("  Stop after: \t%ld iterations\n", state->iterations);
-              printf ("  Minimum gap:\t%d\n", state->min_gap);
-              printf ("  Maximum gap:\t%d\n", state->max_gap);
-              printf ("  AP length:\t%d\n", state->ap_length);
-              printf ("  Seed Seq.:\t"); sequence_print (seek);
-              puts("\n");
+                stream_printf (state->out_stream, "  Stop after: \t%ld iterations\n", state->iterations);
+              stream_printf (state->out_stream,
+                             "  Minimum gap:\t%d\n"
+                             "  Maximum gap:\t%d\n"
+                             "  AP length:\t%d\n"
+                             "  Seed Seq.:\t",
+                             state->min_gap, state->max_gap, state->ap_length);
+              sequence_print (seek, state->out_stream);
+              state->out_stream->write_line (state->out_stream, "\n");
 
               if (seek == NULL)
                 {
@@ -196,12 +199,14 @@ void process (Stream *stm, struct _global_data *state)
 
               puts ("#### Starting coloring search ####");
               if (state->iterations > 0)
-                printf ("  Stop after: \t%ld iterations\n", state->iterations);
-              printf ("  Minimum gap:\t%d\n", state->min_gap);
-              printf ("  Maximum gap:\t%d\n", state->max_gap);
-              printf ("  AP length:\t%d\n", state->ap_length);
-              printf ("  Seed Col.:\t"); coloring_print (seek);
-              puts("");
+                stream_printf (state->out_stream, "  Stop after: \t%ld iterations\n", state->iterations);
+              stream_printf (state->out_stream,
+                             "  Minimum gap:\t%d\n"
+                             "  Maximum gap:\t%d\n"
+                             "  AP length:\t%d\n"
+                             "  Seed Col.:\t",
+                             state->min_gap, state->max_gap, state->ap_length);
+              state->out_stream->write_line (state->out_stream, "\n");
 
               recurse_colorings (seek, 1, state);
 
@@ -213,9 +218,9 @@ void process (Stream *stm, struct _global_data *state)
 
               puts ("#### Starting word search ####");
               if (state->iterations > 0)
-                printf ("  Stop after: \t%ld iterations\n", state->iterations);
-              printf ("  Alphabet:\t"); sequence_print (state->alphabet);
-              printf ("\n  Seed Seq.:\t"); sequence_print (seek);
+                stream_printf (state->out_stream, "  Stop after: \t%ld iterations\n", state->iterations);
+              stream_printf (state->out_stream, "  Alphabet:\t"); sequence_print (state->alphabet, state->out_stream);
+              stream_printf (state->out_stream, "\n  Seed Seq.:\t"); sequence_print (seek, state->out_stream);
               puts("\n");
 
               recurse_words (seek, state);
@@ -225,13 +230,16 @@ void process (Stream *stm, struct _global_data *state)
             }
           else
             fprintf (stderr, "Unrecognized search space ``%s''\n", tok);
-          printf ("Done. Time taken: %ds. Iterations: %ld\n", (int) (time (NULL) - start), get_iterations());
+          stream_printf (state->out_stream, "Done. Time taken: %ds. Iterations: %ld\n",
+                         (int) (time (NULL) - start), get_iterations());
           if (state->dump_iters)
             {
+/* TODO TODO TODO
               sequence_print_real (state->iters_data, 1, state->dump_fh);
+*/
               fputs ("\n", state->dump_fh);
             }
-          puts("\n");
+          state->out_stream->write_line (state->out_stream, "\n");
         }
       free (buf);
     }

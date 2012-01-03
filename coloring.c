@@ -4,6 +4,7 @@
 
 #include "sequence.h"
 #include "coloring.h"
+#include "stream.h"
 
 Coloring *coloring_new (int n_colors)
 {
@@ -37,16 +38,17 @@ void coloring_deappend (Coloring *c, int position)
   sequence_deappend (c->sequences[position]);
 }
 
-void coloring_print (Coloring *c)
+void coloring_print (Coloring *c, Stream *out)
 {
   int i;
-  printf ("["); sequence_print (c->sequences[0]);
+  out->write_line (out, "[");
+  sequence_print (c->sequences[0], out);
   for (i = 1; i < c->n_colors; ++i)
     {
-      printf (" ");
-      sequence_print (c->sequences[i]);
+      out->write_line (out, " ");
+      sequence_print (c->sequences[i], out);
     }
-  printf ("]");
+  out->write_line (out, "]");
 }
 
 void coloring_delete (Coloring *c)

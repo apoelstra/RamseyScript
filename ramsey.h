@@ -5,6 +5,6 @@
 #include "stream.h"
 
 struct _global_data *set_defaults ();
-void process (Stream *stm, struct _global_data *state);
+void process (struct _global_data *state);
 
 #endif
