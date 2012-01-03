@@ -19,27 +19,32 @@
   ((tok) != NULL && strmatch ((tok), #text))	\
     {						\
       char *new_tok = strtok (NULL, " \t\n");	\
-      global.text = strtoul (new_tok, NULL, 0);	\
+      state->text = strtoul (new_tok, NULL, 0);	\
     }
 
-void set_defaults ()
+struct _global_data *set_defaults ()
 {
-  global.iterations = 0;
-  global.min_gap = 1;
-  global.max_gap = 0;
-  global.n_colors = 3;
-  global.ap_length = 3;
-  global.alphabet = sequence_parse ("[1 2 3 4]");
-  global.gap_set = NULL;
-  global.filter = cheap_check_sequence3;
+  struct _global_data *rv = malloc (sizeof *rv);
+  if (rv)
+    {
+      rv->iterations = 0;
+      rv->min_gap = 1;
+      rv->max_gap = 0;
+      rv->n_colors = 3;
+      rv->ap_length = 3;
+      rv->alphabet = sequence_parse ("[1 2 3 4]");
+      rv->gap_set = NULL;
+      rv->filter = cheap_check_sequence3;
 
-  global.dump_fh = stdout;
-  global.dump_iters = 0;
-  global.dump_depth = 400;
-  global.iters_data = NULL;
+      rv->dump_fh = stdout;
+      rv->dump_iters = 0;
+      rv->dump_depth = 400;
+      rv->iters_data = NULL;
+    }
+  return rv;
 }
 
-void process (Stream *stm)
+void process (Stream *stm, struct _global_data *state)
 {
   char *buf;
   int i;
@@ -77,28 +82,28 @@ void process (Stream *stm)
           else if (strmatch (tok, "alphabet"))
             {
               tok = strtok (NULL, "\n");
-              sequence_delete (global.alphabet);
-              global.alphabet = sequence_parse (tok);
+              sequence_delete (state->alphabet);
+              state->alphabet = sequence_parse (tok);
             }
           else if (strmatch (tok, "gap_set"))
             {
               tok = strtok (NULL, "\n");
-              global.gap_set = sequence_parse (tok);
+              state->gap_set = sequence_parse (tok);
             }
           else if (strmatch (tok, "dump_file"))
             {
               tok = strtok (NULL, "\n");
-              if (global.dump_fh && global.dump_fh != stdout)
-                fclose (global.dump_fh);
+              if (state->dump_fh && state->dump_fh != stdout)
+                fclose (state->dump_fh);
               if (strmatch (tok, "_"))
-                global.dump_fh = stdout;
+                state->dump_fh = stdout;
               else
                 {
-                  global.dump_fh = fopen (tok, "a");
-                  if (global.dump_fh == NULL)
+                  state->dump_fh = fopen (tok, "a");
+                  if (state->dump_fh == NULL)
                     {
                       fprintf (stderr, "Failed to open ``%s'' for writing. Using stdout instead.\n", tok);
-                      global.dump_fh = stdout;
+                      state->dump_fh = stdout;
                     }
                 }
             }
@@ -108,9 +113,9 @@ void process (Stream *stm)
         {
           tok = strtok (NULL, " \t\n");
           if (tok && strmatch (tok, "no_double_3_aps"))
-            global.filter = cheap_check_sequence3;
+            state->filter = cheap_check_sequence3;
           else if (tok && strmatch (tok, "no_additive_squares"))
-            global.filter = cheap_check_additive_square;
+            state->filter = cheap_check_additive_square;
           else
             fprintf (stderr, "Unknown filter ``%s''\n", tok);
 	}
@@ -119,7 +124,7 @@ void process (Stream *stm)
         {
           tok = strtok (NULL, " \t\n");
           if (strmatch (tok, "iterations_per_length"))
-            global.dump_iters = 1;
+            state->dump_iters = 1;
           else
             fprintf (stderr, "Unknown dump format ``%s''\n", tok);
         }
@@ -129,10 +134,10 @@ void process (Stream *stm)
           time_t start = time (NULL);
           reset_max ();
 
-          if (global.dump_iters)
+          if (state->dump_iters)
             {
-              free (global.iters_data);
-              global.iters_data = sequence_new_zeros (global.dump_depth);
+              free (state->iters_data);
+              state->iters_data = sequence_new_zeros (state->dump_depth);
             }
 
           tok = strtok (NULL, " \t\n");
@@ -150,11 +155,11 @@ void process (Stream *stm)
                 }
 
               puts ("#### Starting sequence search ####");
-              if (global.iterations > 0)
-                printf ("  Stop after: \t%ld iterations\n", global.iterations);
-              printf ("  Minimum gap:\t%d\n", global.min_gap);
-              printf ("  Maximum gap:\t%d\n", global.max_gap);
-              printf ("  AP length:\t%d\n", global.ap_length);
+              if (state->iterations > 0)
+                printf ("  Stop after: \t%ld iterations\n", state->iterations);
+              printf ("  Minimum gap:\t%d\n", state->min_gap);
+              printf ("  Maximum gap:\t%d\n", state->max_gap);
+              printf ("  AP length:\t%d\n", state->ap_length);
               printf ("  Seed Seq.:\t"); sequence_print (seek);
               puts("\n");
 
@@ -164,13 +169,13 @@ void process (Stream *stm)
                   exit (EXIT_FAILURE);
                 }
 
-              if (global.gap_set == NULL)
+              if (state->gap_set == NULL)
                 {
-                  global.gap_set = sequence_new ();
-                  for (i = global.min_gap; i <= global.max_gap; ++i)
-                    sequence_append (global.gap_set, i);
+                  state->gap_set = sequence_new ();
+                  for (i = state->min_gap; i <= state->max_gap; ++i)
+                    sequence_append (state->gap_set, i);
                 }
-              recurse_sequence (seek);
+              recurse_sequence (seek, state);
               sequence_delete (seek);
             }
           else if (strmatch (tok, "colorings") ||
@@ -185,20 +190,20 @@ void process (Stream *stm)
               else
 */
                 {
-                  seek = coloring_new (global.n_colors);
+                  seek = coloring_new (state->n_colors);
                   coloring_append (seek, 1, 0);
                 }
 
               puts ("#### Starting coloring search ####");
-              if (global.iterations > 0)
-                printf ("  Stop after: \t%ld iterations\n", global.iterations);
-              printf ("  Minimum gap:\t%d\n", global.min_gap);
-              printf ("  Maximum gap:\t%d\n", global.max_gap);
-              printf ("  AP length:\t%d\n", global.ap_length);
+              if (state->iterations > 0)
+                printf ("  Stop after: \t%ld iterations\n", state->iterations);
+              printf ("  Minimum gap:\t%d\n", state->min_gap);
+              printf ("  Maximum gap:\t%d\n", state->max_gap);
+              printf ("  AP length:\t%d\n", state->ap_length);
               printf ("  Seed Col.:\t"); coloring_print (seek);
               puts("");
 
-              recurse_colorings (seek, 1);
+              recurse_colorings (seek, 1, state);
 
               coloring_delete (seek);
             }
@@ -207,24 +212,24 @@ void process (Stream *stm)
               Sequence *seek = sequence_new ();
 
               puts ("#### Starting word search ####");
-              if (global.iterations > 0)
-                printf ("  Stop after: \t%ld iterations\n", global.iterations);
-              printf ("  Alphabet:\t"); sequence_print (global.alphabet);
+              if (state->iterations > 0)
+                printf ("  Stop after: \t%ld iterations\n", state->iterations);
+              printf ("  Alphabet:\t"); sequence_print (state->alphabet);
               printf ("\n  Seed Seq.:\t"); sequence_print (seek);
               puts("\n");
 
-              recurse_words (seek);
+              recurse_words (seek, state);
 
-              sequence_delete (global.alphabet);
+              sequence_delete (state->alphabet);
               sequence_delete (seek);
             }
           else
             fprintf (stderr, "Unrecognized search space ``%s''\n", tok);
           printf ("Done. Time taken: %ds. Iterations: %ld\n", (int) (time (NULL) - start), get_iterations());
-          if (global.dump_iters)
+          if (state->dump_iters)
             {
-              sequence_print_real (global.iters_data, 1, global.dump_fh);
-              fputs ("\n", global.dump_fh);
+              sequence_print_real (state->iters_data, 1, state->dump_fh);
+              fputs ("\n", state->dump_fh);
             }
           puts("\n");
         }
@@ -232,7 +237,7 @@ void process (Stream *stm)
     }
 
   /* Cleanup */
-  if (global.dump_fh && global.dump_fh != stdout)
-    fclose (global.dump_fh);
+  if (state->dump_fh && state->dump_fh != stdout)
+    fclose (state->dump_fh);
 }
 

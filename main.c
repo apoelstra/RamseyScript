@@ -15,6 +15,7 @@ int main (int argc, char *argv[])
 {
 
 #if 0
+  struct _global_state *defs = set_defaults ();
   Stream *stm = file_stream_new ("r");
 
   if (argc > 1)
@@ -27,9 +28,7 @@ int main (int argc, char *argv[])
     }
   else stm->_data = stdin;
 
-  set_defaults ();
-
-  process (stm);
+  process (stm, defs);
 
   stm->close (stm);
   file_stream_delete (stm);

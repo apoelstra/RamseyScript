@@ -1,9 +1,10 @@
 #ifndef RAMSEY_H
 #define RAMSEY_H
 
+#include "global.h"
 #include "stream.h"
 
-void set_defaults ();
-void process (Stream *stm);
+struct _global_data *set_defaults ();
+void process (Stream *stm, struct _global_data *state);
 
 #endif

@@ -41,13 +41,13 @@ static char *_text_buffer_read_line (Stream *obj)
 {
   struct priv_data *pd = obj->_data;
   char *rv = NULL;
-  if (pd->alive && gtk_text_iter_forward_line (&pd->startln))
+  if (pd->alive)
     {
+      gtk_text_iter_forward_line (&pd->startln);
       rv = gtk_text_iter_get_text (&pd->startln, &pd->endln);
-      gtk_text_iter_forward_line (&pd->endln);
+      if (!gtk_text_iter_forward_line (&pd->endln))
+        pd->alive = FALSE;
     }
-  else
-    pd->alive = FALSE;
 
   return rv;
 }

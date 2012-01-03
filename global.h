@@ -22,6 +22,4 @@ struct _global_data {
   Sequence *iters_data;
 };
 
-extern struct _global_data global;
-
 #endif

@@ -21,16 +21,16 @@ long int get_iterations ()
   return iterations;
 }
 
-void recurse_sequence (Sequence *seed)
+void recurse_sequence (Sequence *seed, const struct _global_data *state)
 {
   int i;
 
-  if (!global.filter (seed))
+  if (!state->filter (seed))
     return;
-  if (global.iterations && iterations >= global.iterations)
+  if (state->iterations && iterations >= state->iterations)
     return;
-  if (global.dump_iters && seed->length < global.dump_depth)
-    ++global.iters_data->values[seed->length];
+  if (state->dump_iters && seed->length < state->dump_depth)
+    ++state->iters_data->values[seed->length];
   ++iterations;
 
   if (seed->length > max_length)
@@ -42,24 +42,24 @@ void recurse_sequence (Sequence *seed)
       max_length = seed->length;
     }
 
-  for (i = 0; i < global.gap_set->length; ++i)
+  for (i = 0; i < state->gap_set->length; ++i)
     {
-      sequence_append (seed, sequence_max (seed) + global.gap_set->values[i]);
-      recurse_sequence (seed);
+      sequence_append (seed, sequence_max (seed) + state->gap_set->values[i]);
+      recurse_sequence (seed, state);
       sequence_deappend (seed);
     }
 }
 
-void recurse_words (Sequence *seed)
+void recurse_words (Sequence *seed, const struct _global_data *state)
 {
   int i;
 
-  if (!global.filter (seed))
+  if (!state->filter (seed))
     return;
-  if (global.iterations && iterations >= global.iterations)
+  if (state->iterations && iterations >= state->iterations)
     return;
-  if (global.dump_iters && seed->length < global.dump_depth)
-    ++global.iters_data->values[seed->length];
+  if (state->dump_iters && seed->length < state->dump_depth)
+    ++state->iters_data->values[seed->length];
   ++iterations;
 
   if (seed->length > max_length)
@@ -71,29 +71,29 @@ void recurse_words (Sequence *seed)
       max_length = seed->length;
     }
 
-  for (i = 0; i < global.alphabet->length; ++i)
+  for (i = 0; i < state->alphabet->length; ++i)
     {
-      sequence_append (seed, global.alphabet->values[i]);
-      recurse_words (seed);
+      sequence_append (seed, state->alphabet->values[i]);
+      recurse_words (seed, state);
       sequence_deappend (seed);
     }
 }
 
-void recurse_colorings (Coloring *seed, int max_value)
+void recurse_colorings (Coloring *seed, int max_value, const struct _global_data *state)
 {
   int length = 0;
   int i, j;
 
   for (i = 0; i < seed->n_colors; ++i)
     {
-      if (!global.filter (seed->sequences[i]))
+      if (!state->filter (seed->sequences[i]))
         return;
       length += seed->sequences[i]->length;
     }
-  if (global.iterations && iterations >= global.iterations)
+  if (state->iterations && iterations >= state->iterations)
     return;
-  if (global.dump_iters && length < global.dump_depth)
-    ++global.iters_data->values[length];
+  if (state->dump_iters && length < state->dump_depth)
+    ++state->iters_data->values[length];
   ++iterations;
 
   if (length > max_length)
@@ -108,12 +108,12 @@ void recurse_colorings (Coloring *seed, int max_value)
   for (j = 0; j < seed->n_colors; ++j)
     {
       if (seed->sequences[j]->length > 0)
-        if ((global.max_gap && max_value + 1 - sequence_max (seed->sequences[j]) > global.max_gap) ||
-            max_value + 1 - sequence_max (seed->sequences[j]) < global.min_gap)
+        if ((state->max_gap && max_value + 1 - sequence_max (seed->sequences[j]) > state->max_gap) ||
+            max_value + 1 - sequence_max (seed->sequences[j]) < state->min_gap)
           continue;
 
       coloring_append (seed, max_value + 1, j);
-      recurse_colorings (seed, max_value + 1);
+      recurse_colorings (seed, max_value + 1, state);
       coloring_deappend (seed, j);
 
       /* Only bother with one empty cell, since by symmetry they'll
