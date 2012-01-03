@@ -46,7 +46,7 @@ static char *_file_stream_read_line (Stream *obj)
   return NULL;
 }
 
-static int _file_stream_write_line (Stream *obj, char *line)
+static int _file_stream_write_line (Stream *obj, const char *line)
 {
   if (obj->type == STREAM_WRITE)
     return fputs (line, obj->_data);

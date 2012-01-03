@@ -15,7 +15,7 @@ typedef struct _stream {
   void *(*open)       (struct _stream *, void *);
   void  (*close)      (struct _stream *);
   char *(*read_line)  (struct _stream *);
-  int   (*write_line) (struct _stream *, char *);
+  int   (*write_line) (struct _stream *, const char *);
   int   (*eof)        (struct _stream *);
 } Stream;
 

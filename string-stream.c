@@ -4,6 +4,8 @@
 #include <stdio.h>
 #include <stdarg.h>
 
+#include <gtk/gtk.h>
+
 #include "stream.h"
 #include "string-stream.h"
 
@@ -12,8 +14,10 @@
 struct _string_priv_data
 {
   char *data;
-  char *rw_idx;
+  char *read_idx;
+  char *write_idx;
   int max_len;
+  GMutex *mutex;
 };
 
 static void *_string_stream_open (Stream *obj, void *data)
@@ -21,20 +25,22 @@ static void *_string_stream_open (Stream *obj, void *data)
   struct _string_priv_data *pd = obj->_data;
   char mode = ((char *) data)[0];
 
+  g_mutex_lock (pd->mutex);
   switch (mode)
     {
     case 'r':
       obj->type = STREAM_READ;
-      pd->rw_idx = pd->data;
+      pd->read_idx = pd->data;
       break;
     case 'w':
       obj->type = STREAM_WRITE;
       free (pd->data);
       pd->max_len = STRING_DEFAULT_LEN;
       pd->data = malloc (pd->max_len);
-      pd->rw_idx = pd->data;
+      pd->write_idx = pd->data;
       break;
     }
+  g_mutex_unlock (pd->mutex);
 
   return pd->data;
 }
@@ -42,8 +48,10 @@ static void *_string_stream_open (Stream *obj, void *data)
 static void _string_stream_close (Stream *obj)
 {
   struct _string_priv_data *pd = obj->_data;
+  g_mutex_lock (pd->mutex);
   free (pd->data);
-  pd->data = NULL;
+  pd->read_idx = pd->write_idx = pd->data = NULL;
+  g_mutex_unlock (pd->mutex);
 }
 
 static char *_string_stream_read_line (Stream *obj)
@@ -54,44 +62,55 @@ static char *_string_stream_read_line (Stream *obj)
       struct _string_priv_data *pd = obj->_data;
       char *rv;
 
-      if (*pd->rw_idx == '\0')
-        return NULL;
+      g_mutex_lock (pd->mutex);
+      if (*pd->read_idx == '\0')
+        {
+          g_mutex_unlock (pd->mutex);
+          return NULL;
+        }
 
       copy_len = 1;
-      while (pd->rw_idx[copy_len - 1] && pd->rw_idx[copy_len - 1] != '\n')
+      while (pd->read_idx[copy_len - 1] &&
+             pd->read_idx[copy_len - 1] != '\n')
         ++copy_len;
 
       rv = malloc (copy_len + 1);
-      strncpy (rv, pd->rw_idx, copy_len);
+      strncpy (rv, pd->read_idx, copy_len);
       rv[copy_len] = '\0';
-      pd->rw_idx += copy_len;
+      pd->read_idx += copy_len;
 
       /* Skip over \n, but not the terminator */
-      if (pd->rw_idx[-1] == '\0')
-        --pd->rw_idx;
+      if (pd->read_idx[-1] == '\0')
+        --pd->read_idx;
+      g_mutex_unlock (pd->mutex);
       return rv;
     }
   return NULL;
 }
  
-static int _string_stream_write_line (Stream *obj, char *line)
+static int _string_stream_write_line (Stream *obj, const char *line)
 {
   if (obj->type == STREAM_WRITE)
     {
       struct _string_priv_data *pd = obj->_data;
       int add_len = strlen (line);
 
-      while (pd->max_len < pd->rw_idx - pd->data + add_len)
+      g_mutex_lock (pd->mutex);
+      while (pd->max_len < pd->write_idx - pd->data + add_len)
         {
           void *new_mem = realloc (pd->data, pd->max_len * 2);
           if (new_mem == NULL)
-            return 0;
+            {
+              g_mutex_unlock (pd->mutex);
+              return 0;
+            }
           pd->data = new_mem;
           pd->max_len *= 2;
         }
 
-      strcpy (pd->rw_idx, line);
-      pd->rw_idx += add_len;
+      strcpy (pd->write_idx, line);
+      pd->write_idx += add_len;
+      g_mutex_unlock (pd->mutex);
       return add_len;
     }
   return 0;
@@ -113,7 +132,8 @@ Stream *string_stream_new ()
     return NULL;
 
   rv->_data = pd;
-  pd->rw_idx = pd->data = NULL;
+  pd->read_idx = pd->write_idx = pd->data = NULL;
+  pd->mutex = g_mutex_new ();
 
   rv->open = _string_stream_open;
   rv->close = _string_stream_close;
@@ -127,6 +147,7 @@ Stream *string_stream_new ()
 void string_stream_delete (Stream *stream)
 {
   struct _string_priv_data *pd = stream->_data;
+  g_mutex_free (pd->mutex);
   free (pd->data);
   free (pd);
   free (stream);
