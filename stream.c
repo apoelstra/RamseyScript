@@ -4,8 +4,6 @@
 #include <stdio.h>
 #include <stdarg.h>
 
-#include <gtk/gtk.h>
-
 #include "stream.h"
 
 #define STRING_DEFAULT_LEN 1000
