@@ -104,7 +104,7 @@ static const char *_find_last_slash (const char *inp)
 static void open_callback ()
 {
   GtkWidget *dialog;
-  GtkFileFilter *scripts_only;
+  GtkFileFilter *scripts_only, *all_files;
 
   dialog = gtk_file_chooser_dialog_new ("Open Ramsey Script",
                                         GTK_WINDOW (gui_data.window),
@@ -114,10 +114,14 @@ static void open_callback ()
                                         NULL);
   gtk_dialog_set_default_response (GTK_DIALOG (dialog), GTK_RESPONSE_OK);
 
+  all_files = gtk_file_filter_new ();
   scripts_only = gtk_file_filter_new ();
   gtk_file_filter_set_name (scripts_only, "Ramsey Scripts");
   gtk_file_filter_add_pattern (scripts_only, "*.ramsey");
   gtk_file_chooser_add_filter (GTK_FILE_CHOOSER (dialog), scripts_only);
+  gtk_file_filter_set_name (all_files, "All Files");
+  gtk_file_filter_add_pattern (all_files, "*.*");
+  gtk_file_chooser_add_filter (GTK_FILE_CHOOSER (dialog), all_files);
 
   if (check_save() && gtk_dialog_run (GTK_DIALOG (dialog)) == GTK_RESPONSE_OK)
     {
