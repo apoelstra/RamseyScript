@@ -17,10 +17,10 @@ typedef struct _stream {
   char *(*read_line)  (struct _stream *);
   int   (*write_line) (struct _stream *, const char *);
   int   (*eof)        (struct _stream *);
+  void  (*destroy)    (struct _stream *);
 } Stream;
 
 Stream *file_stream_new (const char *mode);
-void file_stream_delete (Stream *stream);
 void stream_line_copy (Stream *output, Stream *input);
 void stream_printf (Stream *output, const char *fmt, ...);
 

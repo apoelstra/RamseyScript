@@ -57,6 +57,12 @@ static int _file_stream_eof (Stream *obj)
 {
   return feof (obj->_data);
 }
+
+void _file_stream_destroy (Stream *stream)
+{
+  stream->close (stream);
+  free (stream);
+}
 /* END file stream functions */
 
 /* START file stream con/destructors */
@@ -89,15 +95,10 @@ Stream *file_stream_new (const char *mode)
   rv->read_line = _file_stream_read_line;
   rv->write_line = _file_stream_write_line;
   rv->eof = _file_stream_eof;
+  rv->destroy = _file_stream_destroy;
   rv->_data = NULL;
 
   return rv;
-}
-
-void file_stream_delete (Stream *stream)
-{
-  stream->close (stream);
-  free (stream);
 }
 /* END file stream con/destructors */
 

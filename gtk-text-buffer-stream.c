@@ -66,7 +66,17 @@ static int _text_buffer_eof (Stream *obj)
   struct priv_data *pd = obj->_data;
   return pd->alive;
 }
-/* END file stream functions */
+
+void _text_buffer_destroy (Stream *stream)
+{
+  struct priv_data *pd = stream->_data;
+  if (pd)
+    g_object_unref (G_OBJECT (pd->tb));
+  free (stream->_data);
+  free (stream);
+}
+
+/* END text stream functions */
 
 
 Stream *text_buffer_stream_new (GtkTextBuffer *buff)
@@ -91,6 +101,7 @@ Stream *text_buffer_stream_new (GtkTextBuffer *buff)
   rv->read_line = _text_buffer_read_line;
   rv->write_line = _text_buffer_write_line;
   rv->eof = _text_buffer_eof;
+  rv->destroy = _text_buffer_destroy;
   rv->_data = pd;
 
   pd->tb = buff;
@@ -100,13 +111,3 @@ Stream *text_buffer_stream_new (GtkTextBuffer *buff)
 
   return rv;
 }
-
-void text_buffer_stream_delete (Stream *stream)
-{
-  struct priv_data *pd = stream->_data;
-  if (pd)
-    g_object_unref (G_OBJECT (pd->tb));
-  free (stream->_data);
-  free (stream);
-}
-

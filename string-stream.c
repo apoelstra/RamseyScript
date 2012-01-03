@@ -122,6 +122,15 @@ static int _string_stream_eof (Stream *obj)
   return (pd->data == '\0');
 }
 
+void _string_stream_destroy (Stream *stream)
+{
+  struct _string_priv_data *pd = stream->_data;
+  g_mutex_free (pd->mutex);
+  free (pd->data);
+  free (pd);
+  free (stream);
+}
+
 /* START string stream con/destructors */
 Stream *string_stream_new ()
 {
@@ -140,17 +149,9 @@ Stream *string_stream_new ()
   rv->read_line = _string_stream_read_line;
   rv->write_line = _string_stream_write_line;
   rv->eof = _string_stream_eof;
+  rv->destroy = _string_stream_destroy;
 
   return rv;
-}
-
-void string_stream_delete (Stream *stream)
-{
-  struct _string_priv_data *pd = stream->_data;
-  g_mutex_free (pd->mutex);
-  free (pd->data);
-  free (pd);
-  free (stream);
 }
 /* END string stream con/destructors */
 

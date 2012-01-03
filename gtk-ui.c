@@ -11,6 +11,7 @@
 #include "gtk-text-buffer-stream.h"
 
 static void new_callback ();
+static void save_as_callback ();
 
 struct _script
 {
@@ -28,6 +29,14 @@ struct {
   struct _script *active_script;
 } gui_data;
 
+static void destroy_page (struct _script *data)
+{
+  gui_data.script_list = g_list_remove (gui_data.script_list, data);
+  free (data->filename);
+  data->stream->destroy (data->stream);
+  free (data);
+}
+
 static void *process_thread (void *is)
 {
   Stream *input_stream = is;
@@ -39,8 +48,8 @@ static void *process_thread (void *is)
   defs->out_stream = output_stream;
   defs->in_stream = input_stream;
   process (defs);
-  string_stream_delete (input_stream);
-  file_stream_delete (output_stream);
+  input_stream->destroy (input_stream);
+  output_stream->destroy (output_stream);
   free (defs);
   return NULL;
 }
@@ -73,24 +82,19 @@ static gboolean switch_page_callback (GtkNotebook *notebook, gpointer page,
 {
   GList *scan;
   (void) notebook;
-  (void) page;
+  (void) page_index;
   (void) data;
 
   gui_data.active_script = NULL;
   for (scan = gui_data.script_list; scan; scan = scan->next)
     {
       struct _script *data = scan->data;
-      if (data->page_index == page_index)
+      if (data->page == page)
         gui_data.active_script = data;
     }
   return TRUE;
 }
 /* end SIGNAL CALLBACKS */
-
-static int check_save ()
-{
-  return 1;
-}
 
 static const char *_find_last_slash (const char *inp)
 {
@@ -125,7 +129,7 @@ static void open_callback ()
   gtk_file_filter_add_pattern (all_files, "*.*");
   gtk_file_chooser_add_filter (GTK_FILE_CHOOSER (dialog), all_files);
 
-  if (check_save() && gtk_dialog_run (GTK_DIALOG (dialog)) == GTK_RESPONSE_OK)
+  if (gtk_dialog_run (GTK_DIALOG (dialog)) == GTK_RESPONSE_OK)
     {
       Stream *file_reader = file_stream_new ("r");
       gchar *result = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (dialog));
@@ -142,13 +146,14 @@ static void open_callback ()
         }
       else
         fprintf (stderr, "Failed to open file ``%s''\n", result);
-      file_stream_delete (file_reader);
+      file_reader->destroy (file_reader);
     }
   gtk_widget_destroy (dialog);
 }
 
 static void new_callback ()
 {
+  gint page_index;
   struct _script *new_script = malloc (sizeof *new_script);
 
   new_script->modified = FALSE;
@@ -162,7 +167,7 @@ static void new_callback ()
                                        (GTK_TEXT_VIEW (new_script->text_view)));
   gtk_container_add (GTK_CONTAINER (new_script->page),
                      new_script->text_view);
-  new_script->page_index =
+  page_index =
       gtk_notebook_insert_page (GTK_NOTEBOOK (gui_data.notebook),
                                 new_script->page,
                                 gtk_label_new ("New script"),
@@ -174,7 +179,7 @@ static void new_callback ()
   gui_data.script_list = g_list_append (gui_data.script_list, new_script);
   gui_data.active_script = new_script;
   gtk_notebook_set_current_page (GTK_NOTEBOOK (gui_data.notebook),
-                                 new_script->page_index);
+                                 page_index);
 }
 
 static void save_callback ()
@@ -191,7 +196,8 @@ static void save_callback ()
             {
               gui_data.active_script->stream->open (gui_data.active_script->stream, "r");
               stream_line_copy (file_writer, gui_data.active_script->stream);
-              file_stream_delete (file_writer);
+              file_writer->destroy (file_writer);
+              gui_data.active_script->modified = FALSE;
             }
           else
             fprintf (stderr, "Failed to save file ``%s''\n", gui_data.active_script->filename);
@@ -201,10 +207,13 @@ static void save_callback ()
 
 static void save_as_callback ()
 {
-  GtkWidget *dialog;
   if (gui_data.active_script)
     {
-      dialog = gtk_file_chooser_dialog_new ("Save script",
+      GtkWidget *dialog;
+      gchar *title = g_strdup_printf ("Save %s as...",
+          gtk_notebook_get_tab_label_text (GTK_NOTEBOOK (gui_data.notebook),
+                                           gui_data.active_script->page));
+      dialog = gtk_file_chooser_dialog_new (title,
                                             GTK_WINDOW (gui_data.window),
                                             GTK_FILE_CHOOSER_ACTION_SAVE,
                                             GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
@@ -223,14 +232,93 @@ static void save_as_callback ()
               gui_data.active_script->filename = result;
               gui_data.active_script->stream->open (gui_data.active_script->stream, "r");
               stream_line_copy (file_writer, gui_data.active_script->stream);
+              gui_data.active_script->modified = FALSE;
             }
           else
             fprintf (stderr, "Failed to save file ``%s''\n", result);
-          file_stream_delete (file_writer);
+          file_writer->destroy (file_writer);
         }
 
       gtk_widget_destroy (dialog);
+      g_free (title);
     }
+}
+
+static void close_callback ()
+{
+  if (gui_data.active_script != NULL)
+    {
+      struct _script *tmp;
+      if (gui_data.active_script->modified)
+        {
+          GtkWidget *dialog;
+          dialog = gtk_message_dialog_new (GTK_WINDOW (gui_data.window),
+                                           GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT,
+                                           GTK_MESSAGE_WARNING,
+                                           GTK_BUTTONS_NONE, NULL);
+          gtk_message_dialog_set_markup (GTK_MESSAGE_DIALOG (dialog),
+            "There are unsaved changes. Are you sure you want to quit?");
+          gtk_dialog_add_buttons (GTK_DIALOG (dialog),
+                                  "Close _without saving", GTK_RESPONSE_NO,
+                                  GTK_STOCK_CANCEL,        GTK_RESPONSE_CANCEL,
+                                  GTK_STOCK_SAVE,          GTK_RESPONSE_YES,
+                                  NULL);
+
+          gtk_widget_destroy (dialog);
+        }
+      tmp = gui_data.active_script;
+      gtk_container_remove (GTK_CONTAINER (gui_data.notebook),
+                            tmp->page);
+      destroy_page (tmp);
+      gui_data.active_script = NULL;
+    }
+}
+
+static void quit_callback ()
+{
+  gboolean need_confirm = FALSE;
+  GList *scan;
+
+  for (scan = gui_data.script_list; scan; scan = scan->next)
+    {
+      struct _script *data = scan->data;
+      if (data->modified)
+        need_confirm = TRUE;
+    }
+
+  if (need_confirm)
+    {
+      GtkWidget *dialog;
+      dialog = gtk_message_dialog_new (GTK_WINDOW (gui_data.window),
+                                       GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT,
+                                       GTK_MESSAGE_WARNING,
+                                       GTK_BUTTONS_NONE, NULL);
+      gtk_message_dialog_set_markup (GTK_MESSAGE_DIALOG (dialog),
+        "There are unsaved changes. Are you sure you want to quit?");
+      gtk_dialog_add_buttons (GTK_DIALOG (dialog),
+                              "Close _without saving", GTK_RESPONSE_NO,
+                              GTK_STOCK_CANCEL,        GTK_RESPONSE_CANCEL,
+                              GTK_STOCK_SAVE,          GTK_RESPONSE_YES,
+                              NULL);
+      switch (gtk_dialog_run (GTK_DIALOG (dialog)))
+        {
+        case GTK_RESPONSE_YES:
+          for (scan = gui_data.script_list; scan; scan = scan->next)
+            {
+              gui_data.active_script = scan->data;
+              save_callback ();
+            }
+          break;
+        case GTK_RESPONSE_NO:
+          break;
+        case GTK_RESPONSE_CANCEL:
+          gtk_widget_destroy (dialog);
+          return;
+        }
+      gtk_widget_destroy (dialog);
+    }
+
+  gtk_main_quit ();
 }
 /* end MENU CALLBACKS */
 
@@ -244,10 +332,11 @@ static GtkActionEntry entries[] =
   { "save-action", GTK_STOCK_SAVE, "_Save", "<control>S",
      "Save the script", G_CALLBACK (save_callback) },
   { "save-as-action", NULL, "Save _As...", "<control><shift>S",
-     "Save the scrit...", G_CALLBACK (save_as_callback) },
-  { "close-action", GTK_STOCK_CLOSE, "_Close", NULL, NULL, NULL },
+     "Save the script...", G_CALLBACK (save_as_callback) },
+  { "close-action", GTK_STOCK_CLOSE, "_Close", "<control>W",
+    "Close the active script", G_CALLBACK (close_callback) },
   { "quit-action", GTK_STOCK_QUIT, "_Quit", "<control>Q",    
-    "Quit", G_CALLBACK (gtk_main_quit) },
+    "Quit", G_CALLBACK (quit_callback) },
 
   { "run-menu-action", NULL, "_Run", NULL, NULL, NULL },
   { "start-action", NULL, "_Start script", NULL, NULL, NULL },
