@@ -93,10 +93,12 @@ static int _string_stream_write_line (Stream *obj, const char *line)
   if (obj->type == STREAM_WRITE)
     {
       struct _string_priv_data *pd = obj->_data;
-      int add_len = strlen (line);
+      int add_len, index;
 
       g_mutex_lock (pd->mutex);
-      while (pd->max_len < pd->write_idx - pd->data + add_len)
+      add_len = strlen (line);
+      index = pd->write_idx - pd->data;
+      while (pd->max_len < index + add_len)
         {
           void *new_mem = realloc (pd->data, pd->max_len * 2);
           if (new_mem == NULL)
@@ -105,6 +107,7 @@ static int _string_stream_write_line (Stream *obj, const char *line)
               return 0;
             }
           pd->data = new_mem;
+          pd->write_idx = pd->data + index;
           pd->max_len *= 2;
         }
 
