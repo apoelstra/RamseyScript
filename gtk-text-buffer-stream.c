@@ -54,8 +54,11 @@ static char *_text_buffer_read_line (Stream *obj)
 
 static int _text_buffer_write_line (Stream *obj, const char *line)
 {
+  GtkTextIter end;
   struct priv_data *pd = obj->_data;
-  gtk_text_buffer_insert_at_cursor (pd->tb, line, -1);
+
+  gtk_text_buffer_get_end_iter (pd->tb, &end);
+  gtk_text_buffer_insert (pd->tb, &end, line, -1);
   return 0;
 }
 
