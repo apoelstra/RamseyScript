@@ -29,15 +29,15 @@ static void *_string_stream_open (Stream *obj, void *data)
   switch (mode)
     {
     case 'r':
-      obj->type = STREAM_READ;
+      obj->type |= STREAM_READ;
       pd->read_idx = pd->data;
       break;
     case 'w':
-      obj->type = STREAM_WRITE;
+      obj->type |= STREAM_WRITE | STREAM_READ;
       free (pd->data);
       pd->max_len = STRING_DEFAULT_LEN;
       pd->data = malloc (pd->max_len);
-      pd->write_idx = pd->data;
+      pd->read_idx = pd->write_idx = pd->data;
       break;
     }
   g_mutex_unlock (pd->mutex);
@@ -56,7 +56,7 @@ static void _string_stream_close (Stream *obj)
 
 static char *_string_stream_read_line (Stream *obj)
 {
-  if (obj->type == STREAM_READ)
+  if (obj->type & STREAM_READ)
     {
       int copy_len;
       struct _string_priv_data *pd = obj->_data;
@@ -90,15 +90,16 @@ static char *_string_stream_read_line (Stream *obj)
  
 static int _string_stream_write_line (Stream *obj, const char *line)
 {
-  if (obj->type == STREAM_WRITE)
+  if (obj->type & STREAM_WRITE)
     {
       struct _string_priv_data *pd = obj->_data;
-      int add_len, index;
+      int windex = pd->write_idx - pd->data;
+      int rindex = pd->read_idx - pd->data;
+      int add_len;
 
       g_mutex_lock (pd->mutex);
       add_len = strlen (line);
-      index = pd->write_idx - pd->data;
-      while (pd->max_len < index + add_len)
+      while (pd->max_len < windex + add_len + 1)
         {
           void *new_mem = realloc (pd->data, pd->max_len * 2);
           if (new_mem == NULL)
@@ -107,7 +108,8 @@ static int _string_stream_write_line (Stream *obj, const char *line)
               return 0;
             }
           pd->data = new_mem;
-          pd->write_idx = pd->data + index;
+          pd->write_idx = pd->data + windex;
+          pd->read_idx  = pd->data + rindex;
           pd->max_len *= 2;
         }
 
@@ -143,6 +145,7 @@ Stream *string_stream_new ()
   if (rv == NULL || pd == NULL)
     return NULL;
 
+  rv->type = 0;
   rv->_data = pd;
   pd->read_idx = pd->write_idx = pd->data = NULL;
   pd->mutex = g_mutex_new ();

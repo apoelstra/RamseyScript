@@ -55,8 +55,7 @@ static char *_text_buffer_read_line (Stream *obj)
 static int _text_buffer_write_line (Stream *obj, const char *line)
 {
   struct priv_data *pd = obj->_data;
-  if (obj->type == STREAM_WRITE)
-    gtk_text_buffer_insert_at_cursor (pd->tb, line, -1);
+  gtk_text_buffer_insert_at_cursor (pd->tb, line, -1);
   return 0;
 }
 

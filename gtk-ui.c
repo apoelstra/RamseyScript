@@ -84,12 +84,28 @@ static void *process_thread (void *r)
   run->output_stream->open (run->output_stream, "w");
   /* Go! */
   process (defs);
-  /* Close streams */
-  run->input_stream->destroy (run->input_stream);
-  run->output_stream->destroy (run->output_stream);
+  run->running = FALSE;   /* no more output */
   /* Cleanup */
   free (defs);
   return NULL;
+}
+
+static gboolean run_update_timer (gpointer data)
+{
+  struct _run *run = data;
+  Stream *s = file_stream_new ("w");
+  s->_data = stdout;
+
+  stream_line_copy (run->text_view_stream, run->output_stream);
+  if (!run->running)
+    {
+      /* thread has stopped, we can kill the streams */
+      run->input_stream->destroy (run->input_stream);
+      run->output_stream->destroy (run->output_stream);
+      return FALSE;
+    }
+
+  return TRUE;
 }
 
 /* SIGNAL CALLBACKS */
@@ -116,8 +132,6 @@ static void start_callback ()
                                       GTK_POLICY_AUTOMATIC,
                                       GTK_POLICY_AUTOMATIC);
       new_run->text_view = gtk_text_view_new ();
-      tb = gtk_text_view_get_buffer (GTK_TEXT_VIEW (new_run->text_view));
-      new_run->text_view_stream = text_buffer_stream_new (tb);
       gtk_container_add (GTK_CONTAINER (new_run->page),
                          new_run->text_view);
       page_index =
@@ -128,6 +142,10 @@ static void start_callback ()
 
       gtk_text_view_set_editable (GTK_TEXT_VIEW (new_run->text_view), FALSE);
       gtk_widget_show_all (new_run->page);
+
+      tb = gtk_text_view_get_buffer (GTK_TEXT_VIEW (new_run->text_view));
+      new_run->text_view_stream = text_buffer_stream_new (tb);
+      new_run->text_view_stream->open (new_run->text_view_stream, "w");
 
       /* Install run */
       gui_data.run_list = g_list_append (gui_data.run_list, new_run);
@@ -141,7 +159,9 @@ static void start_callback ()
       stream_line_copy (input_stream, script->stream);
 
       /* Run */
+      new_run->running = TRUE;
       g_thread_create (process_thread, new_run, FALSE, NULL);
+      g_timeout_add (250, run_update_timer, new_run);
     }
 }
 

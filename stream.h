@@ -4,9 +4,9 @@
 #include <stddef.h>
 
 enum e_stream_type {
-  STREAM_READ,
-  STREAM_WRITE,
-  STREAM_APPEND
+  STREAM_READ = 1,
+  STREAM_WRITE = 2,
+  STREAM_APPEND = 4
 };
 
 typedef struct _stream {
