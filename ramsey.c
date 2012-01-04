@@ -197,7 +197,7 @@ void process (struct _global_data *state)
                   coloring_append (seek, 1, 0);
                 }
 
-              puts ("#### Starting coloring search ####");
+              stream_printf (state->out_stream, "#### Starting coloring search ####\n");
               if (state->iterations > 0)
                 stream_printf (state->out_stream, "  Stop after: \t%ld iterations\n", state->iterations);
               stream_printf (state->out_stream,
@@ -216,12 +216,12 @@ void process (struct _global_data *state)
             {
               Sequence *seek = sequence_new ();
 
-              puts ("#### Starting word search ####");
+              stream_printf (state->out_stream, "#### Starting word search ####\n");
               if (state->iterations > 0)
                 stream_printf (state->out_stream, "  Stop after: \t%ld iterations\n", state->iterations);
               stream_printf (state->out_stream, "  Alphabet:\t"); sequence_print (state->alphabet, state->out_stream);
               stream_printf (state->out_stream, "\n  Seed Seq.:\t"); sequence_print (seek, state->out_stream);
-              puts("\n");
+              stream_printf (state->out_stream, "\n");
 
               recurse_words (seek, state);
 
