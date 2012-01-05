@@ -26,18 +26,19 @@ struct _script
 
 struct _run
 {
-  const char *tab_title;
+  char *tab_title;
   char *filename;
   GtkWidget *page, *text_view;
   Stream *text_view_stream;
   Stream *input_stream;
   Stream *output_stream;
+  GThread *thread;
   gboolean modified;
   gboolean running;
 };
 
 struct {
-  GtkWidget *window, *notebook;
+  GtkWidget *window, *notebook, *start_btn;
   GList *script_list;
   GList *run_list;
   struct _script *active_script;
@@ -72,6 +73,18 @@ static void destroy_page (struct _script *data)
   free (data);
 }
 
+static void destroy_run (struct _run *data)
+{
+  /* TODO: KILL THE THREAD KILL THE THREAD KILL THE THREAD */
+  gui_data.run_list = g_list_remove (gui_data.run_list, data);
+  data->text_view_stream->destroy (data->text_view_stream);
+  data->input_stream->destroy (data->input_stream);
+  data->output_stream->destroy (data->output_stream);
+  g_free (data->tab_title);
+  g_free (data->filename);
+  free (data);
+}
+
 static void *process_thread (void *r)
 {
   struct _run *run = r;
@@ -93,19 +106,10 @@ static void *process_thread (void *r)
 static gboolean run_update_timer (gpointer data)
 {
   struct _run *run = data;
-  Stream *s = file_stream_new ("w");
-  s->_data = stdout;
 
   stream_line_copy (run->text_view_stream, run->output_stream);
-  if (!run->running)
-    {
-      /* thread has stopped, we can kill the streams */
-      run->input_stream->destroy (run->input_stream);
-      run->output_stream->destroy (run->output_stream);
-      return FALSE;
-    }
 
-  return TRUE;
+  return run->running;
 }
 
 /* SIGNAL CALLBACKS */
@@ -122,7 +126,8 @@ static void start_callback ()
 
       /* Create run */
       new_run->modified = FALSE;
-      new_run->filename = script->filename;
+      new_run->filename = g_strdup (script->filename);
+      new_run->tab_title = g_strdup_printf ("Run: %s", script->tab_title);
       new_run->input_stream = input_stream;
       new_run->output_stream = output_stream;
 
@@ -137,7 +142,7 @@ static void start_callback ()
       page_index =
           gtk_notebook_insert_page (GTK_NOTEBOOK (gui_data.notebook),
                                     new_run->page,
-                                    gtk_label_new (script->tab_title),
+                                    gtk_label_new (new_run->tab_title),
                                     gtk_notebook_get_n_pages (GTK_NOTEBOOK (gui_data.notebook)) - 1);
 
       gtk_text_view_set_editable (GTK_TEXT_VIEW (new_run->text_view), FALSE);
@@ -160,8 +165,9 @@ static void start_callback ()
 
       /* Run */
       new_run->running = TRUE;
-      g_thread_create (process_thread, new_run, FALSE, NULL);
-      g_timeout_add (250, run_update_timer, new_run);
+      new_run->thread = g_thread_create (process_thread, new_run, FALSE, NULL);
+      if (new_run->thread != NULL)
+        g_timeout_add (250, run_update_timer, new_run);
     }
 }
 
@@ -173,8 +179,11 @@ static gboolean switch_page_callback (GtkNotebook *notebook, gpointer page,
   (void) page_index;
   (void) data;
 
+  gui_data.active_run = NULL;
   gui_data.active_script = NULL;
+  gtk_widget_set_sensitive (gui_data.start_btn, FALSE);
   gtk_window_set_title (GTK_WINDOW (gui_data.window), "RamseyScript");
+  /* Scan through scripts */
   for (scan = gui_data.script_list; scan; scan = scan->next)
     {
       struct _script *data = scan->data;
@@ -185,6 +194,22 @@ static gboolean switch_page_callback (GtkNotebook *notebook, gpointer page,
                                              data->page));
           gui_data.active_script = data;
           gtk_window_set_title (GTK_WINDOW (gui_data.window), title);
+          gtk_widget_set_sensitive (gui_data.start_btn, TRUE);
+          free (title);
+        }
+    }
+  /* Scan through runs */
+  for (scan = gui_data.run_list; scan; scan = scan->next)
+    {
+      struct _run *data = scan->data;
+      if (data->page == page)
+        {
+          gchar *title = g_strdup_printf ("%s - RamseyScript",
+            gtk_notebook_get_tab_label_text (GTK_NOTEBOOK (gui_data.notebook),
+                                             data->page));
+          gui_data.active_run = data;
+          gtk_window_set_title (GTK_WINDOW (gui_data.window), title);
+          gtk_widget_set_sensitive (gui_data.start_btn, FALSE);
           free (title);
         }
     }
@@ -359,6 +384,7 @@ static void save_as_callback ()
 
 static void close_callback ()
 {
+  /* Kill active script */
   if (gui_data.active_script != NULL)
     {
       struct _script *tmp;
@@ -395,6 +421,39 @@ static void close_callback ()
                             tmp->page);
       destroy_page (tmp);
       gui_data.active_script = NULL;
+    }
+  /* Kill active run */
+  else if (gui_data.active_run != NULL)
+    {
+      struct _run *tmp = gui_data.active_run;
+      if (tmp->running)
+        {
+          GtkWidget *dialog;
+          dialog = gtk_message_dialog_new (GTK_WINDOW (gui_data.window),
+                                           GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT,
+                                           GTK_MESSAGE_WARNING,
+                                           GTK_BUTTONS_NONE, NULL);
+          gtk_message_dialog_set_markup (GTK_MESSAGE_DIALOG (dialog),
+            "Are you sure you want to close a running process?");
+          gtk_dialog_add_buttons (GTK_DIALOG (dialog),
+                                  GTK_STOCK_NO,  GTK_RESPONSE_CANCEL,
+                                  GTK_STOCK_YES, GTK_RESPONSE_YES,
+                                  NULL);
+
+          switch (gtk_dialog_run (GTK_DIALOG (dialog)))
+            {
+            case GTK_RESPONSE_YES:
+              break;
+            case GTK_RESPONSE_CANCEL:
+              gtk_widget_destroy (dialog);
+              return;
+            }
+          gtk_widget_destroy (dialog);
+        }
+      gtk_container_remove (GTK_CONTAINER (gui_data.notebook),
+                            tmp->page);
+      destroy_run (tmp);
+      gui_data.active_run = NULL;
     }
 }
 
@@ -463,7 +522,8 @@ static GtkActionEntry entries[] =
     "Quit", G_CALLBACK (quit_callback) },
 
   { "run-menu-action", NULL, "_Run", NULL, NULL, NULL },
-  { "start-action", NULL, "_Start script", NULL, NULL, NULL },
+  { "start-action", NULL, "_Start script", "F5",
+    "Run a script", G_CALLBACK (start_callback) },
   { "stop-action", NULL, "S_top script", NULL, NULL, NULL }
 };
 static guint n_entries = G_N_ELEMENTS (entries);
@@ -473,7 +533,6 @@ int run_gtk_ui (int argc, char *argv[])
   GError *failcode;
   GtkUIManager *ui;
   GtkWidget *menubar, *vbox, *hbox;
-  GtkWidget *start_btn;
   GtkActionGroup *action_group;
 
   gui_data.script_list = NULL;
@@ -516,9 +575,9 @@ int run_gtk_ui (int argc, char *argv[])
 
   /* Build start/stop buttons */
   hbox = gtk_hbox_new (FALSE, 0);
-  start_btn = gtk_button_new_with_label ("Run Script");
-  gtk_box_pack_end (GTK_BOX (hbox), start_btn, FALSE, FALSE, 2);
-  g_signal_connect (start_btn, "clicked", G_CALLBACK (start_callback), NULL);
+  gui_data.start_btn = gtk_button_new_with_label ("Run Script");
+  gtk_box_pack_end (GTK_BOX (hbox), gui_data.start_btn, FALSE, FALSE, 2);
+  g_signal_connect (gui_data.start_btn, "clicked", G_CALLBACK (start_callback), NULL);
 
   /* Put it all together */
   gtk_box_pack_start (GTK_BOX (vbox), menubar, FALSE, FALSE, 0);
