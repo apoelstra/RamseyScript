@@ -420,7 +420,6 @@ static void close_callback ()
       gtk_container_remove (GTK_CONTAINER (gui_data.notebook),
                             tmp->page);
       destroy_page (tmp);
-      gui_data.active_script = NULL;
     }
   /* Kill active run */
   else if (gui_data.active_run != NULL)
@@ -453,7 +452,6 @@ static void close_callback ()
       gtk_container_remove (GTK_CONTAINER (gui_data.notebook),
                             tmp->page);
       destroy_run (tmp);
-      gui_data.active_run = NULL;
     }
 }
 
