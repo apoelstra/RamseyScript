@@ -1,3 +1,12 @@
+GETTING STARTED
+======================
+
+Press Ctrl+N to create a new script, or Ctrl+O to open an existing
+one. When you are done, press 'Run Script' in the bottom right to
+run it, or press F5.
+
+
+
 LANGUAGE SPECIFICATION
 =======================
 

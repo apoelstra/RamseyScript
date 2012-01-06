@@ -112,6 +112,35 @@ static gboolean run_update_timer (gpointer data)
   return run->running;
 }
 
+static void open_readme ()
+{
+  GtkWidget *scrolled_page = gtk_scrolled_window_new (NULL, NULL);
+  GtkWidget *text_view = gtk_text_view_new ();
+  GtkTextBuffer *tb;
+  Stream *tb_stream, *readme_stream;
+
+  gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scrolled_page),
+                                  GTK_POLICY_AUTOMATIC,
+                                  GTK_POLICY_AUTOMATIC);
+  gtk_container_add (GTK_CONTAINER (scrolled_page), text_view);
+
+  gtk_notebook_insert_page (GTK_NOTEBOOK (gui_data.notebook),
+                            scrolled_page, gtk_label_new ("README"), -1);
+  gtk_text_view_set_editable (GTK_TEXT_VIEW (text_view), FALSE);
+  gtk_widget_show_all (scrolled_page);
+
+  tb = gtk_text_view_get_buffer (GTK_TEXT_VIEW (text_view));
+  tb_stream = text_buffer_stream_new (tb);
+  readme_stream = file_stream_new ("r");
+  tb_stream->open (tb_stream, "w");
+
+  if (readme_stream->open (readme_stream, "README"))
+    stream_line_copy (tb_stream, readme_stream);
+
+  readme_stream->destroy (readme_stream);
+  tb_stream->destroy (tb_stream);
+}
+
 /* SIGNAL CALLBACKS */
 static void start_callback ()
 {
@@ -589,7 +618,7 @@ int run_gtk_ui (int argc, char *argv[])
   gdk_threads_enter ();
   gtk_rc_parse_string ("style \"mono\" { font_name = \"Monospace\" }\n"
                        "widget \"*.GtkTextView\" style \"mono\"");
-  new_callback ();
+  open_readme ();
   gtk_main ();
   gdk_threads_leave ();
 
