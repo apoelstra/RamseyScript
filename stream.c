@@ -55,7 +55,7 @@ static int _file_stream_write_line (Stream *obj, const char *line)
 
 static int _file_stream_eof (Stream *obj)
 {
-  return feof (obj->_data);
+  return feof ((FILE *) obj->_data);
 }
 
 void _file_stream_destroy (Stream *stream)
