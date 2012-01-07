@@ -40,6 +40,8 @@ struct _global_data *set_defaults ()
       rv->dump_iters = 0;
       rv->dump_depth = 400;
       rv->iters_data = NULL;
+
+      rv->kill_now = 0;
     }
   return rv;
 }

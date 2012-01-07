@@ -22,6 +22,8 @@ struct _global_data {
   int dump_depth;
   Sequence *iters_data;
 
+  int kill_now;
+
   Stream *out_stream;
   Stream *in_stream;
   Stream *err_stream;

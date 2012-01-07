@@ -78,6 +78,12 @@ static void start_callback ()
     }
 }
 
+static void stop_callback ()
+{
+  if (gui_data.active_run)
+    gtk_script_run_stop (gui_data.active_run);
+}
+
 static gboolean switch_page_callback (GtkNotebook *notebook, gpointer page,
                                       int page_index, gpointer data)
 {
@@ -272,7 +278,8 @@ static GtkActionEntry entries[] =
   { "run-menu-action", NULL, "_Run", NULL, NULL, NULL },
   { "start-action", NULL, "_Start script", "F5",
     "Run a script", G_CALLBACK (start_callback) },
-  { "stop-action", NULL, "S_top script", NULL, NULL, NULL }
+  { "stop-action", NULL, "S_top script", "F6",
+    "Stop a script", G_CALLBACK (stop_callback) }
 };
 static guint n_entries = G_N_ELEMENTS (entries);
 

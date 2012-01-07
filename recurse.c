@@ -25,7 +25,7 @@ void recurse_sequence (Sequence *seed, const struct _global_data *state)
 {
   int i;
 
-  if (!state->filter (seed))
+  if (!state->filter (seed) || state->kill_now)
     return;
   if (state->iterations && iterations >= state->iterations)
     return;
@@ -55,7 +55,7 @@ void recurse_words (Sequence *seed, const struct _global_data *state)
 {
   int i;
 
-  if (!state->filter (seed))
+  if (!state->filter (seed) || state->kill_now)
     return;
   if (state->iterations && iterations >= state->iterations)
     return;
@@ -87,7 +87,7 @@ void recurse_colorings (Coloring *seed, int max_value, const struct _global_data
 
   for (i = 0; i < seed->n_colors; ++i)
     {
-      if (!state->filter (seed->sequences[i]))
+      if (!state->filter (seed->sequences[i]) || state->kill_now)
         return;
       length += seed->sequences[i]->length;
     }

@@ -21,6 +21,7 @@ GType gtk_script_run_get_type (void);
 GtkWidget* gtk_script_run_new (GtkScriptView *view);
 
 void gtk_script_run_start (GtkScriptRun *run);
+void gtk_script_run_stop (GtkScriptRun *run);
 GtkWidget *gtk_script_run_get_label (GtkScriptRun *run);
 const gchar *gtk_script_run_get_title (GtkScriptRun *run);
 void gtk_script_run_destroy (GtkScriptRun *run, gboolean confirm);

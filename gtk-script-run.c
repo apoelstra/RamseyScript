@@ -24,6 +24,7 @@ struct _GtkScriptRun
   Stream *output_stream;
 
   GThread *thread;
+  struct _global_data *tdata;
   gboolean running;
 };
 
@@ -36,20 +37,20 @@ struct _GtkScriptRunClass
 static void *_thread_body (gpointer r)
 {
   GtkScriptRun *run = r;
-  struct _global_data *defs = set_defaults ();
+  run->tdata = set_defaults ();
 
   /* Open streams */
-  defs->out_stream = run->output_stream;
-  defs->in_stream  = run->script_stream;
+  run->tdata->out_stream = run->output_stream;
+  run->tdata->in_stream  = run->script_stream;
   run->output_stream->open (run->output_stream, "w");
   run->script_stream->open (run->script_stream, "r");
 
   /* Go! */
-  process (defs);
+  process (run->tdata);
 
   /* Cleanup */
   run->running = FALSE;
-  free (defs);
+  free (run->tdata);
   return NULL;
 }
 
@@ -161,6 +162,12 @@ GtkWidget *gtk_script_run_get_label (GtkScriptRun *run)
   return run->label;
 }
 
+void gtk_script_run_stop (GtkScriptRun *run)
+{
+  run->output_stream->write_line (run->output_stream, "ABORT\n");
+  run->tdata->kill_now = 1;  /* shoot out the thread */
+}
+
 void gtk_script_run_destroy (GtkScriptRun *run, gboolean confirm)
 {
   if (confirm && run->running)
@@ -188,13 +195,13 @@ void gtk_script_run_destroy (GtkScriptRun *run, gboolean confirm)
         }
       gtk_widget_destroy (dialog);
     }
+  gtk_script_run_stop (run);
   run->view_stream->destroy (run->view_stream);
   run->script_stream->destroy (run->script_stream);
   run->output_stream->destroy (run->output_stream);
   g_object_unref (G_OBJECT (run->label));
   gtk_widget_destroy (run->text_view);
   gtk_widget_destroy (GTK_WIDGET (run));
-  /* TODO: KILL THE THREAD KILL THE THREAD KILL THE THREAD */
 }
 
 
