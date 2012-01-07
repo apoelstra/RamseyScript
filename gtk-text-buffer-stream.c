@@ -15,7 +15,7 @@ struct priv_data
 };
 
 /* START file stream functions */
-static void *_text_buffer_open (Stream *obj, void *data)
+static void *_text_buffer_open (Stream *obj, const void *data)
 {
   struct priv_data *pd = obj->_data;
   gtk_text_buffer_get_start_iter (pd->tb, &pd->startln);

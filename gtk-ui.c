@@ -9,108 +9,20 @@
 #include "stream.h"
 #include "string-stream.h"
 #include "gtk-text-buffer-stream.h"
+#include "gtk-script-view.h"
+#include "gtk-script-run.h"
 
 static void new_callback ();
 static void save_as_callback ();
-
-struct _script
-{
-  const char *tab_title;
-  char *filename;
-  GtkWidget *page, *text_view;
-  Stream *stream;
-  gint page_index;
-  gboolean modified;
-  gboolean modify_holdoff;
-};
-
-struct _run
-{
-  char *tab_title;
-  char *filename;
-  GtkWidget *page, *text_view;
-  Stream *text_view_stream;
-  Stream *input_stream;
-  Stream *output_stream;
-  GThread *thread;
-  gboolean modified;
-  gboolean running;
-};
 
 struct {
   GtkWidget *window, *notebook, *start_btn;
   GList *script_list;
   GList *run_list;
-  struct _script *active_script;
-  struct _run *active_run;
+  GtkScriptView *active_script;
+  GtkScriptRun *active_run;
 } gui_data;
 
-static void set_active_script_modified (gboolean modified)
-{
-  if (gui_data.active_script)
-    {
-      gui_data.active_script->modified = modified;
-      gchar *title = g_strdup_printf ("%s%c",
-                                      gui_data.active_script->tab_title,
-                                      modified ? '*' : ' ');
-      gtk_notebook_set_tab_label_text (GTK_NOTEBOOK (gui_data.notebook),
-                                       gui_data.active_script->page,
-                                       title);
-      free (title);
-      title = g_strdup_printf ("%s - RamseyScript",
-        gtk_notebook_get_tab_label_text (GTK_NOTEBOOK (gui_data.notebook),
-                                         gui_data.active_script->page));
-      gtk_window_set_title (GTK_WINDOW (gui_data.window), title);
-      free (title);
-    }
-}
-
-static void destroy_page (struct _script *data)
-{
-  gui_data.script_list = g_list_remove (gui_data.script_list, data);
-  free (data->filename);
-  data->stream->destroy (data->stream);
-  free (data);
-}
-
-static void destroy_run (struct _run *data)
-{
-  /* TODO: KILL THE THREAD KILL THE THREAD KILL THE THREAD */
-  gui_data.run_list = g_list_remove (gui_data.run_list, data);
-  data->text_view_stream->destroy (data->text_view_stream);
-  data->input_stream->destroy (data->input_stream);
-  data->output_stream->destroy (data->output_stream);
-  g_free (data->tab_title);
-  g_free (data->filename);
-  free (data);
-}
-
-static void *process_thread (void *r)
-{
-  struct _run *run = r;
-  struct _global_data *defs = set_defaults ();
-
-  /* Open streams */
-  defs->out_stream = run->output_stream;
-  defs->in_stream = run->input_stream;
-  run->input_stream->open (run->input_stream, "r");
-  run->output_stream->open (run->output_stream, "w");
-  /* Go! */
-  process (defs);
-  run->running = FALSE;   /* no more output */
-  /* Cleanup */
-  free (defs);
-  return NULL;
-}
-
-static gboolean run_update_timer (gpointer data)
-{
-  struct _run *run = data;
-
-  stream_line_copy (run->text_view_stream, run->output_stream);
-
-  return run->running;
-}
 
 static void open_readme ()
 {
@@ -118,6 +30,7 @@ static void open_readme ()
   GtkWidget *text_view = gtk_text_view_new ();
   GtkTextBuffer *tb;
   Stream *tb_stream, *readme_stream;
+  GtkTextIter iter;
 
   gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scrolled_page),
                                   GTK_POLICY_AUTOMATIC,
@@ -137,6 +50,9 @@ static void open_readme ()
   if (readme_stream->open (readme_stream, "README"))
     stream_line_copy (tb_stream, readme_stream);
 
+  gtk_text_buffer_get_start_iter (tb, &iter);
+  gtk_text_buffer_place_cursor (tb, &iter);
+
   readme_stream->destroy (readme_stream);
   tb_stream->destroy (tb_stream);
 }
@@ -146,57 +62,19 @@ static void start_callback ()
 {
   if (gui_data.active_script)
     {
-      Stream *input_stream = string_stream_new ();
-      Stream *output_stream = string_stream_new ();
-      struct _run *new_run = malloc (sizeof *new_run);
-      struct _script *script = gui_data.active_script;
-      GtkTextBuffer *tb;
-      gint page_index;
+      GtkScriptRun *new_run = GTK_SCRIPT_RUN
+                                (gtk_script_run_new (gui_data.active_script));
+      gint page_index =
+          gtk_notebook_append_page (GTK_NOTEBOOK (gui_data.notebook),
+                                    GTK_WIDGET (new_run),
+                                    gtk_script_run_get_label (new_run));
 
-      /* Create run */
-      new_run->modified = FALSE;
-      new_run->filename = g_strdup (script->filename);
-      new_run->tab_title = g_strdup_printf ("Run: %s", script->tab_title);
-      new_run->input_stream = input_stream;
-      new_run->output_stream = output_stream;
-
-      /* Create gui */
-      new_run->page = gtk_scrolled_window_new (NULL, NULL);
-      gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (new_run->page),
-                                      GTK_POLICY_AUTOMATIC,
-                                      GTK_POLICY_AUTOMATIC);
-      new_run->text_view = gtk_text_view_new ();
-      gtk_container_add (GTK_CONTAINER (new_run->page),
-                         new_run->text_view);
-      page_index =
-          gtk_notebook_insert_page (GTK_NOTEBOOK (gui_data.notebook),
-                                    new_run->page,
-                                    gtk_label_new (new_run->tab_title),
-                                    gtk_notebook_get_n_pages (GTK_NOTEBOOK (gui_data.notebook)) - 1);
-
-      gtk_text_view_set_editable (GTK_TEXT_VIEW (new_run->text_view), FALSE);
-      gtk_widget_show_all (new_run->page);
-
-      tb = gtk_text_view_get_buffer (GTK_TEXT_VIEW (new_run->text_view));
-      new_run->text_view_stream = text_buffer_stream_new (tb);
-      new_run->text_view_stream->open (new_run->text_view_stream, "w");
-
-      /* Install run */
+      gtk_widget_show_all (GTK_WIDGET (new_run));
       gui_data.run_list = g_list_append (gui_data.run_list, new_run);
-      gui_data.active_run = new_run;
       gtk_notebook_set_current_page (GTK_NOTEBOOK (gui_data.notebook),
                                      page_index);
 
-      /* Copy script text-buffer into input stream */
-      script->stream->open (script->stream, "r");
-      input_stream->open (input_stream, "w");
-      stream_line_copy (input_stream, script->stream);
-
-      /* Run */
-      new_run->running = TRUE;
-      new_run->thread = g_thread_create (process_thread, new_run, FALSE, NULL);
-      if (new_run->thread != NULL)
-        g_timeout_add (250, run_update_timer, new_run);
+      gtk_script_run_start (new_run);
     }
 }
 
@@ -215,12 +93,11 @@ static gboolean switch_page_callback (GtkNotebook *notebook, gpointer page,
   /* Scan through scripts */
   for (scan = gui_data.script_list; scan; scan = scan->next)
     {
-      struct _script *data = scan->data;
-      if (data->page == page)
+      GtkScriptView *data = scan->data;
+      if (data == page)
         {
           gchar *title = g_strdup_printf ("%s - RamseyScript",
-            gtk_notebook_get_tab_label_text (GTK_NOTEBOOK (gui_data.notebook),
-                                             data->page));
+                                          gtk_script_view_get_title (data));
           gui_data.active_script = data;
           gtk_window_set_title (GTK_WINDOW (gui_data.window), title);
           gtk_widget_set_sensitive (gui_data.start_btn, TRUE);
@@ -230,12 +107,11 @@ static gboolean switch_page_callback (GtkNotebook *notebook, gpointer page,
   /* Scan through runs */
   for (scan = gui_data.run_list; scan; scan = scan->next)
     {
-      struct _run *data = scan->data;
-      if (data->page == page)
+      GtkScriptRun *data = scan->data;
+      if (data == page)
         {
           gchar *title = g_strdup_printf ("%s - RamseyScript",
-            gtk_notebook_get_tab_label_text (GTK_NOTEBOOK (gui_data.notebook),
-                                             data->page));
+                                          gtk_script_run_get_title (data));
           gui_data.active_run = data;
           gtk_window_set_title (GTK_WINDOW (gui_data.window), title);
           gtk_widget_set_sensitive (gui_data.start_btn, FALSE);
@@ -244,25 +120,7 @@ static gboolean switch_page_callback (GtkNotebook *notebook, gpointer page,
     }
   return TRUE;
 }
-
-static void page_edit_callback (GtkTextBuffer *buf, gpointer data)
-{
-  (void) buf;
-  (void) data;
-  if (gui_data.active_script->modify_holdoff == FALSE)
-    set_active_script_modified (TRUE);
-}
 /* end SIGNAL CALLBACKS */
-
-static const char *_find_last_slash (const char *inp)
-{
-  const char *rv = inp;
-  const char *scan = inp;
-  while (*scan)
-    if (*scan++ == '/')
-      rv = scan;
-  return rv;
-}
 
 /* MENU CALLBACKS */
 static void open_callback ()
@@ -289,126 +147,50 @@ static void open_callback ()
 
   if (gtk_dialog_run (GTK_DIALOG (dialog)) == GTK_RESPONSE_OK)
     {
-      Stream *file_reader = file_stream_new ("r");
       gchar *result = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (dialog));
-      if (file_reader->open (file_reader, result))
+      GtkScriptView *new_script = GTK_SCRIPT_VIEW
+                                    (gtk_script_view_new_from_file (result));
+      if (new_script != NULL)
         {
-          new_callback ();
-          gui_data.active_script->filename = result;
-          gui_data.active_script->tab_title = _find_last_slash(result);
-          gtk_notebook_set_tab_label_text (GTK_NOTEBOOK (gui_data.notebook),
-                                            gui_data.active_script->page,
-                                            gui_data.active_script->tab_title);
+          gint page_index =
+               gtk_notebook_append_page (GTK_NOTEBOOK (gui_data.notebook),
+                                         GTK_WIDGET (new_script),
+                                         gtk_script_view_get_label (new_script));
 
-          gui_data.active_script->stream->open (gui_data.active_script->stream, "w");
+          gtk_widget_show_all (GTK_WIDGET (new_script));
 
-          gui_data.active_script->modify_holdoff = TRUE;
-          stream_line_copy (gui_data.active_script->stream, file_reader);
-          gui_data.active_script->modify_holdoff = FALSE;
+          gui_data.script_list = g_list_append (gui_data.script_list, new_script);
+          gtk_notebook_set_current_page (GTK_NOTEBOOK (gui_data.notebook),
+                                         page_index);
         }
-      else
-        fprintf (stderr, "Failed to open file ``%s''\n", result);
-      file_reader->destroy (file_reader);
     }
   gtk_widget_destroy (dialog);
 }
 
 static void new_callback ()
 {
-  gint page_index;
-  GtkTextBuffer *tb;
-  struct _script *new_script = malloc (sizeof *new_script);
+  GtkScriptView *new_script = GTK_SCRIPT_VIEW (gtk_script_view_new ("New script"));
+  gint page_index =
+       gtk_notebook_append_page (GTK_NOTEBOOK (gui_data.notebook),
+                                 GTK_WIDGET (new_script),
+                                 gtk_script_view_get_label (new_script));
 
-  new_script->modified = FALSE;
-  new_script->modify_holdoff = FALSE;
-  new_script->filename = NULL;
-  new_script->tab_title = "New script";
-  new_script->page = gtk_scrolled_window_new (NULL, NULL);
-  gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (new_script->page),
-                                  GTK_POLICY_AUTOMATIC,
-                                  GTK_POLICY_AUTOMATIC);
-  new_script->text_view = gtk_text_view_new ();
-  tb = gtk_text_view_get_buffer (GTK_TEXT_VIEW (new_script->text_view));
-  new_script->stream = text_buffer_stream_new (tb);
-  gtk_container_add (GTK_CONTAINER (new_script->page),
-                     new_script->text_view);
-  page_index =
-      gtk_notebook_insert_page (GTK_NOTEBOOK (gui_data.notebook),
-                                new_script->page,
-                                gtk_label_new ("New script"),
-                                gtk_notebook_get_n_pages (GTK_NOTEBOOK (gui_data.notebook)) - 1);
-
-  gtk_text_view_set_editable (GTK_TEXT_VIEW (new_script->text_view), TRUE);
-  gtk_widget_show_all (new_script->page);
-
+  gtk_widget_show_all (GTK_WIDGET (new_script));
   gui_data.script_list = g_list_append (gui_data.script_list, new_script);
-  gui_data.active_script = new_script;
   gtk_notebook_set_current_page (GTK_NOTEBOOK (gui_data.notebook),
                                  page_index);
-
-  g_signal_connect (tb, "changed", G_CALLBACK (page_edit_callback), new_script);
 }
 
 static void save_callback ()
 {
   if (gui_data.active_script)
-    {
-      if (gui_data.active_script->filename == NULL)
-        save_as_callback ();
-      else
-        {
-          Stream *file_writer = file_stream_new ("w");
-
-          if (file_writer->open (file_writer, gui_data.active_script->filename))
-            {
-              gui_data.active_script->stream->open (gui_data.active_script->stream, "r");
-              stream_line_copy (file_writer, gui_data.active_script->stream);
-              file_writer->destroy (file_writer);
-              set_active_script_modified (FALSE);
-            }
-          else
-            fprintf (stderr, "Failed to save file ``%s''\n", gui_data.active_script->filename);
-        }
-    }
+    gtk_script_view_save (GTK_SCRIPT_VIEW (gui_data.active_script), FALSE);
 }
 
 static void save_as_callback ()
 {
   if (gui_data.active_script)
-    {
-      GtkWidget *dialog;
-      gchar *title = g_strdup_printf ("Save %s as...",
-          gtk_notebook_get_tab_label_text (GTK_NOTEBOOK (gui_data.notebook),
-                                           gui_data.active_script->page));
-      dialog = gtk_file_chooser_dialog_new (title,
-                                            GTK_WINDOW (gui_data.window),
-                                            GTK_FILE_CHOOSER_ACTION_SAVE,
-                                            GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
-                                            GTK_STOCK_OK, GTK_RESPONSE_OK,
-                                            NULL);
-      gtk_file_chooser_set_do_overwrite_confirmation (GTK_FILE_CHOOSER (dialog),
-                                                    TRUE);
-      gtk_dialog_set_default_response (GTK_DIALOG (dialog), GTK_RESPONSE_OK);
-
-      if (gtk_dialog_run (GTK_DIALOG (dialog)) == GTK_RESPONSE_OK)
-        {
-          Stream *file_writer = file_stream_new ("w");
-          gchar *result = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (dialog));
-          if (file_writer->open (file_writer, result))
-            {
-              gui_data.active_script->filename = result;
-              gui_data.active_script->stream->open (gui_data.active_script->stream, "r");
-              stream_line_copy (file_writer, gui_data.active_script->stream);
-              set_active_script_modified (FALSE);
-            }
-          else
-            fprintf (stderr, "Failed to save file ``%s''\n", result);
-          file_writer->destroy (file_writer);
-        }
-
-      gtk_widget_destroy (dialog);
-      g_free (title);
-    }
+    gtk_script_view_save (GTK_SCRIPT_VIEW (gui_data.active_script), TRUE);
 }
 
 static void close_callback ()
@@ -416,71 +198,16 @@ static void close_callback ()
   /* Kill active script */
   if (gui_data.active_script != NULL)
     {
-      struct _script *tmp;
-      if (gui_data.active_script->modified)
-        {
-          GtkWidget *dialog;
-          dialog = gtk_message_dialog_new (GTK_WINDOW (gui_data.window),
-                                           GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT,
-                                           GTK_MESSAGE_WARNING,
-                                           GTK_BUTTONS_NONE, NULL);
-          gtk_message_dialog_set_markup (GTK_MESSAGE_DIALOG (dialog),
-            "There are unsaved changes. Are you sure you want to quit?");
-          gtk_dialog_add_buttons (GTK_DIALOG (dialog),
-                                  "Close _without saving", GTK_RESPONSE_NO,
-                                  GTK_STOCK_CANCEL,        GTK_RESPONSE_CANCEL,
-                                  GTK_STOCK_SAVE,          GTK_RESPONSE_YES,
-                                  NULL);
-
-          switch (gtk_dialog_run (GTK_DIALOG (dialog)))
-            {
-            case GTK_RESPONSE_YES:
-              save_callback ();
-              break;
-            case GTK_RESPONSE_NO:
-              break;
-            case GTK_RESPONSE_CANCEL:
-              gtk_widget_destroy (dialog);
-              return;
-            }
-          gtk_widget_destroy (dialog);
-        }
-      tmp = gui_data.active_script;
-      gtk_container_remove (GTK_CONTAINER (gui_data.notebook),
-                            tmp->page);
-      destroy_page (tmp);
+      gui_data.script_list = g_list_remove (gui_data.script_list,
+                                            gui_data.active_script);
+      gtk_script_view_destroy (gui_data.active_script, TRUE);
     }
   /* Kill active run */
   else if (gui_data.active_run != NULL)
     {
-      struct _run *tmp = gui_data.active_run;
-      if (tmp->running)
-        {
-          GtkWidget *dialog;
-          dialog = gtk_message_dialog_new (GTK_WINDOW (gui_data.window),
-                                           GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT,
-                                           GTK_MESSAGE_WARNING,
-                                           GTK_BUTTONS_NONE, NULL);
-          gtk_message_dialog_set_markup (GTK_MESSAGE_DIALOG (dialog),
-            "Are you sure you want to close a running process?");
-          gtk_dialog_add_buttons (GTK_DIALOG (dialog),
-                                  GTK_STOCK_NO,  GTK_RESPONSE_CANCEL,
-                                  GTK_STOCK_YES, GTK_RESPONSE_YES,
-                                  NULL);
-
-          switch (gtk_dialog_run (GTK_DIALOG (dialog)))
-            {
-            case GTK_RESPONSE_YES:
-              break;
-            case GTK_RESPONSE_CANCEL:
-              gtk_widget_destroy (dialog);
-              return;
-            }
-          gtk_widget_destroy (dialog);
-        }
-      gtk_container_remove (GTK_CONTAINER (gui_data.notebook),
-                            tmp->page);
-      destroy_run (tmp);
+      gui_data.run_list = g_list_remove (gui_data.run_list,
+                                         gui_data.active_run);
+      gtk_script_run_destroy (gui_data.active_run, TRUE);
     }
 }
 
@@ -490,11 +217,8 @@ static void quit_callback ()
   GList *scan;
 
   for (scan = gui_data.script_list; scan; scan = scan->next)
-    {
-      struct _script *data = scan->data;
-      if (data->modified)
-        need_confirm = TRUE;
-    }
+    if (gtk_script_view_get_modified (scan->data))
+      need_confirm = TRUE;
 
   if (need_confirm)
     {
@@ -514,10 +238,7 @@ static void quit_callback ()
         {
         case GTK_RESPONSE_YES:
           for (scan = gui_data.script_list; scan; scan = scan->next)
-            {
-              gui_data.active_script = scan->data;
-              save_callback ();
-            }
+            gtk_script_view_save (scan->data, FALSE);
           break;
         case GTK_RESPONSE_NO:
           break;

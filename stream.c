@@ -16,7 +16,7 @@ struct _string_priv_data
 };
 
 /* START file stream functions */
-static void *_file_stream_open (Stream *obj, void *data)
+static void *_file_stream_open (Stream *obj, const void *data)
 {
   switch (obj->type)
     {

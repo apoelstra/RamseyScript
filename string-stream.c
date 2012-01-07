@@ -20,7 +20,7 @@ struct _string_priv_data
   GMutex *mutex;
 };
 
-static void *_string_stream_open (Stream *obj, void *data)
+static void *_string_stream_open (Stream *obj, const void *data)
 {
   struct _string_priv_data *pd = obj->_data;
   char mode = ((char *) data)[0];

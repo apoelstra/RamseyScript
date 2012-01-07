@@ -12,7 +12,7 @@ enum e_stream_type {
 typedef struct _stream {
   void *_data;
   enum e_stream_type type;
-  void *(*open)       (struct _stream *, void *);
+  void *(*open)       (struct _stream *, const void *);
   void  (*close)      (struct _stream *);
   char *(*read_line)  (struct _stream *);
   int   (*write_line) (struct _stream *, const char *);
