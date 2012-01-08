@@ -36,7 +36,8 @@ struct _global_data *set_defaults ()
       rv->gap_set = NULL;
       rv->filter = cheap_check_sequence3;
 
-      rv->dump_fh = stdout;
+      rv->dump_stream = file_stream_new ("w");
+      rv->dump_stream->_data = stdout;
       rv->dump_iters = 0;
       rv->dump_depth = 400;
       rv->iters_data = NULL;
@@ -95,17 +96,17 @@ void process (struct _global_data *state)
           else if (strmatch (tok, "dump_file"))
             {
               tok = strtok (NULL, "\n");
-              if (state->dump_fh && state->dump_fh != stdout)
-                fclose (state->dump_fh);
+              if (state->dump_stream->_data && state->dump_stream->_data != stdout)
+                fclose (state->dump_stream->_data);
               if (strmatch (tok, "_"))
-                state->dump_fh = stdout;
+                state->dump_stream->_data = stdout;
               else
                 {
-                  state->dump_fh = fopen (tok, "a");
-                  if (state->dump_fh == NULL)
+                  state->dump_stream->_data = fopen (tok, "a");
+                  if (state->dump_stream->_data == NULL)
                     {
                       fprintf (stderr, "Failed to open ``%s'' for writing. Using stdout instead.\n", tok);
-                      state->dump_fh = stdout;
+                      state->dump_stream->_data = stdout;
                     }
                 }
             }
@@ -236,10 +237,8 @@ void process (struct _global_data *state)
                          (int) (time (NULL) - start), get_iterations());
           if (state->dump_iters)
             {
-/* TODO TODO TODO
-              sequence_print_real (state->iters_data, 1, state->dump_fh);
-*/
-              fputs ("\n", state->dump_fh);
+              sequence_print_real (state->iters_data, 1, state->dump_stream);
+              fputs ("\n", state->dump_stream->_data);
             }
           state->out_stream->write_line (state->out_stream, "\n");
         }
@@ -247,7 +246,6 @@ void process (struct _global_data *state)
     }
 
   /* Cleanup */
-  if (state->dump_fh && state->dump_fh != stdout)
-    fclose (state->dump_fh);
+  state->dump_stream->destroy (state->dump_stream);
 }
 

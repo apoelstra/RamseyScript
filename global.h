@@ -17,7 +17,7 @@ struct _global_data {
   Sequence *gap_set;
   filter_func filter;
 
-  FILE *dump_fh;
+  Stream *dump_stream;
   bool dump_iters;
   int dump_depth;
   Sequence *iters_data;
