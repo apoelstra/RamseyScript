@@ -26,6 +26,10 @@ int main (int argc, char *argv[])
   defs->in_stream = stm;
   defs->out_stream = file_stream_new ("w");
   defs->out_stream->_data = stdout;
+
+  puts ("Welcome to RamseyScript CLI " VERSION);
+  puts ("All code used in this project is public domain.");
+  puts ("");
   process (defs);
 
   return 0;

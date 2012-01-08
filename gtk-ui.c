@@ -95,14 +95,14 @@ static gboolean switch_page_callback (GtkNotebook *notebook, gpointer page,
   gui_data.active_run = NULL;
   gui_data.active_script = NULL;
   gtk_widget_set_sensitive (gui_data.start_btn, FALSE);
-  gtk_window_set_title (GTK_WINDOW (gui_data.window), "RamseyScript");
+  gtk_window_set_title (GTK_WINDOW (gui_data.window), "RamseyScript " VERSION);
   /* Scan through scripts */
   for (scan = gui_data.script_list; scan; scan = scan->next)
     {
       GtkScriptView *data = scan->data;
       if (data == page)
         {
-          gchar *title = g_strdup_printf ("%s - RamseyScript",
+          gchar *title = g_strdup_printf ("%s - RamseyScript " VERSION,
                                           gtk_script_view_get_title (data));
           gui_data.active_script = data;
           gtk_window_set_title (GTK_WINDOW (gui_data.window), title);
@@ -116,7 +116,7 @@ static gboolean switch_page_callback (GtkNotebook *notebook, gpointer page,
       GtkScriptRun *data = scan->data;
       if (data == page)
         {
-          gchar *title = g_strdup_printf ("%s - RamseyScript",
+          gchar *title = g_strdup_printf ("%s - RamseyScript " VERSION,
                                           gtk_script_run_get_title (data));
           gui_data.active_run = data;
           gtk_window_set_title (GTK_WINDOW (gui_data.window), title);
@@ -300,7 +300,7 @@ int run_gtk_ui (int argc, char *argv[])
 
   /* Build window and UI */
   gui_data.window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
-  gtk_window_set_title (GTK_WINDOW (gui_data.window), "RamseyScript");
+  gtk_window_set_title (GTK_WINDOW (gui_data.window), "RamseyScript " VERSION);
   g_signal_connect (gui_data.window, "destroy", G_CALLBACK (gtk_main_quit), NULL);
 
   ui = gtk_ui_manager_new ();

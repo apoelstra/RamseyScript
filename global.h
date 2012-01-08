@@ -7,6 +7,8 @@
 
 typedef int bool;
 
+#define VERSION "0.1"
+
 struct _global_data {
   long iterations;
   int min_gap;
