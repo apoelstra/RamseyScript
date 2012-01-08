@@ -25,6 +25,7 @@ struct _GtkScriptRun
 
   GThread *thread;
   struct _global_data *tdata;
+  guint timeout_id;
   gboolean running;
 };
 
@@ -116,6 +117,7 @@ GtkWidget *gtk_script_run_new (GtkScriptView *view)
   run->buffer = gtk_text_view_get_buffer (GTK_TEXT_VIEW (run->text_view));
   run->running = FALSE;
   run->thread = NULL;
+  run->timeout_id = -1;
 
   run->script_stream = string_stream_new ();
   run->view_stream = text_buffer_stream_new (run->buffer);
@@ -146,9 +148,9 @@ void gtk_script_run_start (GtkScriptRun *run)
       run->output_stream = string_stream_new ();
       run->output_stream->open (run->output_stream, "r");
       run->running = TRUE;
-      run->thread = g_thread_create (_thread_body, run, FALSE, NULL);
+      run->thread = g_thread_create (_thread_body, run, TRUE, NULL);
       if (run->thread != NULL)
-        g_timeout_add (500, _update_view, run);
+        run->timeout_id = g_timeout_add (500, _update_view, run);
     }
 }
 
@@ -166,6 +168,7 @@ void gtk_script_run_stop (GtkScriptRun *run)
 {
   run->output_stream->write_line (run->output_stream, "ABORT\n");
   run->tdata->kill_now = 1;  /* shoot out the thread */
+  g_thread_join (run->thread);
 }
 
 void gtk_script_run_destroy (GtkScriptRun *run, gboolean confirm)
@@ -196,6 +199,7 @@ void gtk_script_run_destroy (GtkScriptRun *run, gboolean confirm)
       gtk_widget_destroy (dialog);
     }
   gtk_script_run_stop (run);
+  g_source_remove (run->timeout_id);
   run->view_stream->destroy (run->view_stream);
   run->script_stream->destroy (run->script_stream);
   run->output_stream->destroy (run->output_stream);
