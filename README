@@ -15,17 +15,9 @@ LANGUAGE SPECIFICATION
 
 Sets a variable. Not all variables are effective for each search space.
 
-iterations: The number of iterations to run before stopping, or 0 to
-            search the entire space.
-            Default value: 0
-
-   min-gap: The minimum gap size for sequences and colorings. Ignored
-            if gap_set is set.
-            Default value: 1
-
-   max-gap: The maximum gap size for sequences and colorings, or 0 for
-            no maximum. Ignored if gap_set is set.
-            Default value: 0
+max_iterations: The number of iterations to run before stopping, or 0 to
+                search the entire space.
+                Default value: 0
 
   n-colors: The number of colors to use when searching colorings.
             Default value: 3
@@ -40,11 +32,9 @@ iterations: The number of iterations to run before stopping, or 0 to
             format [c1 c2 c3 ... cn].
             Default value: [1 2 3 4]
 
-   gap-set: The set of allowable gap sizes when searching sequences. If
-            unset, all gaps between min_gap and max_gap (inclusive) will
-            be allowed.
+   gap-set: The set of allowable gap sizes when searching sequences.
             format [g1 g2 g3 ... gn].
-            Default value: [min_gap ... max_gap]
+            Default value: [1 ... 1000]
 
  dump-file: The file to output dump output (see 'dump'), or "-" to use
             stdout.

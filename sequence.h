@@ -1,26 +1,12 @@
 #ifndef SEQUENCE_H
 #define SEQUENCE_H
 
-#include <stdio.h>
-
+#include "global.h"
 #include "stream.h"
 
-#define DEFAULT_MAX_LENGTH	400
-
-typedef struct {
-  int *values;
-  int length;
-  int _max_length;
-} Sequence;
-
-Sequence *sequence_new ();
-Sequence *sequence_new_zeros (int size);
-Sequence *sequence_parse (const char *data);
-int sequence_append (Sequence *s, int value);
-void sequence_deappend (Sequence *s);
-void sequence_print_real (Sequence *s, int start, Stream *out);
-void sequence_print (Sequence *s, Stream *out);
-void sequence_delete (Sequence *s);
+ramsey_t *sequence_new ();
+ramsey_t *sequence_new_zeros (int size, bool one_indexed);
+void sequence_print_real (ramsey_t *s, int start, Stream *out);
 
 #define sequence_max(s) ((s)->values[(s)->length - 1])
 

@@ -1,9 +1,9 @@
 #ifndef CHECK_H
 #define CHECK_H
 
-#include "sequence.h"
+#include "global.h"
 
-int cheap_check_sequence3 (Sequence *s);
-int cheap_check_additive_square (Sequence *s);
+int cheap_check_sequence3 (ramsey_t *);
+int cheap_check_additive_square (ramsey_t *);
 
 #endif

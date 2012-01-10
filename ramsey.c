@@ -10,7 +10,6 @@
 #include "ramsey.h"
 #include "sequence.h"
 #include "coloring.h"
-#include "recurse.h"
 #include "filters.h"
 #include "check.h"
 
@@ -27,13 +26,13 @@ struct _global_data *set_defaults ()
   struct _global_data *rv = malloc (sizeof *rv);
   if (rv)
     {
-      rv->iterations = 0;
-      rv->min_gap = 1;
-      rv->max_gap = 0;
+      rv->max_iterations = 0;
       rv->n_colors = 3;
       rv->ap_length = 3;
-      rv->alphabet = sequence_parse ("[1 2 3 4]");
-      rv->gap_set = NULL;
+      rv->alphabet = sequence_new ();
+      rv->alphabet->parse (rv->alphabet, "[1 2 3 4]");
+      rv->gap_set = sequence_new ();
+      rv->gap_set->parse (rv->gap_set, "[1 ... 1000]");
       rv->filter = cheap_check_sequence3;
 
       rv->dump_stream = file_stream_new ("w");
@@ -44,6 +43,45 @@ struct _global_data *set_defaults ()
 
       rv->kill_now = 0;
     }
+  return rv;
+}
+
+ramsey_t *new_from_parse (const char *data)
+{
+  ramsey_t *rv = NULL;
+  const char *scan = data;
+  int lb_count  = 0;
+  while (*scan && (isspace (*scan) || *scan == '['))
+    {
+      if (*scan == '[')
+        ++lb_count;
+      ++scan;
+    }
+
+  switch (lb_count)
+    {
+    case 1:
+      rv = sequence_new ();
+      break;
+    case 2:
+      lb_count = 0;
+      scan = data;
+      while (*scan)
+        {
+          if (*scan == '[')
+            ++lb_count;
+          ++scan;
+        }
+      rv = coloring_new (lb_count - 1);
+      break;
+    default:
+      fprintf (stderr, "Failed to parse: %s\n", data);
+      break;
+    }
+
+  if (rv)
+    rv->parse (rv, data);
+
   return rv;
 }
 
@@ -76,22 +114,21 @@ void process (struct _global_data *state)
       if (strmatch (tok, "set"))
         {
           tok = strtok (NULL, " \t\n");
-          if MATCH_THEN_SET (tok, min_gap)
-          else if MATCH_THEN_SET (tok, max_gap)
-          else if MATCH_THEN_SET (tok, n_colors)
+          if MATCH_THEN_SET (tok, n_colors)
           else if MATCH_THEN_SET (tok, ap_length)
-          else if MATCH_THEN_SET (tok, iterations)
+          else if MATCH_THEN_SET (tok, max_iterations)
           else if MATCH_THEN_SET (tok, dump_depth)
           else if (strmatch (tok, "alphabet"))
             {
               tok = strtok (NULL, "\n");
-              sequence_delete (state->alphabet);
-              state->alphabet = sequence_parse (tok);
+              state->alphabet->destroy (state->alphabet);
+              state->alphabet = new_from_parse (tok);
             }
           else if (strmatch (tok, "gap_set"))
             {
               tok = strtok (NULL, "\n");
-              state->gap_set = sequence_parse (tok);
+              state->gap_set->destroy (state->gap_set);
+              state->gap_set = new_from_parse (tok);
             }
           else if (strmatch (tok, "dump_file"))
             {
@@ -134,110 +171,108 @@ void process (struct _global_data *state)
       /* search <seqences|colorings|words> [seed] */
       else if (strmatch (tok, "search"))
         {
-          time_t start = time (NULL);
-          reset_max ();
+          ramsey_t *seed = NULL;
 
           if (state->dump_iters)
             {
               free (state->iters_data);
-              state->iters_data = sequence_new_zeros (state->dump_depth);
+              state->iters_data = sequence_new_zeros (state->dump_depth, 1);
             }
 
           tok = strtok (NULL, " \t\n");
           if (tok && strmatch (tok, "sequences"))
             {
-              Sequence *seek;
-
               tok = strtok (NULL, " \t\n");
-              if (tok && *tok == '[')
-                seek = sequence_parse (tok);
-              else
-                {
-                  seek = sequence_new ();
-                  sequence_append (seek, 1);
-                }
-
-              state->out_stream->write_line (state->out_stream, "#### Starting sequence search ####\n");
-              if (state->iterations > 0)
-                stream_printf (state->out_stream, "  Stop after: \t%ld iterations\n", state->iterations);
-              stream_printf (state->out_stream,
-                             "  Minimum gap:\t%d\n"
-                             "  Maximum gap:\t%d\n"
-                             "  AP length:\t%d\n"
-                             "  Seed Seq.:\t",
-                             state->min_gap, state->max_gap, state->ap_length);
-              sequence_print (seek, state->out_stream);
-              state->out_stream->write_line (state->out_stream, "\n");
-
-              if (seek == NULL)
+              seed = sequence_new ();
+              if (seed == NULL)
                 {
                   fprintf (stderr, "Failed to allocate sequence.");
                   exit (EXIT_FAILURE);
                 }
 
-              if (state->gap_set == NULL)
-                {
-                  state->gap_set = sequence_new ();
-                  for (i = state->min_gap; i <= state->max_gap; ++i)
-                    sequence_append (state->gap_set, i);
-                }
-              recurse_sequence (seek, state);
-              sequence_delete (seek);
+              seed->add_filter  (seed, state->filter);
+              seed->add_gap_set (seed, state->gap_set);
+
+              if (tok && *tok == '[')
+                seed->parse (seed, tok);
+              else
+                seed->append (seed, 1);
+
+              state->out_stream->write_line (state->out_stream, "#### Starting sequence search ####\n");
+              if (state->max_iterations > 0)
+                stream_printf (state->out_stream, "  Stop after: \t%ld iterations\n", state->max_iterations);
+              stream_printf (state->out_stream,
+                             "  AP length:\t%d\n"
+                             "  Seed Seq.:\t",
+                             state->ap_length);
+              seed->print (seed, state->out_stream);
+              state->out_stream->write_line (state->out_stream, "\n");
+              stream_printf (state->out_stream, "  Gap set:\t"); state->gap_set->print (state->gap_set, state->out_stream);
+              state->out_stream->write_line (state->out_stream, "\n");
             }
           else if (strmatch (tok, "colorings") ||
                    strmatch (tok, "partitions"))
             {
-              Coloring *seek;
-
-/*
-              tok = strtok (NULL, " \t\n");
-              if (tok && *tok == '[')
-                seek = sequence_parse (tok);
-              else
-*/
+              seed = coloring_new (state->n_colors);
+              if (seed == NULL)
                 {
-                  seek = coloring_new (state->n_colors);
-                  coloring_append (seek, 1, 0);
+                  fprintf (stderr, "Failed to allocate coloring.");
+                  exit (EXIT_FAILURE);
                 }
 
+              seed->add_filter  (seed, state->filter);
+              seed->add_gap_set (seed, state->gap_set);
+
+              if (tok && *tok == '[')
+                seed->parse (seed, tok);
+              else
+                seed->append (seed, 1);
+
               stream_printf (state->out_stream, "#### Starting coloring search ####\n");
-              if (state->iterations > 0)
-                stream_printf (state->out_stream, "  Stop after: \t%ld iterations\n", state->iterations);
+              if (state->max_iterations > 0)
+                stream_printf (state->out_stream, "  Stop after: \t%ld iterations\n", state->max_iterations);
               stream_printf (state->out_stream,
-                             "  Minimum gap:\t%d\n"
-                             "  Maximum gap:\t%d\n"
                              "  AP length:\t%d\n"
                              "  Seed Col.:\t",
-                             state->min_gap, state->max_gap, state->ap_length);
+                             state->ap_length);
+              seed->print (seed, state->out_stream);
               state->out_stream->write_line (state->out_stream, "\n");
-
-              recurse_colorings (seek, 1, state);
-
-              coloring_delete (seek);
+              stream_printf (state->out_stream, "  Gap set:\t"); state->gap_set->print (state->gap_set, state->out_stream);
+              state->out_stream->write_line (state->out_stream, "\n");
             }
           else if (tok && strmatch (tok, "words"))
             {
-              Sequence *seek = sequence_new ();
+              seed = sequence_new ();
+              if (seed == NULL)
+                {
+                  fprintf (stderr, "Failed to allocate coloring.");
+                  exit (EXIT_FAILURE);
+                }
 
+              seed->add_filter  (seed, state->filter);
               stream_printf (state->out_stream, "#### Starting word search ####\n");
-              if (state->iterations > 0)
-                stream_printf (state->out_stream, "  Stop after: \t%ld iterations\n", state->iterations);
-              stream_printf (state->out_stream, "  Alphabet:\t"); sequence_print (state->alphabet, state->out_stream);
-              stream_printf (state->out_stream, "\n  Seed Seq.:\t"); sequence_print (seek, state->out_stream);
+              if (state->max_iterations > 0)
+                stream_printf (state->out_stream, "  Stop after: \t%ld iterations\n", state->max_iterations);
+              stream_printf (state->out_stream, "  Alphabet:\t"); state->alphabet->print (state->alphabet, state->out_stream);
+              stream_printf (state->out_stream, "\n  Seed Seq.:\t"); seed->print (seed, state->out_stream);
               stream_printf (state->out_stream, "\n");
-
-              recurse_words (seek, state);
-
-              sequence_delete (state->alphabet);
-              sequence_delete (seek);
             }
           else
             fprintf (stderr, "Unrecognized search space ``%s''\n", tok);
-          stream_printf (state->out_stream, "Done. Time taken: %ds. Iterations: %ld\n",
-                         (int) (time (NULL) - start), get_iterations());
+
+          if (seed != NULL)
+            {
+              time_t start = time (NULL);
+
+              seed->recurse (seed, state);
+              stream_printf (state->out_stream, "Done. Time taken: %ds. Iterations: %ld\n",
+                             (int) (time (NULL) - start), seed->recurse_get_iterations (seed));
+              seed->destroy (seed);
+            }
+
           if (state->dump_iters)
             {
-              sequence_print_real (state->iters_data, 1, state->dump_stream);
+              state->iters_data->print (state->iters_data, state->dump_stream);
               fputs ("\n", state->dump_stream->_data);
             }
           state->out_stream->write_line (state->out_stream, "\n");
