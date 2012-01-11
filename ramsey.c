@@ -182,7 +182,6 @@ void process (struct _global_data *state)
           tok = strtok (NULL, " \t\n");
           if (tok && strmatch (tok, "sequences"))
             {
-              tok = strtok (NULL, " \t\n");
               seed = sequence_new ();
               if (seed == NULL)
                 {
@@ -193,6 +192,7 @@ void process (struct _global_data *state)
               seed->add_filter  (seed, state->filter);
               seed->add_gap_set (seed, state->gap_set);
 
+              tok = strtok (NULL, "\n");
               if (tok && *tok == '[')
                 seed->parse (seed, tok);
               else
@@ -223,6 +223,7 @@ void process (struct _global_data *state)
               seed->add_filter  (seed, state->filter);
               seed->add_gap_set (seed, state->gap_set);
 
+              tok = strtok (NULL, "\n");
               if (tok && *tok == '[')
                 seed->parse (seed, tok);
               else
@@ -250,6 +251,12 @@ void process (struct _global_data *state)
                 }
 
               seed->add_filter  (seed, state->filter);
+              tok = strtok (NULL, "\n");
+              if (tok && *tok == '[')
+                seed->parse (seed, tok);
+              else
+                seed->append (seed, 1);
+
               stream_printf (state->out_stream, "#### Starting word search ####\n");
               if (state->max_iterations > 0)
                 stream_printf (state->out_stream, "  Stop after: \t%ld iterations\n", state->max_iterations);
