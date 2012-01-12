@@ -1,4 +1,5 @@
 
+#include <time.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -11,27 +12,7 @@ struct _global_data global;
 
 int main (int argc, char *argv[])
 {
-
-#if 0
-  struct _global_state *defs = set_defaults ();
-  Stream *stm = file_stream_new ("r");
-
-  if (argc > 1)
-    {
-      if (stm->open (stm, argv[1]) == NULL)
-        {
-          fprintf (stderr, "Failed to open script ``%s''\n", argv[1]);
-          exit (EXIT_FAILURE);
-        }
-    }
-  else stm->_data = stdin;
-
-  process (stm, defs);
-
-  stm->close (stm);
-  file_stream_delete (stm);
-#endif
-
+  srand (time (NULL));
   return run_gtk_ui (argc, argv);
 }
 

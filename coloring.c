@@ -196,6 +196,25 @@ static void _coloring_print (const ramsey_t *rt, Stream *out)
   out->write_line (out, "]");
 }
 
+static void _coloring_randomize (ramsey_t *rt, int n)
+{
+  struct _coloring *c = (struct _coloring *) rt;
+  bool success = 0;
+  int i;
+  assert (rt && rt->type == TYPE_COLORING);
+
+  while (!success)
+    {
+      rt->empty (rt);
+      success = 1;
+      for (i = 1; success && i <= n; ++i)
+        {
+          rt->cell_append (rt, i, rand () % c->n_cells);
+          success &= rt->run_filters (rt);
+        }
+    }
+}
+
 /* ACCESSORS */
 static int _coloring_get_length (const ramsey_t *rt)
 {
@@ -277,6 +296,17 @@ static void _coloring_empty (ramsey_t *rt)
 
   for (i = 0; i < c->n_cells; ++i)
     c->sequence[i]->empty (c->sequence[i]);
+}
+
+static void _coloring_reset (ramsey_t *rt)
+{
+  struct _coloring *c = (struct _coloring *) rt;
+  int i;
+
+  assert (rt && rt->type == TYPE_COLORING);
+
+  for (i = 0; i < c->n_cells; ++i)
+    c->sequence[i]->reset (c->sequence[i]);
   rt->recurse_reset (rt);
 }
 
@@ -304,7 +334,9 @@ ramsey_t *coloring_new (int n_colors)
       rv->print   = _coloring_print;
       rv->parse   = _coloring_parse;
       rv->empty   = _coloring_empty;
+      rv->reset   = _coloring_reset;
       rv->destroy = _coloring_destroy;
+      rv->randomize = _coloring_randomize;
 
       rv->find_value  = _coloring_find_value;
       rv->get_length  = _coloring_get_length;

@@ -29,6 +29,7 @@ struct _global_data *set_defaults ()
       rv->max_iterations = 0;
       rv->n_colors = 3;
       rv->ap_length = 3;
+      rv->random_length = 10;
       rv->alphabet = sequence_new ();
       rv->alphabet->parse (rv->alphabet, "[1 2 3 4]");
       rv->gap_set = sequence_new ();
@@ -118,6 +119,7 @@ void process (struct _global_data *state)
           else if MATCH_THEN_SET (tok, ap_length)
           else if MATCH_THEN_SET (tok, max_iterations)
           else if MATCH_THEN_SET (tok, dump_depth)
+          else if MATCH_THEN_SET (tok, random_length)
           else if (strmatch (tok, "alphabet"))
             {
               tok = strtok (NULL, "\n");
@@ -226,6 +228,8 @@ void process (struct _global_data *state)
               tok = strtok (NULL, "\n");
               if (tok && *tok == '[')
                 seed->parse (seed, tok);
+              else if (tok && strmatch (tok, "random"))
+                seed->randomize (seed, state->random_length);
               else
                 seed->append (seed, 1);
 

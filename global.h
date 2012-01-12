@@ -21,8 +21,10 @@ struct _ramsey_t {
   e_ramsey_type type;
 
   const char *(*parse) (ramsey_t *, const char *data);
+  void (*randomize)    (ramsey_t *, int);
   void (*print)        (const ramsey_t *, Stream *);
   void (*empty)        (ramsey_t *);
+  void (*reset)        (ramsey_t *);
   void (*destroy)      (ramsey_t *);
 
   int (*add_filter)  (ramsey_t *, filter_func);
@@ -54,6 +56,7 @@ struct _global_data {
   int max_iterations;
   int n_colors;
   int ap_length;
+  int random_length;
   ramsey_t *alphabet;
   ramsey_t *gap_set;
   filter_func filter;

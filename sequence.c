@@ -222,6 +222,13 @@ static const char *_sequence_parse (ramsey_t *rt, const char *data)
   return data;
 }
 
+static void _sequence_randomize (ramsey_t *rt, int n)
+{
+  (void) rt;
+  (void) n;
+  fputs ("Warning: call to unimplemented function randomize() on sequence.\n", stderr);
+}
+
 /* ACCESSORS */
 static int _sequence_get_length (const ramsey_t *rt)
 {
@@ -318,6 +325,14 @@ static void _sequence_empty (ramsey_t *rt)
   assert (rt && rt->type == TYPE_SEQUENCE);
 
   s->length = 0;
+}
+
+static void _sequence_reset (ramsey_t *rt)
+{
+  struct _sequence *s = (struct _sequence *) rt;
+  assert (rt && rt->type == TYPE_SEQUENCE);
+
+  s->length = 0;
   s->n_filters = 0;
   rt->recurse_reset (rt);
 }
@@ -343,7 +358,9 @@ ramsey_t *sequence_new ()
       rv->print   = _sequence_print;
       rv->parse   = _sequence_parse;
       rv->empty   = _sequence_empty;
+      rv->reset   = _sequence_reset;
       rv->destroy = _sequence_destroy;
+      rv->randomize = _sequence_randomize;
 
       rv->find_value  = _sequence_find_value;
       rv->get_length  = _sequence_get_length;

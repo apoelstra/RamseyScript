@@ -1,4 +1,5 @@
 
+#include <time.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -30,6 +31,8 @@ int main (int argc, char *argv[])
   puts ("Welcome to RamseyScript CLI " VERSION);
   puts ("All code used in this project is public domain.");
   puts ("");
+
+  srand (time (NULL));
   process (defs);
 
   return 0;
