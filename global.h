@@ -5,20 +5,23 @@ typedef struct _ramsey_t ramsey_t;
 typedef struct _global_data global_data_t;
 typedef int bool;
 
-#include "stream.h"
-#include "filters.h"
-
-#define VERSION "0.1"
-
 typedef enum _e_ramsey_type {
   TYPE_INVALID,
   TYPE_SEQUENCE,
   TYPE_COLORING,
-  N_TYPES
+  TYPE_WORD
 } e_ramsey_type;
+
+
+#include "stream.h"
+#include "filter.h"
+
+#define VERSION "0.1"
 
 struct _ramsey_t {
   e_ramsey_type type;
+
+  const char *(*get_type) (const ramsey_t *);
 
   const char *(*parse) (ramsey_t *, const char *data);
   void (*randomize)    (ramsey_t *, int);
@@ -27,7 +30,10 @@ struct _ramsey_t {
   void (*reset)        (ramsey_t *);
   void (*destroy)      (ramsey_t *);
 
-  int (*add_filter)  (ramsey_t *, filter_func);
+  /* WARNING: when a filter is added to a ramsey_t, the
+   *          ramsey_t assumes ownership of the filter
+   *          and may modify or free it at its discretion. */
+  int (*add_filter)  (ramsey_t *, filter_t *);
   int (*add_gap_set) (ramsey_t *, const ramsey_t *);
   int (*run_filters) (ramsey_t *);
 
@@ -52,6 +58,11 @@ struct _ramsey_t {
   const void *(*get_priv_data_const) (const ramsey_t *);
 };
 
+struct _filter_cell {
+  filter_t *data;
+  struct _filter_cell *next;
+};
+
 struct _global_data {
   int max_iterations;
   int n_colors;
@@ -59,7 +70,7 @@ struct _global_data {
   int random_length;
   ramsey_t *alphabet;
   ramsey_t *gap_set;
-  filter_func filter;
+  struct _filter_cell *filters;
 
   Stream *dump_stream;
   bool dump_iters;

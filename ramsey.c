@@ -10,8 +10,7 @@
 #include "ramsey.h"
 #include "sequence.h"
 #include "coloring.h"
-#include "filters.h"
-#include "check.h"
+#include "filter.h"
 
 #define strmatch(s, r) (!strcmp ((s), (r)))
 #define MATCH_THEN_SET(tok, text)		\
@@ -34,7 +33,7 @@ struct _global_data *set_defaults ()
       rv->alphabet->parse (rv->alphabet, "[1 2 3 4]");
       rv->gap_set = sequence_new ();
       rv->gap_set->parse (rv->gap_set, "[1 ... 1000]");
-      rv->filter = cheap_check_sequence3;
+      rv->filters = NULL;
 
       rv->dump_stream = file_stream_new ("w");
       rv->dump_stream->_data = stdout;
@@ -153,13 +152,15 @@ void process (struct _global_data *state)
       /* filter <no-double-3-aps|no-additive-squares> */
       else if (strmatch (tok, "filter"))
         {
+          struct _filter_cell **cell = &state->filters;
+
           tok = strtok (NULL, " \t\n");
-          if (tok && strmatch (tok, "no_double_3_aps"))
-            state->filter = cheap_check_sequence3;
-          else if (tok && strmatch (tok, "no_additive_squares"))
-            state->filter = cheap_check_additive_square;
-          else
-            fprintf (stderr, "Unknown filter ``%s''\n", tok);
+          /* Goto end of linked list and add new filter */
+          while (*cell != NULL)
+            cell = &((*cell)->next);
+          (*cell) = malloc (sizeof **cell);
+          (*cell)->data = filter_new (tok);
+          (*cell)->next = NULL;
 	}
       /* dump <iterations-per-length> */
       else if (strmatch (tok, "dump"))
@@ -184,6 +185,8 @@ void process (struct _global_data *state)
           tok = strtok (NULL, " \t\n");
           if (tok && strmatch (tok, "sequences"))
             {
+              struct _filter_cell *filter_cell = state->filters;
+
               seed = sequence_new ();
               if (seed == NULL)
                 {
@@ -191,7 +194,11 @@ void process (struct _global_data *state)
                   exit (EXIT_FAILURE);
                 }
 
-              seed->add_filter  (seed, state->filter);
+              while (filter_cell)
+                {
+                  seed->add_filter  (seed, filter_cell->data->clone (filter_cell->data));
+                  filter_cell = filter_cell->next;
+                }
               seed->add_gap_set (seed, state->gap_set);
 
               tok = strtok (NULL, "\n");
@@ -215,6 +222,8 @@ void process (struct _global_data *state)
           else if (strmatch (tok, "colorings") ||
                    strmatch (tok, "partitions"))
             {
+              struct _filter_cell *filter_cell = state->filters;
+
               seed = coloring_new (state->n_colors);
               if (seed == NULL)
                 {
@@ -222,7 +231,11 @@ void process (struct _global_data *state)
                   exit (EXIT_FAILURE);
                 }
 
-              seed->add_filter  (seed, state->filter);
+              while (filter_cell)
+                {
+                  seed->add_filter  (seed, filter_cell->data->clone (filter_cell->data));
+                  filter_cell = filter_cell->next;
+                }
               seed->add_gap_set (seed, state->gap_set);
 
               tok = strtok (NULL, "\n");
@@ -247,14 +260,20 @@ void process (struct _global_data *state)
             }
           else if (tok && strmatch (tok, "words"))
             {
-              seed = sequence_new ();
+              struct _filter_cell *filter_cell = state->filters;
+
+              seed = word_new ();
               if (seed == NULL)
                 {
-                  fprintf (stderr, "Failed to allocate coloring.");
+                  fprintf (stderr, "Failed to allocate word.");
                   exit (EXIT_FAILURE);
                 }
 
-              seed->add_filter  (seed, state->filter);
+              while (filter_cell)
+                {
+                  seed->add_filter  (seed, filter_cell->data->clone (filter_cell->data));
+                  filter_cell = filter_cell->next;
+                }
               tok = strtok (NULL, "\n");
               if (tok && *tok == '[')
                 seed->parse (seed, tok);

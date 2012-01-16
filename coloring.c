@@ -19,6 +19,12 @@ struct _coloring {
   int r_max_found;
 };
 
+static const char *_coloring_get_type (const ramsey_t *rt)
+{
+  (void) rt;
+  return "coloring";
+}
+
 static const ramsey_t *_coloring_find_value (const ramsey_t *rt, int value)
 {
   struct _coloring *c = (struct _coloring *) rt;
@@ -46,15 +52,19 @@ static int _coloring_run_filters (ramsey_t *rt)
   return 1;
 }
 
-static int _coloring_add_filter (ramsey_t *rt, filter_func f)
+static int _coloring_add_filter (ramsey_t *rt, filter_t *f)
 {
   struct _coloring *c = (struct _coloring *) rt;
   int i;
   assert (rt && rt->type == TYPE_COLORING);
 
   for (i = 0; i < c->n_cells; ++i)
-    if (!c->sequence[i]->add_filter (c->sequence[i], f))
-      return 0;
+    {
+      if (i > 0)
+        f = f->clone (f);
+      if (!c->sequence[i]->add_filter (c->sequence[i], f))
+        return 0;
+    }
 
   return 1;
 }
@@ -81,7 +91,8 @@ static int _coloring_add_gap_set (ramsey_t *rt, const ramsey_t *gap_set)
     }
   else
     {
-      fprintf (stderr, "Bad gap set type %d for coloring search, sorry.\n", gap_set->type);
+      fprintf (stderr, "Bad gap set type ``%s'' for coloring search, sorry.\n",
+               gap_set->get_type (gap_set));
       return 0;
     }
 
@@ -337,6 +348,8 @@ ramsey_t *coloring_new (int n_colors)
       rv->reset   = _coloring_reset;
       rv->destroy = _coloring_destroy;
       rv->randomize = _coloring_randomize;
+
+      rv->get_type = _coloring_get_type;
 
       rv->find_value  = _coloring_find_value;
       rv->get_length  = _coloring_get_length;
