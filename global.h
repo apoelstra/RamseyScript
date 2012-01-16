@@ -17,7 +17,7 @@ typedef enum _e_ramsey_type {
 #include "stream.h"
 #include "filter.h"
 
-#define VERSION "0.1"
+#define VERSION "0.2"
 
 struct _ramsey_t {
   e_ramsey_type type;

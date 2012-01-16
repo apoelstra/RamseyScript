@@ -32,13 +32,13 @@ int recursion_preamble (ramsey_t *rt, global_data_t *state)
         }
       ++rt->r_iterations;
 
-      if (1||rt->get_length (rt) > rt->r_max_found)
+      if (rt->get_length (rt) > rt->r_max_found)
         {
           stream_printf (state->out_stream,
                          "New maximal %s (length %3d): ",
                          rt->get_type (rt), rt->get_length (rt));
           rt->print (rt, state->out_stream);
-          stream_printf (state->out_stream, "%c\n", rt->run_filters (rt) ? '*' : ' ');
+          stream_printf (state->out_stream, "\n");
           rt->r_max_found = rt->get_length (rt);
         }
     }
