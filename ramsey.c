@@ -7,11 +7,12 @@
 #include <strings.h>
 
 #include "global.h"
+#include "coloring.h"
+#include "filter.h"
+#include "permutation.h"
 #include "ramsey.h"
 #include "sequence.h"
-#include "coloring.h"
-#include "permutation.h"
-#include "filter.h"
+#include "word.h"
 
 #define strmatch(s, r) (!strcmp ((s), (r)))
 #define MATCH_THEN_SET(tok, text)		\

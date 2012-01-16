@@ -399,13 +399,6 @@ ramsey_t *sequence_new_zeros (int size, bool one_indexed)
   return rv;
 }
 
-ramsey_t *word_new ()
-{
-  ramsey_t *rv = sequence_new ();
-  rv->type = TYPE_WORD;
-  return rv;
-}
-
 /* PROTOTYPE */
 const ramsey_t *sequence_prototype ()
 {
@@ -414,14 +407,5 @@ const ramsey_t *sequence_prototype ()
     rv = sequence_new ();
   return rv;
 }
-
-const ramsey_t *word_prototype ()
-{
-  static ramsey_t *rv;
-  if (rv == NULL)
-    rv = word_new ();
-  return rv;
-}
-
 
 

@@ -134,8 +134,9 @@ static bool _filter_set_mode (filter_t *flt, e_filter_mode mode)
     case FILTER_NO_ADDITIVE_SQUARE:
       flt->mode = MODE_LAST_ONLY;
       flt->run  = cheap_check_additive_square;
-      fprintf (stderr, "Warning: enabling full-check on unsupported filter ``%s''\n",
-               flt->get_type (flt));
+      if (mode != MODE_LAST_ONLY)
+        fprintf (stderr, "Warning: enabling full-check on unsupported filter ``%s''\n",
+                 flt->get_type (flt));
       return (mode == MODE_LAST_ONLY);
     /* All modes supported */
     case FILTER_NO_DOUBLE_3_AP:
