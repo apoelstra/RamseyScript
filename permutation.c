@@ -33,7 +33,7 @@ static void _permutation_recurse (ramsey_t *rt, global_data_t *state)
   int *val;
   assert (rt && rt->type == TYPE_PERMUTATION);
 
-  if (!recursion_preamble_no_prune (rt, state))
+  if (!recursion_preamble (rt, state))
     return;
 
   /* Initial iteration -- append next number */

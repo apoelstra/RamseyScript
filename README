@@ -15,14 +15,10 @@ LANGUAGE SPECIFICATION
 Variables
 ===============
 
-  set <max-iterations | max-depth | gap-set | n-colors | ap-length |
-       random-length | alphabet | dump-file> <value>
+  set <variable> <value>
 
 Sets a variable. Not all variables are effective for each search space.
-
-max-iterations: The number of iterations to run before stopping, or 0 to
-                search the entire space.
-                Default value: 0
+``variable'' should be one of:
 
   alphabet: The alphabet to use when searching words. Specified in the
             format [c1 c2 c3 ... cn].
@@ -52,12 +48,29 @@ max-iterations: The number of iterations to run before stopping, or 0 to
  max-depth: The maximum depth to search the space, or 0 for no maximum.
             Default value: 0
 
+max-iterations: The number of iterations to run before stopping, or 0 to
+                search the entire space.
+                Default value: 0
+
+prune-tree: Whether or not the search tree should be pruned; i.e., if some
+            element is filtered out, should new elements be built from it?
+
+            For example, if a sequence S contains a double-3-AP, then every
+            sequence starting with S will too, so we would set prune-tree
+            to nonzero.
+
+            But if a permutation P contains a double-3-AP, it still might be
+            that permutations built from P could be double-3-AP-free, so we
+            would set prune-tree to 0.
+           
+            Default value: 1
+
   n-colors: The number of colors to use when searching colorings.
             Default value: 3
 
- random-length: If the seed is set to RANDOM on a supported space, this
-                sets the length of the generated seed.
-                Default value: 10
+random-length: If the seed is set to RANDOM on a supported space, this
+               sets the length of the generated seed.
+               Default value: 10
 
 
 
@@ -155,9 +168,6 @@ search colorings RANDOM
 ## Explore the space of permutations with no 3-AP's. Output the iterations
 ## at each depth (i.e., the number of valid permutations of each length)
 ## to output.dump.
-
-# Note that since the search space is not pruned efficiently (read: at all)
-# this search will take far longer than it should.
 
 # The resultant output will match the values computed by G.J. Simmons.
 # See American Mathematical Monthly 82 (1975) pp. 76-77.

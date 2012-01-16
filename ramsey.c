@@ -28,6 +28,7 @@ struct _global_data *set_defaults ()
     {
       rv->max_iterations = 0;
       rv->max_depth = 0;
+      rv->prune_tree = 1;
       rv->n_colors = 3;
       rv->ap_length = 3;
       rv->random_length = 10;
@@ -120,6 +121,7 @@ void process (struct _global_data *state)
           else if MATCH_THEN_SET (tok, ap_length)
           else if MATCH_THEN_SET (tok, max_iterations)
           else if MATCH_THEN_SET (tok, max_depth)
+          else if MATCH_THEN_SET (tok, prune_tree)
           else if MATCH_THEN_SET (tok, dump_depth)
           else if MATCH_THEN_SET (tok, random_length)
           else if (strmatch (tok, "alphabet"))
@@ -151,6 +153,8 @@ void process (struct _global_data *state)
                     }
                 }
             }
+          else
+            fprintf (stderr, "Unknown variable ``%s''.\n", tok);
         }
       /* filter <no-double-3-aps|no-additive-squares> */
       else if (strmatch (tok, "filter"))

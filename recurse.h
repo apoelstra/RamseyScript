@@ -4,7 +4,6 @@
 #include "global.h"
 
 int recursion_preamble (ramsey_t *rt, global_data_t *state);
-int recursion_preamble_no_prune (ramsey_t *rt, global_data_t *state);
 void recursion_postamble (ramsey_t *rt);
 void recursion_reset (ramsey_t *rt);
 

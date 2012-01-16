@@ -70,6 +70,7 @@ struct _global_data {
   int max_iterations;
   int max_depth;
 
+  bool prune_tree;
   int n_colors;
   int ap_length;
   int random_length;
