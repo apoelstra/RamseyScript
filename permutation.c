@@ -51,7 +51,7 @@ static void _permutation_recurse (ramsey_t *rt, global_data_t *state)
       rt->recurse (rt, state);
     }
   /* Remove new number, which is now at the start of the array */
-  memcpy (&val[0], &val[1], rt->get_length (rt) * sizeof *val);
+  memmove (&val[0], &val[1], rt->get_length (rt) * sizeof *val);
   rt->deappend (rt);
 
   recursion_postamble (rt);
