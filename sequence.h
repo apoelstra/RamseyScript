@@ -8,4 +8,7 @@ ramsey_t *sequence_new ();
 ramsey_t *sequence_new_zeros (int size, bool one_indexed);
 ramsey_t *word_new ();
 
+const ramsey_t *sequence_prototype ();
+const ramsey_t *word_prototype ();
+
 #endif

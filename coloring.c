@@ -391,4 +391,12 @@ ramsey_t *coloring_new (int n_colors)
   return rv;
 }
 
+/* PROTOTYPE */
+const ramsey_t *coloring_prototype ()
+{
+  static ramsey_t *rv;
+  if (rv == NULL)
+    rv = coloring_new (1);
+  return rv;
+}
 

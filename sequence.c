@@ -449,3 +449,22 @@ ramsey_t *word_new ()
   return rv;
 }
 
+/* PROTOTYPE */
+const ramsey_t *sequence_prototype ()
+{
+  static ramsey_t *rv;
+  if (rv == NULL)
+    rv = sequence_new ();
+  return rv;
+}
+
+const ramsey_t *word_prototype ()
+{
+  static ramsey_t *rv;
+  if (rv == NULL)
+    rv = word_new ();
+  return rv;
+}
+
+
+
