@@ -5,18 +5,16 @@
 #include <ctype.h>
 
 #include "global.h"
-#include "sequence.h"
 #include "coloring.h"
+#include "recurse.h"
+#include "sequence.h"
 #include "stream.h"
 
 struct _coloring {
   ramsey_t parent;
+
   int n_cells;
   ramsey_t **sequence;
-
-  /* Recursion state variables */
-  int r_iterations;
-  int r_max_found;
 };
 
 static const char *_coloring_get_type (const ramsey_t *rt)
@@ -100,28 +98,6 @@ static int _coloring_add_gap_set (ramsey_t *rt, const ramsey_t *gap_set)
 }
 
 /* RECURSION */
-static void _coloring_recurse_reset (ramsey_t *rt)
-{
-  struct _coloring *c = (struct _coloring *) rt;
-  assert (rt && rt->type == TYPE_COLORING);
-  c->r_iterations = 0;
-  c->r_max_found = 0;
-}
-
-static int _coloring_recurse_get_iterations (const ramsey_t *rt)
-{
-  struct _coloring *c = (struct _coloring *) rt;
-  assert (rt && rt->type == TYPE_COLORING);
-  return c->r_iterations;
-}
-
-static int _coloring_recurse_get_max_found (const ramsey_t *rt)
-{
-  struct _coloring *c = (struct _coloring *) rt;
-  assert (rt && rt->type == TYPE_COLORING);
-  return c->r_max_found;
-}
-
 static void _coloring_real_recurse (ramsey_t *rt, int max_value, global_data_t *state)
 {
   struct _coloring *c = (struct _coloring *) rt;
@@ -130,26 +106,8 @@ static void _coloring_real_recurse (ramsey_t *rt, int max_value, global_data_t *
   assert (rt && rt->type == TYPE_COLORING);
   assert (state != NULL);
 
-  if (!rt->run_filters (rt) || state->kill_now)
+  if (!recursion_preamble (rt, state))
     return; 
-  if (state->max_iterations && c->r_iterations >= state->max_iterations)
-    return;
-
-  if (state->dump_iters && rt->get_length (rt) < state->dump_depth)
-    {
-      int *dump_val = state->iters_data->get_priv_data (state->iters_data);
-      ++dump_val[rt->get_length (rt)];
-    }
-  ++c->r_iterations;
-
-  if (rt->get_length (rt) > c->r_max_found)
-    {
-      stream_printf (state->out_stream, "Got new maximum length %d. Coloring: ",
-                     rt->get_length (rt));
-      rt->print (rt, state->out_stream);
-      stream_printf (state->out_stream, "\n");
-      c->r_max_found = rt->get_length (rt);
-    }
 
   for (i = 0; i < c->n_cells; ++i)
     {
@@ -162,6 +120,8 @@ static void _coloring_real_recurse (ramsey_t *rt, int max_value, global_data_t *
       if (c->sequence[i]->get_length (c->sequence[i]) == 0)
         break;
     }
+
+  recursion_postamble (rt);
 }
 
 static void _coloring_recurse (ramsey_t *rt, global_data_t *state)
@@ -318,7 +278,7 @@ static void _coloring_reset (ramsey_t *rt)
 
   for (i = 0; i < c->n_cells; ++i)
     c->sequence[i]->reset (c->sequence[i]);
-  rt->recurse_reset (rt);
+  recursion_reset (rt);
 }
 
 static void _coloring_destroy (ramsey_t *rt)
@@ -342,14 +302,16 @@ ramsey_t *coloring_new (int n_colors)
   if (c != NULL)
     {
       rv->type = TYPE_COLORING;
+      rv->get_type = _coloring_get_type;
+
       rv->print   = _coloring_print;
       rv->parse   = _coloring_parse;
       rv->empty   = _coloring_empty;
       rv->reset   = _coloring_reset;
       rv->destroy = _coloring_destroy;
       rv->randomize = _coloring_randomize;
-
-      rv->get_type = _coloring_get_type;
+      rv->recurse = _coloring_recurse;
+      recursion_reset (rv);
 
       rv->find_value  = _coloring_find_value;
       rv->get_length  = _coloring_get_length;
@@ -367,12 +329,6 @@ ramsey_t *coloring_new (int n_colors)
       rv->add_filter  = _coloring_add_filter;
       rv->add_gap_set = _coloring_add_gap_set;
       rv->run_filters = _coloring_run_filters;
-
-      rv->recurse       = _coloring_recurse;
-      rv->recurse_reset = _coloring_recurse_reset;
-      rv->recurse_get_iterations = _coloring_recurse_get_iterations;
-      rv->recurse_get_max_length = _coloring_recurse_get_max_found;
-      _coloring_recurse_reset (rv);
 
       c->n_cells = n_colors;
       c->sequence = malloc (n_colors * sizeof *c->sequence);

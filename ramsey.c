@@ -10,6 +10,7 @@
 #include "ramsey.h"
 #include "sequence.h"
 #include "coloring.h"
+#include "permutation.h"
 #include "filter.h"
 
 #define strmatch(s, r) (!strcmp ((s), (r)))
@@ -26,6 +27,7 @@ struct _global_data *set_defaults ()
   if (rv)
     {
       rv->max_iterations = 0;
+      rv->max_depth = 0;
       rv->n_colors = 3;
       rv->ap_length = 3;
       rv->random_length = 10;
@@ -117,6 +119,7 @@ void process (struct _global_data *state)
           if MATCH_THEN_SET (tok, n_colors)
           else if MATCH_THEN_SET (tok, ap_length)
           else if MATCH_THEN_SET (tok, max_iterations)
+          else if MATCH_THEN_SET (tok, max_depth)
           else if MATCH_THEN_SET (tok, dump_depth)
           else if MATCH_THEN_SET (tok, random_length)
           else if (strmatch (tok, "alphabet"))
@@ -210,6 +213,8 @@ void process (struct _global_data *state)
               state->out_stream->write_line (state->out_stream, "#### Starting sequence search ####\n");
               if (state->max_iterations > 0)
                 stream_printf (state->out_stream, "  Stop after: \t%ld iterations\n", state->max_iterations);
+              if (state->max_depth > 0)
+                stream_printf (state->out_stream, "  Max. depth: \t%ld\n", state->max_depth);
               stream_printf (state->out_stream,
                              "  AP length:\t%d\n"
                              "  Seed Seq.:\t",
@@ -249,6 +254,8 @@ void process (struct _global_data *state)
               stream_printf (state->out_stream, "#### Starting coloring search ####\n");
               if (state->max_iterations > 0)
                 stream_printf (state->out_stream, "  Stop after: \t%ld iterations\n", state->max_iterations);
+              if (state->max_depth > 0)
+                stream_printf (state->out_stream, "  Max. depth: \t%ld\n", state->max_depth);
               stream_printf (state->out_stream,
                              "  AP length:\t%d\n"
                              "  Seed Col.:\t",
@@ -283,8 +290,41 @@ void process (struct _global_data *state)
               stream_printf (state->out_stream, "#### Starting word search ####\n");
               if (state->max_iterations > 0)
                 stream_printf (state->out_stream, "  Stop after: \t%ld iterations\n", state->max_iterations);
+              if (state->max_depth > 0)
+                stream_printf (state->out_stream, "  Max. depth: \t%ld\n", state->max_depth);
               stream_printf (state->out_stream, "  Alphabet:\t"); state->alphabet->print (state->alphabet, state->out_stream);
               stream_printf (state->out_stream, "\n  Seed Seq.:\t"); seed->print (seed, state->out_stream);
+              stream_printf (state->out_stream, "\n");
+            }
+          else if (tok && strmatch (tok, "permutations"))
+            {
+              struct _filter_cell *filter_cell = state->filters;
+
+              seed = permutation_new ();
+              if (seed == NULL)
+                {
+                  fprintf (stderr, "Failed to allocate sequence.");
+                  exit (EXIT_FAILURE);
+                }
+
+              while (filter_cell)
+                {
+                  seed->add_filter  (seed, filter_cell->data->clone (filter_cell->data));
+                  filter_cell = filter_cell->next;
+                }
+
+              tok = strtok (NULL, "\n");
+              if (tok && *tok == '[')
+                seed->parse (seed, tok);
+              else
+                seed->append (seed, 1);
+
+              stream_printf (state->out_stream, "#### Starting permutation search ####\n");
+              if (state->max_iterations > 0)
+                stream_printf (state->out_stream, "  Stop after: \t%ld iterations\n", state->max_iterations);
+              if (state->max_depth > 0)
+                stream_printf (state->out_stream, "  Max. depth: \t%ld\n", state->max_depth);
+              stream_printf (state->out_stream, "\n  Seed Perm.:\t"); seed->print (seed, state->out_stream);
               stream_printf (state->out_stream, "\n");
             }
           else
@@ -296,7 +336,7 @@ void process (struct _global_data *state)
 
               seed->recurse (seed, state);
               stream_printf (state->out_stream, "Done. Time taken: %ds. Iterations: %ld\n",
-                             (int) (time (NULL) - start), seed->recurse_get_iterations (seed));
+                             (int) (time (NULL) - start), seed->r_iterations);
               seed->destroy (seed);
             }
 

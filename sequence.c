@@ -5,6 +5,8 @@
 #include <assert.h>
 #include <ctype.h>
 
+#include "global.h"
+#include "recurse.h"
 #include "stream.h"
 #include "sequence.h"
 
@@ -13,18 +15,15 @@
 
 struct _sequence {
   ramsey_t parent;
-  int *value;
-  int length;
-  int max_length;
 
-  const ramsey_t *gap_set;
   filter_t **filter;
   int n_filters;
   int max_filters;
 
-  /* Recursion state variables */
-  int r_iterations;
-  int r_max_found;
+  int *value;
+  int length;
+  int max_length;
+  const ramsey_t *gap_set;
 };
 
 static const char *_sequence_get_type (const ramsey_t *rt)
@@ -110,56 +109,15 @@ static int _sequence_add_gap_set (ramsey_t *rt, const ramsey_t *gap_set)
 }
 
 /* RECURSION */
-static void _sequence_recurse_reset (ramsey_t *rt)
-{
-  struct _sequence *s = (struct _sequence *) rt;
-  assert (rt && (rt->type == TYPE_SEQUENCE || TYPE_WORD));
-  s->r_iterations = 0;
-  s->r_max_found = 0;
-}
-
-static int _sequence_recurse_get_iterations (const ramsey_t *rt)
-{
-  struct _sequence *s = (struct _sequence *) rt;
-  assert (rt && (rt->type == TYPE_SEQUENCE || TYPE_WORD));
-  return s->r_iterations;
-}
-
-static int _sequence_recurse_get_max_found (const ramsey_t *rt)
-{
-  struct _sequence *s = (struct _sequence *) rt;
-  assert (rt && (rt->type == TYPE_SEQUENCE || TYPE_WORD));
-  return s->r_max_found;
-}
-
 static void _sequence_recurse (ramsey_t *rt, global_data_t *state)
 {
   int i;
   int *gap_set;
   int gap_set_len;
-  struct _sequence *s = (struct _sequence *) rt;
   assert (rt && (rt->type == TYPE_SEQUENCE || TYPE_WORD));
 
-  if (!rt->run_filters (rt) || state->kill_now)
+  if (!recursion_preamble (rt, state))
     return;
-  if (state->max_iterations && s->r_iterations >= state->max_iterations)
-    return;
-
-  if (state->dump_iters && s->length < state->dump_depth)
-    {
-      int *dump_val = state->iters_data->get_priv_data (state->iters_data);
-      ++dump_val[s->length];
-    }
-  ++s->r_iterations;
-
-  if (s->length > s->r_max_found)
-    {
-      stream_printf (state->out_stream,
-                     "Got new maximum length %d. Sequence: ", s->length);
-      rt->print (rt, state->out_stream);
-      stream_printf (state->out_stream, "\n");
-      s->r_max_found = s->length;
-    }
 
   gap_set = state->gap_set->get_priv_data (state->gap_set);
   gap_set_len = state->gap_set->get_length (state->gap_set);
@@ -169,6 +127,8 @@ static void _sequence_recurse (ramsey_t *rt, global_data_t *state)
       rt->recurse (rt, state);
       rt->deappend (rt);
     }
+
+  recursion_postamble (rt);
 }
 
 /* PRINT / PARSE */
@@ -241,9 +201,9 @@ static const char *_sequence_parse (ramsey_t *rt, const char *data)
 
 static void _sequence_randomize (ramsey_t *rt, int n)
 {
-  (void) rt;
   (void) n;
-  fputs ("Warning: call to unimplemented function randomize() on sequence.\n", stderr);
+  fprintf (stderr, "Warning: randomize() unimplemented for ``%s''.\n",
+           rt->get_type (rt));
 }
 
 /* ACCESSORS */
@@ -355,7 +315,7 @@ static void _sequence_reset (ramsey_t *rt)
 
   s->length = 0;
   s->n_filters = 0;
-  rt->recurse_reset (rt);
+  recursion_reset (rt);
 }
 
 static void _sequence_destroy (ramsey_t *rt)
@@ -379,6 +339,7 @@ ramsey_t *sequence_new ()
   if (s != NULL)
     {
       rv->type = TYPE_SEQUENCE;
+      rv->get_type = _sequence_get_type;
 
       rv->print   = _sequence_print;
       rv->parse   = _sequence_parse;
@@ -386,8 +347,8 @@ ramsey_t *sequence_new ()
       rv->reset   = _sequence_reset;
       rv->destroy = _sequence_destroy;
       rv->randomize = _sequence_randomize;
-
-      rv->get_type = _sequence_get_type;
+      rv->recurse = _sequence_recurse;
+      recursion_reset (rv);
 
       rv->find_value  = _sequence_find_value;
       rv->get_length  = _sequence_get_length;
@@ -406,12 +367,6 @@ ramsey_t *sequence_new ()
       rv->add_gap_set = _sequence_add_gap_set;
       rv->run_filters = _sequence_run_filters;
 
-      rv->recurse       = _sequence_recurse;
-      rv->recurse_reset = _sequence_recurse_reset;
-      rv->recurse_get_iterations = _sequence_recurse_get_iterations;
-      rv->recurse_get_max_length = _sequence_recurse_get_max_found;
-      _sequence_recurse_reset (rv);
-
       s->gap_set   = NULL;
       s->length    = 0;
       s->n_filters = 0;
@@ -420,8 +375,10 @@ ramsey_t *sequence_new ()
       s->max_filters = DEFAULT_MAX_FILTERS;
       s->filter = malloc (s->max_filters * sizeof *s->filter);
 
-      if (s->value == NULL)
+      if (s->value == NULL || s->filter == NULL)
         {
+          free (s->value);
+          free (s->filter);
           free (s);
           rv = NULL;
         }

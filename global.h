@@ -9,7 +9,8 @@ typedef enum _e_ramsey_type {
   TYPE_INVALID,
   TYPE_SEQUENCE,
   TYPE_COLORING,
-  TYPE_WORD
+  TYPE_WORD,
+  TYPE_PERMUTATION
 } e_ramsey_type;
 
 
@@ -20,6 +21,11 @@ typedef enum _e_ramsey_type {
 
 struct _ramsey_t {
   e_ramsey_type type;
+
+  /* Recursion state variables */
+  int r_depth;
+  int r_iterations;
+  int r_max_found;
 
   const char *(*get_type) (const ramsey_t *);
 
@@ -38,9 +44,6 @@ struct _ramsey_t {
   int (*run_filters) (ramsey_t *);
 
   void (*recurse)       (ramsey_t *, global_data_t *);
-  void (*recurse_reset) (ramsey_t *);
-  int  (*recurse_get_iterations) (const ramsey_t *);
-  int  (*recurse_get_max_length) (const ramsey_t *);
 
   int (*get_length)  (const ramsey_t *);
   int (*get_maximum) (const ramsey_t *);
@@ -65,6 +68,8 @@ struct _filter_cell {
 
 struct _global_data {
   int max_iterations;
+  int max_depth;
+
   int n_colors;
   int ap_length;
   int random_length;
@@ -83,5 +88,7 @@ struct _global_data {
   Stream *in_stream;
   Stream *err_stream;
 };
+
+int recursion_preamble (ramsey_t *rt, global_data_t *state);
 
 #endif

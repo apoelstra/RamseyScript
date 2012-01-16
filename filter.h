@@ -6,6 +6,7 @@
 typedef struct _filter_t filter_t;
 
 typedef enum _e_filter_type {
+  FILTER_NO_3_AP,
   FILTER_NO_DOUBLE_3_AP,
   FILTER_NO_ADDITIVE_SQUARE,
   FILTER_CUSTOM
@@ -13,8 +14,7 @@ typedef enum _e_filter_type {
 
 typedef enum _e_filter_mode {
   MODE_FULL,
-  MODE_LAST_ONLY,
-  N_FILTER_MODES
+  MODE_LAST_ONLY
 } e_filter_mode;
 
 struct _filter_t {
