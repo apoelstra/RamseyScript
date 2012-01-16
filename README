@@ -10,17 +10,23 @@ run it, or press F5.
 LANGUAGE SPECIFICATION
 =======================
 
-  set <iterations | min-gap | max_gap | n-colors | ap-length |
-       alphabet | dump-file> <value>
+
+===============
+Variables
+===============
+
+  set <max-iterations | max-depth | gap-set | n-colors | ap-length |
+       random-length | alphabet | dump-file> <value>
 
 Sets a variable. Not all variables are effective for each search space.
 
-max_iterations: The number of iterations to run before stopping, or 0 to
+max-iterations: The number of iterations to run before stopping, or 0 to
                 search the entire space.
                 Default value: 0
 
-  n-colors: The number of colors to use when searching colorings.
-            Default value: 3
+  alphabet: The alphabet to use when searching words. Specified in the
+            format [c1 c2 c3 ... cn].
+            Default value: [1 2 3 4]
 
  ap-length: The length of arithmetic progressions to check when using
             AP-related filters. (This may be broken up into a min/max
@@ -28,38 +34,54 @@ max_iterations: The number of iterations to run before stopping, or 0 to
             so this would be superfluous.)
             Default value: 3
 
-  alphabet: The alphabet to use when searching words. Specified in the
-            format [c1 c2 c3 ... cn].
-            Default value: [1 2 3 4]
-
-   gap-set: The set of allowable gap sizes when searching sequences.
-            format [g1 g2 g3 ... gn].
-            Default value: [1 ... 1000]
-
  dump-file: The file to output dump output (see 'dump'), or "-" to use
             stdout.
             Default value: -
 
-dump-depth: The maximum depth to output iteration counts for, if this
-            output is enabled. (See 'dump'.)
-            Default value: 400
+   gap-set: The set of allowable gap sizes when searching sequences or
+            colorings. For sequences, the value must be a 1D sequence
+            of the form [x y z] containing the allowable gap sizes.
 
-  filter <no-double-3-aps | no-additive-squares>
+            For colorings, if the gap-set is a sequence, this sequence
+            defines the allowable gap sizes for each color. Alternately,
+            if the gap-set is a coloring (i.e., a sequence of sequences)
+            then each color of the gap-set defines the allowable gap
+            sizes for the respective colors in the search space.
+            Default value: [1 ... 1000]
 
-Chooses which filter to when searching spaces. WARNING: If you choose a
-filter that doesn't make sense for your search space (e.g., looking for
-strictly increasing sequences with no additive squares), the program
-won't catch this. (Since no strictly increasing sequence has an additive
-square, in this case it would simply recurse indefinitely.)
+ max-depth: The maximum depth to search the space, or 0 for no maximum.
+            Default value: 0
 
-      no-double-3-aps: Only recurse on sequences or colorings with no
-                       double 3-AP's.
+  n-colors: The number of colors to use when searching colorings.
+            Default value: 3
+
+ random-length: If the seed is set to RANDOM on a supported space, this
+                sets the length of the generated seed.
+                Default value: 10
+
+
+
+===============
+Filters
+===============
+
+  filter <no-3-aps | no-double-3-aps | no-additive-squares>
+
+Chooses which filter to when searching spaces.
+
+             no-3-aps: Only recurse on objects with no 3-AP's
+
+      no-double-3-aps: Only recurse on objects with no double-3-AP's
 
   no-additive-squares: Only recurse on words with no additive squares
 
 
 
-  search <sequences | colorings | words> [seed]
+===============
+Search Spaces
+===============
+
+  search <sequences | colorings | words | permutations> [seed]
 
 Selects a search space and recursively explores it, looking for longer
 and longer elements which satisfy the given filter. There is no default
@@ -67,18 +89,28 @@ value. If you do not specify a 'search' line, the program will do
 nothing.
 
 
-   sequences: The space of strictly increasing sequences
-              Default seed: [1]
-
    colorings: The space of r-colorings of integers, for some given r.
+              For colorings, the seed may be RANDOM, in which case a
+              seed of length random-length is generated.
               Default seed: [[1] [] []]
 
   partitions: synonym of 'colorings'
+
+permutations: The space of permutations of [1,n]. You cannot change
+              the seed for this space.
+              Default seed: [1]
+
+   sequences: The space of strictly increasing sequences
+              Default seed: [1]
 
        words: The space of words on some given alphabet
               Default seed: []
 
 
+
+===============
+Additional Output
+===============
 
   dump <iterations-per-length>
 
@@ -86,5 +118,61 @@ Output auxiliary data about the search space or program operation.
 
 iterations-per-length: dump the number of iterations spent at each
                        search-space depth
+
+
+
+
+
+EXAMPLES
+===================
+
+## Look for 2-colorings of [1, N] with no double-3-ap's
+## This will find that there is no such coloring of [1, 17],
+## though there is one of [1, 16].
+
+filter no-double-3-aps
+search colorings
+
+# (end file)
+
+
+## Explore the space of 3-colorings of [1, N] with no double-3-ap's.
+## One does exist of [1, 390], but this is all that is known so far.
+
+filter no-double-3-aps
+set max-iterations 10000000
+
+search colorings RANDOM
+search colorings RANDOM
+search colorings RANDOM
+search colorings RANDOM
+search colorings RANDOM
+
+# (end file)
+
+
+
+## Explore the space of permutations with no 3-AP's. Output the iterations
+## at each depth (i.e., the number of valid permutations of each length)
+## to output.dump.
+
+# Note that since the search space is not pruned efficiently (read: at all)
+# this search will take far longer than it should.
+
+# The resultant output will match the values computed by G.J. Simmons.
+# See American Mathematical Monthly 82 (1975) pp. 76-77.
+
+filter no-3-aps
+
+set dump-depth 25
+set dump-file output.dump
+dump iterations-per-length
+
+set max-depth 20
+search permutations
+
+# (end file)
+
+
 
 
