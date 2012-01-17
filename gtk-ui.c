@@ -302,6 +302,8 @@ int run_gtk_ui (int argc, char *argv[])
   gui_data.window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
   gtk_window_set_title (GTK_WINDOW (gui_data.window), "RamseyScript " VERSION);
   g_signal_connect (gui_data.window, "destroy", G_CALLBACK (gtk_main_quit), NULL);
+  /* Start maximized (bad style, I know..) */
+  gtk_window_maximize (GTK_WINDOW (gui_data.window));
 
   ui = gtk_ui_manager_new ();
   gtk_ui_manager_set_add_tearoffs (ui, TRUE);
