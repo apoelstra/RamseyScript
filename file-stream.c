@@ -103,12 +103,12 @@ static int _file_stream_write (stream_t *s, const char *line)
 {
   struct _file_stream *priv = (struct _file_stream *) s;
 
-  if (priv->mode & STREAM_WRITE)
+  if (priv->mode & (STREAM_WRITE | STREAM_APPEND))
     return fputs (line, priv->fh);
   return 0;
 }
 
-/* CONSTRUCTOR */
+/* DESTRUCTOR */
 static void _file_stream_destroy (stream_t *s)
 {
   struct _file_stream *priv = (struct _file_stream *) s;
@@ -117,11 +117,25 @@ static void _file_stream_destroy (stream_t *s)
   free (s);
 }
 
+/* noop functions for special streams */
+static int _special_stream_open (stream_t *s, enum e_stream_mode mode)
+{
+  (void) s;
+  (void) mode;
+  return 1;
+}
+
+static void _special_stream_close (stream_t *s)
+{
+  (void) s;
+}
+
 static void _special_stream_destroy (stream_t *s)
 {
   free (s);
 }
 
+/* CONSTRUCTORS */
 static stream_t *_file_stream_new_real ()
 {
   struct _file_stream *priv = malloc (sizeof *priv);
@@ -168,6 +182,8 @@ stream_t *stdout_stream_new ()
       priv->fh = stdout;
       priv->mode = STREAM_WRITE;
       rv->destroy = _special_stream_destroy;
+      rv->close = _special_stream_close;
+      rv->open = _special_stream_open;
     }
   return rv;
 }
@@ -182,6 +198,8 @@ stream_t *stderr_stream_new ()
       priv->fh = stderr;
       priv->mode = STREAM_WRITE;
       rv->destroy = _special_stream_destroy;
+      rv->close = _special_stream_close;
+      rv->open = _special_stream_open;
     }
   return rv;
 }
@@ -196,6 +214,8 @@ stream_t *stdin_stream_new  ()
       priv->fh = stdin;
       priv->mode = STREAM_READ;
       rv->destroy = _special_stream_destroy;
+      rv->close = _special_stream_close;
+      rv->open = _special_stream_open;
     }
   return rv;
 }
