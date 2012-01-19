@@ -88,7 +88,7 @@ dump_t *dump_new (const char *data, size_t size, stream_t *out)
         }
       else
         {
-          fprintf (stderr, "Warning: Unknown dump type ``%s''.\n",
+          fprintf (stderr, "Warning: unknown dump type ``%s''.\n",
                    data);
           rv->destroy (rv);
           return NULL;

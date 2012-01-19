@@ -113,16 +113,23 @@ void process (struct _global_data *state)
       /* set <min_gap|max_gap|n_colors|ap_length|alphabet|gap_set> <N> */
       if (strmatch (tok, "set"))
         {
-          const char *name = strtok (NULL, " \t\n");
+          const char *name = strtok (NULL, " #\t\n");
           const char *text = strtok (NULL, "#\n");
-          state->settings->add_setting (state->settings, setting_new (name, text));
+          setting_t *new_set = setting_new (name, text);
+          if (state->settings->add_setting (state->settings, new_set))
+            {
+              if (state->interactive)
+                new_set->print (new_set, state->out_stream);
+            }
+          else
+            fprintf (stderr, "Failed to add setting ``%s''.\n", name);
         }
       /* filter <no-double-3-aps|no-additive-squares> */
       else if (strmatch (tok, "filter"))
         {
           filter_t *new_filter;
 
-          tok = strtok (NULL, " \t\n");
+          tok = strtok (NULL, " #\t\n");
           new_filter = filter_new (tok);
           if (new_filter != NULL)
             {
@@ -130,6 +137,8 @@ void process (struct _global_data *state)
               new_cell->next = state->filters;
               new_cell->data = new_filter;
               state->filters = new_cell;
+              stream_printf (state->out_stream, "Added filter ``%s''.\n",
+                             new_filter->get_type (new_filter));
             }
 	}
       /* dump <iterations-per-length> */
@@ -148,7 +157,7 @@ void process (struct _global_data *state)
           else
             dump_stream = stdout_stream_new ();
 
-          tok = strtok (NULL, " \t\n");
+          tok = strtok (NULL, " #\t\n");
           new_dump = dump_new (tok, dump_depth, dump_stream);
           if (new_dump != NULL)
             {
@@ -156,6 +165,8 @@ void process (struct _global_data *state)
               new_cell->next = state->dumps;
               new_cell->data = new_dump;
               state->dumps = new_cell;
+              stream_printf (state->out_stream, "Added dump ``%s''.\n",
+                             new_dump->get_type (new_dump));
             }
         }
       /* search <seqences|colorings|words> [seed] */
@@ -163,7 +174,7 @@ void process (struct _global_data *state)
         {
           ramsey_t *seed = NULL;
 
-          tok = strtok (NULL, " \t\n");
+          tok = strtok (NULL, " #\t\n");
           if (tok && strmatch (tok, "sequences"))
             seed = sequence_new ();
           else if (strmatch (tok, "colorings") ||
@@ -259,14 +270,22 @@ void process (struct _global_data *state)
               seed->destroy (seed);
             }
         }
-      /* Interactive mode bail commands */
-      else if (strmatch (tok, "quit"))
-        return;
-      else if (strmatch (tok, "exit"))
-        return;
+      /* Interactive mode commands */
       else if (state->interactive)
-        fprintf (stderr, "Unrecognized command ``%s''. Type 'quit' to quit.\n"
-                         "See the README file for a full language specification.\n", tok);
+        {
+          if (strmatch (tok, "quit") || strmatch (tok, "exit"))
+            return;
+          else if (strmatch (tok, "get"))
+            {
+              const setting_t *set;
+              tok = strtok (NULL, " #\t\n");
+              if (tok && (set = SETTING (tok)))
+                set->print (set, state->out_stream);
+            }
+          else 
+            fprintf (stderr, "Unrecognized command ``%s''. Type 'quit' to quit.\n"
+                             "See the README file for a full language specification.\n", tok);
+        }
       else
         fprintf (stderr, "Unrecognized command ``%s''.\n", tok);
 

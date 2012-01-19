@@ -214,7 +214,7 @@ filter_t *filter_new (const char *data)
     }
   else
     {
-      fprintf (stderr, "filter_new: Unrecognized filter ``%s''.\n", data);
+      fprintf (stderr, "Warning: unrecognized filter ``%s''.\n", data);
       free (rv);
       rv = NULL;
     }

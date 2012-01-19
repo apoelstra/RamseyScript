@@ -199,6 +199,28 @@ static long _setting_get_int_value (const setting_t *set)
   return 0;
 }
 
+static void _setting_print (const setting_t *set, stream_t *out)
+{
+  const struct _setting_priv *priv = (const struct _setting_priv *) set;
+  switch (set->type)
+    {
+    case TYPE_STRING:
+      stream_printf (out, "string: %s\n", priv->text);
+      break;
+    case TYPE_INTEGER:
+      stream_printf (out, "integer: %ld\n", priv->int_data);
+      break;
+    case TYPE_RAMSEY:
+      {
+        const ramsey_t *rt = priv->ramsey_data;
+        stream_printf (out, "%s: ", rt->get_type (rt));
+        rt->print (rt, out);
+        out->write (out, "\n");
+      }
+      break;
+    }
+}
+
 /* CONSTRUCTOR / DESTRUCTOR */
 static void _setting_destroy (setting_t *set)
 {
@@ -225,6 +247,7 @@ setting_t *setting_new (const char *name, const char *text)
       rv->get_text = _setting_get_text;
       rv->get_ramsey_value = _setting_get_ramsey_value;
       rv->get_int_value = _setting_get_int_value;
+      rv->print         = _setting_print;
       rv->destroy       = _setting_destroy;
 
       priv->name = _strip_strdup (name);
