@@ -20,51 +20,57 @@ Variables
 Sets a variable. Not all variables are effective for each search space.
 ``variable'' should be one of:
 
-  alphabet: The alphabet to use when searching words. Specified in the
-            format [c1 c2 c3 ... cn].
-            Default value: [1 2 3 4]
+      alphabet: The alphabet to use when searching words. Specified in the
+                format [c1 c2 c3 ... cn].
+                Default value: [1 2 3 4]
 
- dump-file: The file to output dump output (see 'dump'), or "-" to use
-            stdout.
-            Default value: -
+     dump-file: The file to output dump output (see 'dump'), or "-" to use
+                stdout.
+                Default value: -
 
-   gap-set: The set of allowable gap sizes when searching sequences or
-            colorings. For sequences, the value must be a 1D sequence
-            of the form [x y z] containing the allowable gap sizes.
+       gap-set: The set of allowable gap sizes when searching sequences or
+                colorings. For sequences, the value must be a 1D sequence
+                of the form [x y z] containing the allowable gap sizes.
 
-            For colorings, if the gap-set is a sequence, this sequence
-            defines the allowable gap sizes for each color. Alternately,
-            if the gap-set is a coloring (i.e., a sequence of sequences)
-            then each color of the gap-set defines the allowable gap
-            sizes for the respective colors in the search space.
-            Default value: [-1000 ... 1000]
+                For colorings, if the gap-set is a sequence, this sequence
+                defines the allowable gap sizes for each color. Alternately,
+                if the gap-set is a coloring (i.e., a sequence of sequences)
+                then each color of the gap-set defines the allowable gap
+                sizes for the respective colors in the search space.
+                Default value: [-1000 ... 1000]
 
- max-depth: The maximum depth to search the space, or 0 for no maximum.
-            Default value: 0
+     max-depth: The maximum depth to search the space, or 0 for no maximum.
+                Default value: 0
 
 max-iterations: The number of iterations to run before stopping, or 0 to
                 search the entire space.
                 Default value: 0
 
-prune-tree: Whether or not the search tree should be pruned; i.e., if some
-            element is filtered out, should new elements be built from it?
+    prune-tree: Whether or not the search tree should be pruned; i.e., if some
+                element is filtered out, should new elements be built from it?
 
-            For example, if a sequence S contains a double-3-AP, then every
-            sequence starting with S will too, so we would set prune-tree
-            to nonzero.
+                For example, if a sequence S contains a double-3-AP, then every
+                sequence starting with S will too, so we would set prune-tree
+                to nonzero.
 
-            But if a permutation P contains a double-3-AP, it still might be
-            that permutations built from P could be double-3-AP-free, so we
-            would set prune-tree to 0.
+                But if a permutation P contains a double-3-AP, it still might
+                be that permutations built from P could be double-3-AP-free,
+                so we would set prune-tree to 0.
            
-            Default value: 1
+                Default value: 1
 
-  n-colors: The number of colors to use when searching colorings.
-            Default value: 3
+      n-colors: The number of colors to use when searching colorings.
+                Default value: 3
 
-random-length: If the seed is set to RANDOM on a supported space, this
-               sets the length of the generated seed.
-               Default value: 10
+ random-length: If the seed is set to RANDOM on a supported space, this
+                sets the length of the generated seed.
+                Default value: 10
+
+
+
+  unset <variable>
+
+Unsets a previously-set variable. If the variable does not exist, does nothing.
 
 
 
@@ -82,6 +88,11 @@ Chooses which filter to when searching spaces.
 
   no-additive-squares: Only recurse on words with no additive squares
 
+
+
+  filter clear
+
+Removes all set filters.
 
 
 ===============
@@ -126,6 +137,12 @@ Output auxiliary data about the search space or program operation.
 iterations-per-length: dump the number of iterations spent at each
                        search-space depth
 
+
+
+
+  dump clear
+
+Removes all data dumps.
 
 
 
