@@ -110,7 +110,7 @@ void process (struct _global_data *state)
           continue;
         }
 
-      /* set <min_gap|max_gap|n_colors|ap_length|alphabet|gap_set> <N> */
+      /* set <variable> <value> */
       if (strmatch (tok, "set"))
         {
           const char *name = strtok (NULL, " #\t\n");
@@ -123,6 +123,14 @@ void process (struct _global_data *state)
             }
           else
             fprintf (stderr, "Failed to add setting ``%s''.\n", name);
+        }
+      /* unset <variable> */
+      else if (strmatch (tok, "unset"))
+        {
+          const char *name = strtok (NULL, " #\t\n");
+          if (state->settings->remove_setting (state->settings, name))
+            if (state->interactive)
+              stream_printf (state->out_stream, "Removed ``%s''.\n", name);
         }
       /* filter <no-double-3-aps|no-additive-squares> */
       else if (strmatch (tok, "filter"))

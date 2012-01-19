@@ -74,7 +74,7 @@ static setting_t *_setting_list_add_setting (setting_list_t *slist, setting_t *s
   if (set == NULL)
     return NULL;
   hash = _hash (set->get_name (set));
-  setting_priv = (struct _setting_priv *) priv->setting[hash];
+  setting_priv = priv->setting[hash];
 
   if (setting_priv == NULL)
     priv->setting[hash] = (struct _setting_priv *) set;
@@ -102,9 +102,9 @@ static setting_t *_setting_list_add_setting (setting_list_t *slist, setting_t *s
 
 static setting_t *_setting_list_get_setting (const setting_list_t *slist, const char *name)
 {
-  struct _setting_list_priv *priv = (struct _setting_list_priv *) slist;
+  const struct _setting_list_priv *priv = (struct _setting_list_priv *) slist;
   unsigned hash = _hash (name);
-  const struct _setting_priv *setting_priv = (struct _setting_priv *) priv->setting[hash];
+  const struct _setting_priv *setting_priv = priv->setting[hash];
 
   while (setting_priv)
     {
@@ -115,6 +115,36 @@ static setting_t *_setting_list_get_setting (const setting_list_t *slist, const 
   return NULL;
 }
 
+static int _setting_list_remove_setting (setting_list_t *slist, const char *name)
+{
+  struct _setting_list_priv *priv = (struct _setting_list_priv *) slist;
+  unsigned hash = _hash (name);
+  struct _setting_priv *setting_priv = priv->setting[hash];
+
+  if (setting_priv)
+    {
+      if (!strcmp (name, setting_priv->name))
+        {
+          setting_t *tmp = (setting_t *) priv->setting[hash];
+          priv->setting[hash] = setting_priv->next;
+          tmp->destroy (tmp);
+          return 1;
+        }
+
+      while (setting_priv->next)
+        {
+          if (!strcmp (name, setting_priv->next->name))
+            {
+              setting_t *tmp = (setting_t *) setting_priv->next;
+              setting_priv->next = setting_priv->next->next;
+              tmp->destroy (tmp);
+              return 1;
+            }
+          setting_priv = setting_priv->next;
+        }
+    }
+  return 0;
+}
 
 static void _setting_list_destroy (setting_list_t *slist)
 {
@@ -143,6 +173,7 @@ setting_list_t *setting_list_new ()
     {
       rv->add_setting = _setting_list_add_setting;
       rv->get_setting = _setting_list_get_setting;
+      rv->remove_setting = _setting_list_remove_setting;
       rv->destroy     = _setting_list_destroy;
 
       for (i = 0; i < HASH_TABLE_SIZE; ++i)
