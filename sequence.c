@@ -132,7 +132,7 @@ static void _sequence_recurse (ramsey_t *rt, global_data_t *state)
 }
 
 /* PRINT / PARSE */
-static void _sequence_print_real (const ramsey_t *rt, int start, Stream *out)
+static void _sequence_print_real (const ramsey_t *rt, int start, stream_t *out)
 {
   struct _sequence *s = (struct _sequence *) rt;
   int i;
@@ -140,20 +140,20 @@ static void _sequence_print_real (const ramsey_t *rt, int start, Stream *out)
   assert (rt && (rt->type == TYPE_SEQUENCE || TYPE_WORD));
   assert (start >= 0);
 
-  out->write_line (out, "[");
+  out->write (out, "[");
   if (start < s->length)
     stream_printf (out, "%d", s->value[start]);
   for (i = start + 1; i < s->length; ++i)
     stream_printf (out, ", %d", s->value[i]);
-  out->write_line (out, "]");
+  out->write (out, "]");
 }
 
-static void _sequence_print (const ramsey_t *rt, Stream *out)
+static void _sequence_print (const ramsey_t *rt, stream_t *out)
 {
   _sequence_print_real (rt, 0, out);
 }
 
-static void _sequence_print1 (const ramsey_t *rt, Stream *out)
+static void _sequence_print1 (const ramsey_t *rt, stream_t *out)
 {
   _sequence_print_real (rt, 1, out);
 }

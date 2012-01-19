@@ -5,6 +5,7 @@
 #include <glib-object.h>
 #include <gtk/gtk.h>
 
+#include "file-stream.h"
 #include "stream.h"
 #include "gtk-text-buffer-stream.h"
 #include "gtk-script-view.h"
@@ -170,12 +171,12 @@ GtkWidget *gtk_script_view_new (const gchar *label)
 GtkWidget *gtk_script_view_new_from_file (const gchar *filename)
 {
   GtkScriptView *view = GTK_SCRIPT_VIEW (gtk_script_view_new (""));
-  Stream *file_stream = file_stream_new ("r");
-  Stream *view_stream = text_buffer_stream_new (view->buffer);
+  stream_t *file_stream = file_stream_new (filename);
+  stream_t *view_stream = text_buffer_stream_new (view->buffer);
 
-  if (file_stream->open (file_stream, filename))
+  if (file_stream->open (file_stream, STREAM_READ))
     {
-      view_stream->open (view_stream, "w");
+      view_stream->open (view_stream, STREAM_WRITE);
       view->modify_holdoff = TRUE;
       stream_line_copy (view_stream, file_stream);
       view->modify_holdoff = FALSE;
@@ -195,17 +196,17 @@ GtkWidget *gtk_script_view_new_from_file (const gchar *filename)
 gboolean gtk_script_view_save (GtkScriptView *view, gboolean force_save_as)
 {
   gboolean success = FALSE;
-  Stream *file_writer, *view_reader;
+  stream_t *file_writer, *view_reader;
 
   if (view->filename == NULL || force_save_as)
     if (!_show_save_as_dialog (view))
       return FALSE;
 
-  file_writer = file_stream_new ("w");
+  file_writer = file_stream_new (view->filename);
   view_reader = text_buffer_stream_new (view->buffer);
-  if (file_writer->open (file_writer, view->filename))
+  if (file_writer->open (file_writer, STREAM_WRITE))
     {
-      view_reader->open (view_reader, "r");
+      view_reader->open (view_reader, STREAM_READ);
       stream_line_copy (file_writer, view_reader);
       _set_modified (view, FALSE);
       success = TRUE;

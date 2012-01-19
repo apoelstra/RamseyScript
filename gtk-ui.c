@@ -5,6 +5,7 @@
 #include <gtk/gtk.h>
 
 #include "global.h"
+#include "file-stream.h"
 #include "ramsey.h"
 #include "stream.h"
 #include "string-stream.h"
@@ -29,7 +30,7 @@ static void open_readme ()
   GtkWidget *scrolled_page = gtk_scrolled_window_new (NULL, NULL);
   GtkWidget *text_view = gtk_text_view_new ();
   GtkTextBuffer *tb;
-  Stream *tb_stream, *readme_stream;
+  stream_t *tb_stream, *readme_stream;
   GtkTextIter iter;
 
   gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scrolled_page),
@@ -44,10 +45,10 @@ static void open_readme ()
 
   tb = gtk_text_view_get_buffer (GTK_TEXT_VIEW (text_view));
   tb_stream = text_buffer_stream_new (tb);
-  readme_stream = file_stream_new ("r");
-  tb_stream->open (tb_stream, "w");
+  readme_stream = file_stream_new ("README");
+  tb_stream->open (tb_stream, STREAM_WRITE);
 
-  if (readme_stream->open (readme_stream, "README"))
+  if (readme_stream->open (readme_stream, STREAM_READ))
     stream_line_copy (tb_stream, readme_stream);
 
   gtk_text_buffer_get_start_iter (tb, &iter);

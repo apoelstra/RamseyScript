@@ -3,25 +3,26 @@
 
 #include <stddef.h>
 
-enum e_stream_type {
+enum e_stream_mode {
+  STREAM_CLOSED = 0,
   STREAM_READ = 1,
   STREAM_WRITE = 2,
   STREAM_APPEND = 4
 };
 
-typedef struct _stream {
-  void *_data;
-  enum e_stream_type type;
-  void *(*open)       (struct _stream *, const void *);
-  void  (*close)      (struct _stream *);
-  char *(*read_line)  (struct _stream *);
-  int   (*write_line) (struct _stream *, const char *);
-  int   (*eof)        (struct _stream *);
-  void  (*destroy)    (struct _stream *);
-} Stream;
+typedef struct _stream_t stream_t;
 
-Stream *file_stream_new (const char *mode);
-void stream_line_copy (Stream *output, Stream *input);
-void stream_printf (Stream *output, const char *fmt, ...);
+struct _stream_t {
+  const char *(*get_type) (const stream_t *);
+
+  int   (*open)      (stream_t *, enum e_stream_mode);
+  void  (*close)     (stream_t *);
+  char *(*read_line) (stream_t *);
+  int   (*write)     (stream_t *, const char *);
+  void  (*destroy)   (stream_t *);
+};
+
+void stream_line_copy (stream_t *output, stream_t *input);
+void stream_printf (stream_t *output, const char *fmt, ...);
 
 #endif

@@ -6,8 +6,10 @@
 
 #include "stream.h"
 
-struct priv_data
+struct _tb_stream
 {
+  stream_t parent;
+
   GtkTextBuffer *tb;
   GtkTextIter startln;
   GtkTextIter endln;
@@ -15,76 +17,62 @@ struct priv_data
 };
 
 /* START file stream functions */
-static void *_text_buffer_open (Stream *obj, const void *data)
+static int _text_buffer_open (stream_t *obj, enum e_stream_mode mode)
 {
-  struct priv_data *pd = obj->_data;
-  gtk_text_buffer_get_start_iter (pd->tb, &pd->startln);
-  gtk_text_buffer_get_start_iter (pd->tb, &pd->endln);
-  pd->alive = TRUE;
-
-  switch (((char *)data) [0])
-    {
-    case 'r': obj->type = STREAM_READ;  break;
-    case 'w': obj->type = STREAM_WRITE; break;
-    }
-
-  return obj->_data;
+  struct _tb_stream *priv = (struct _tb_stream *) obj;
+  gtk_text_buffer_get_start_iter (priv->tb, &priv->startln);
+  gtk_text_buffer_get_start_iter (priv->tb, &priv->endln);
+  priv->alive = TRUE;
+  (void) mode;
+  return 1;
 }
 
-static void _text_buffer_close (Stream *obj)
+static void _text_buffer_close (stream_t *obj)
 {
-  struct priv_data *pd = obj->_data;
-  pd->alive = FALSE;
+  struct _tb_stream *priv = (struct _tb_stream *) obj;
+  priv->alive = FALSE;
 }
 
-static char *_text_buffer_read_line (Stream *obj)
+static char *_text_buffer_read_line (stream_t *obj)
 {
-  struct priv_data *pd = obj->_data;
+  struct _tb_stream *priv = (struct _tb_stream *) obj;
   char *rv = NULL;
-  if (pd->alive)
+  if (priv->alive)
     {
-      gtk_text_iter_forward_line (&pd->startln);
-      rv = gtk_text_iter_get_text (&pd->startln, &pd->endln);
-      if (!gtk_text_iter_forward_line (&pd->endln))
-        pd->alive = FALSE;
+      gtk_text_iter_forward_line (&priv->startln);
+      rv = gtk_text_iter_get_text (&priv->startln, &priv->endln);
+      if (!gtk_text_iter_forward_line (&priv->endln))
+        priv->alive = FALSE;
     }
 
   return rv;
 }
 
-static int _text_buffer_write_line (Stream *obj, const char *line)
+static int _text_buffer_write (stream_t *obj, const char *line)
 {
   GtkTextIter end;
-  struct priv_data *pd = obj->_data;
+  struct _tb_stream *priv = (struct _tb_stream *) obj;
 
-  gtk_text_buffer_get_end_iter (pd->tb, &end);
-  gtk_text_buffer_insert (pd->tb, &end, line, -1);
+  gtk_text_buffer_get_end_iter (priv->tb, &end);
+  gtk_text_buffer_insert (priv->tb, &end, line, -1);
   return 0;
 }
 
-
-static int _text_buffer_eof (Stream *obj)
+void _text_buffer_destroy (stream_t *stream)
 {
-  struct priv_data *pd = obj->_data;
-  return pd->alive;
-}
-
-void _text_buffer_destroy (Stream *stream)
-{
-  struct priv_data *pd = stream->_data;
-  if (pd)
-    g_object_unref (G_OBJECT (pd->tb));
-  free (stream->_data);
+  struct _tb_stream *priv = (struct _tb_stream *) stream;
+  if (stream)
+    g_object_unref (G_OBJECT (priv->tb));
   free (stream);
 }
 
 /* END text stream functions */
 
 
-Stream *text_buffer_stream_new (GtkTextBuffer *buff)
+stream_t *text_buffer_stream_new (GtkTextBuffer *buff)
 {
-  Stream *rv = malloc (sizeof *rv);
-  struct priv_data *pd = malloc (sizeof *pd);
+  struct _tb_stream *priv = malloc (sizeof *priv);
+  stream_t *rv = (stream_t *) priv;
 
   if (buff == NULL)
     {
@@ -92,7 +80,7 @@ Stream *text_buffer_stream_new (GtkTextBuffer *buff)
       return NULL;
     }
 
-  if (rv == NULL || pd == NULL)
+  if (rv == NULL)
     {
       fputs ("text_buffer_stream_new: out of memory!\n", stderr);
       return NULL;
@@ -101,13 +89,11 @@ Stream *text_buffer_stream_new (GtkTextBuffer *buff)
   rv->open = _text_buffer_open;
   rv->close = _text_buffer_close;
   rv->read_line = _text_buffer_read_line;
-  rv->write_line = _text_buffer_write_line;
-  rv->eof = _text_buffer_eof;
+  rv->write = _text_buffer_write;
   rv->destroy = _text_buffer_destroy;
-  rv->_data = pd;
 
-  pd->tb = buff;
-  pd->alive = FALSE;
+  priv->tb = buff;
+  priv->alive = FALSE;
 
   g_object_ref (G_OBJECT (buff));
 

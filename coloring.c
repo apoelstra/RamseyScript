@@ -149,7 +149,7 @@ static const char *_coloring_parse (ramsey_t *rt, const char *data)
   return data;
 }
 
-static void _coloring_print (const ramsey_t *rt, Stream *out)
+static void _coloring_print (const ramsey_t *rt, stream_t *out)
 {
   int i;
   const struct _coloring *c = (const struct _coloring *) rt;
@@ -157,14 +157,14 @@ static void _coloring_print (const ramsey_t *rt, Stream *out)
   assert (rt && rt->type == TYPE_COLORING);
   assert (out != NULL);
 
-  out->write_line (out, "[");
+  out->write (out, "[");
   c->sequence[0]->print (c->sequence[0], out);
   for (i = 1; i < c->n_cells; ++i)
     {
-      out->write_line (out, " ");
+      out->write (out, " ");
       c->sequence[i]->print (c->sequence[i], out);
     }
-  out->write_line (out, "]");
+  out->write (out, "]");
 }
 
 static void _coloring_randomize (ramsey_t *rt, int n)

@@ -31,7 +31,7 @@ struct _ramsey_t {
 
   const char *(*parse) (ramsey_t *, const char *data);
   void (*randomize)    (ramsey_t *, int);
-  void (*print)        (const ramsey_t *, Stream *);
+  void (*print)        (const ramsey_t *, stream_t *);
   void (*empty)        (ramsey_t *);
   void (*reset)        (ramsey_t *);
   void (*destroy)      (ramsey_t *);
@@ -78,16 +78,16 @@ struct _global_data {
   ramsey_t *gap_set;
   struct _filter_cell *filters;
 
-  Stream *dump_stream;
+  stream_t *dump_stream;
   bool dump_iters;
   int dump_depth;
   ramsey_t *iters_data;
 
   int kill_now;
 
-  Stream *out_stream;
-  Stream *in_stream;
-  Stream *err_stream;
+  stream_t *out_stream;
+  stream_t *in_stream;
+  stream_t *err_stream;
 };
 
 int recursion_preamble (ramsey_t *rt, global_data_t *state);

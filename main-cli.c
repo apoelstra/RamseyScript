@@ -4,6 +4,7 @@
 #include <stdlib.h>
 
 #include "global.h"
+#include "file-stream.h"
 #include "ramsey.h"
 #include "stream.h"
 
@@ -12,21 +13,18 @@ struct _global_data global;
 int main (int argc, char *argv[])
 {
   struct _global_data *defs = set_defaults ();
-  Stream *stm = file_stream_new ("r");
 
   if (argc > 1)
     {
-      if (stm->open (stm, argv[1]) == NULL)
+      defs->in_stream = file_stream_new (argv[1]);
+      if (!defs->in_stream->open (defs->in_stream, STREAM_READ))
         {
           fprintf (stderr, "Failed to open script ``%s''\n", argv[1]);
           exit (EXIT_FAILURE);
         }
     }
-  else stm->_data = stdin;
-
-  defs->in_stream = stm;
-  defs->out_stream = file_stream_new ("w");
-  defs->out_stream->_data = stdout;
+  else defs->in_stream = stdin_stream_new ();
+  defs->out_stream = stdout_stream_new ();
 
   puts ("Welcome to RamseyScript CLI " VERSION);
   puts ("All code used in this project is public domain.");

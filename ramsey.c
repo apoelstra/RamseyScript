@@ -8,6 +8,7 @@
 
 #include "global.h"
 #include "coloring.h"
+#include "file-stream.h"
 #include "filter.h"
 #include "permutation.h"
 #include "ramsey.h"
@@ -39,8 +40,7 @@ struct _global_data *set_defaults ()
       rv->gap_set->parse (rv->gap_set, "[1 ... 1000]");
       rv->filters = NULL;
 
-      rv->dump_stream = file_stream_new ("w");
-      rv->dump_stream->_data = stdout;
+      rv->dump_stream = stdout_stream_new ();
       rv->dump_iters = 0;
       rv->dump_depth = 400;
       rv->iters_data = NULL;
@@ -140,17 +140,18 @@ void process (struct _global_data *state)
           else if (strmatch (tok, "dump_file"))
             {
               tok = strtok (NULL, "\n");
-              if (state->dump_stream->_data && state->dump_stream->_data != stdout)
-                fclose (state->dump_stream->_data);
+              if (state->dump_stream)
+                state->dump_stream->destroy (state->dump_stream);
               if (strmatch (tok, "_"))
-                state->dump_stream->_data = stdout;
+                state->dump_stream = stdout_stream_new ();
               else
                 {
-                  state->dump_stream->_data = fopen (tok, "a");
-                  if (state->dump_stream->_data == NULL)
+                  state->dump_stream = file_stream_new (tok);
+                  if (!state->dump_stream->open (state->dump_stream, STREAM_APPEND))
                     {
                       fprintf (stderr, "Failed to open ``%s'' for writing. Using stdout instead.\n", tok);
-                      state->dump_stream->_data = stdout;
+                      state->dump_stream->destroy (state->dump_stream);
+                      state->dump_stream = stdout_stream_new ();
                     }
                 }
             }
@@ -215,7 +216,7 @@ void process (struct _global_data *state)
               else
                 seed->append (seed, 1);
 
-              state->out_stream->write_line (state->out_stream, "#### Starting sequence search ####\n");
+              state->out_stream->write (state->out_stream, "#### Starting sequence search ####\n");
               if (state->max_iterations > 0)
                 stream_printf (state->out_stream, "  Stop after: \t%ld iterations\n", state->max_iterations);
               if (state->max_depth > 0)
@@ -225,9 +226,9 @@ void process (struct _global_data *state)
                              "  Seed Seq.:\t",
                              state->ap_length);
               seed->print (seed, state->out_stream);
-              state->out_stream->write_line (state->out_stream, "\n");
+              state->out_stream->write (state->out_stream, "\n");
               stream_printf (state->out_stream, "  Gap set:\t"); state->gap_set->print (state->gap_set, state->out_stream);
-              state->out_stream->write_line (state->out_stream, "\n");
+              state->out_stream->write (state->out_stream, "\n");
             }
           else if (strmatch (tok, "colorings") ||
                    strmatch (tok, "partitions"))
@@ -266,9 +267,9 @@ void process (struct _global_data *state)
                              "  Seed Col.:\t",
                              state->ap_length);
               seed->print (seed, state->out_stream);
-              state->out_stream->write_line (state->out_stream, "\n");
+              state->out_stream->write (state->out_stream, "\n");
               stream_printf (state->out_stream, "  Gap set:\t"); state->gap_set->print (state->gap_set, state->out_stream);
-              state->out_stream->write_line (state->out_stream, "\n");
+              state->out_stream->write (state->out_stream, "\n");
             }
           else if (tok && strmatch (tok, "words"))
             {
@@ -348,9 +349,9 @@ void process (struct _global_data *state)
           if (state->dump_iters)
             {
               state->iters_data->print (state->iters_data, state->dump_stream);
-              fputs ("\n", state->dump_stream->_data);
+              stream_printf (state->dump_stream, "\n");
             }
-          state->out_stream->write_line (state->out_stream, "\n");
+          state->out_stream->write (state->out_stream, "\n");
         }
       free (buf);
     }

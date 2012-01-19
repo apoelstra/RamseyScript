@@ -19,9 +19,9 @@ struct _GtkScriptRun
 
   GtkWidget *text_view, *label;
   GtkTextBuffer *buffer;
-  Stream *view_stream;
-  Stream *script_stream;
-  Stream *output_stream;
+  stream_t *view_stream;
+  stream_t *script_stream;
+  stream_t *output_stream;
 
   GThread *thread;
   struct _global_data *tdata;
@@ -43,8 +43,8 @@ static void *_thread_body (gpointer r)
   /* Open streams */
   run->tdata->out_stream = run->output_stream;
   run->tdata->in_stream  = run->script_stream;
-  run->output_stream->open (run->output_stream, "w");
-  run->script_stream->open (run->script_stream, "r");
+  run->output_stream->open (run->output_stream, STREAM_WRITE);
+  run->script_stream->open (run->script_stream, STREAM_READ);
 
   /* Go! */
   process (run->tdata);
@@ -108,7 +108,7 @@ GType gtk_script_run_get_type (void)
 GtkWidget *gtk_script_run_new (GtkScriptView *view)
 { 
   GtkScriptRun *run = g_object_new (GTK_SCRIPT_RUN_TYPE, NULL);
-  Stream *script_stream;
+  stream_t *script_stream;
   gchar *label_text = g_strdup_printf ("Output: %s",
                                        gtk_script_view_get_title (view));
 
@@ -132,8 +132,8 @@ GtkWidget *gtk_script_run_new (GtkScriptView *view)
 
   /* Copy data from scriptview */
   script_stream = text_buffer_stream_new (gtk_script_view_get_buffer (view));
-  script_stream->open (script_stream, "r");
-  run->script_stream->open (run->script_stream, "w");
+  script_stream->open (script_stream, STREAM_READ);
+  run->script_stream->open (run->script_stream, STREAM_WRITE);
   stream_line_copy (run->script_stream, script_stream);
   script_stream->destroy (script_stream);
 
@@ -146,7 +146,7 @@ void gtk_script_run_start (GtkScriptRun *run)
   if (run->running == FALSE)
     {
       run->output_stream = string_stream_new ();
-      run->output_stream->open (run->output_stream, "r");
+      run->output_stream->open (run->output_stream, STREAM_READ);
       run->running = TRUE;
       run->thread = g_thread_create (_thread_body, run, TRUE, NULL);
       if (run->thread != NULL)
@@ -166,7 +166,7 @@ GtkWidget *gtk_script_run_get_label (GtkScriptRun *run)
 
 void gtk_script_run_stop (GtkScriptRun *run)
 {
-  run->output_stream->write_line (run->output_stream, "ABORT\n");
+  run->output_stream->write (run->output_stream, "ABORT\n");
   run->tdata->kill_now = 1;  /* shoot out the thread */
   g_thread_join (run->thread);
 }
