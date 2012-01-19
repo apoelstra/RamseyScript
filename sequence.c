@@ -98,9 +98,12 @@ static int _sequence_add_gap_set (ramsey_t *rt, const ramsey_t *gap_set)
   assert (rt && (rt->type == TYPE_SEQUENCE || rt->type == TYPE_WORD ||
                  rt->type == TYPE_PERMUTATION));
 
+  if (gap_set == NULL)
+    return 0;
+
   if (gap_set->type != TYPE_SEQUENCE)
     {
-      fprintf (stderr, "Bad gap set type ``%s'' for sequence search, sorry.\n",
+      fprintf (stderr, "Warning: bad gap set type ``%s'' for sequence search.\n",
                        gap_set->get_type (gap_set));
       return 0;
     }
@@ -120,6 +123,12 @@ static void _sequence_recurse (ramsey_t *rt, global_data_t *state)
 
   if (!recursion_preamble (rt, state))
     return;
+
+  if (rt->r_gap_set == NULL)
+    {
+      fputs ("Error: cannot search sequnces without a gap set.\n", stderr);
+      return;
+    }
 
   gap_set = rt->r_gap_set->get_priv_data_const (rt->r_gap_set);
   gap_set_len = rt->r_gap_set->get_length (rt->r_gap_set);

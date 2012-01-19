@@ -72,6 +72,9 @@ static int _coloring_add_gap_set (ramsey_t *rt, const ramsey_t *gap_set)
   struct _coloring *c = (struct _coloring *) rt;
   assert (rt && rt->type == TYPE_COLORING);
 
+  if (gap_set == NULL)
+    return 0;
+
   if (gap_set->type == TYPE_SEQUENCE)
     {
       int i;
