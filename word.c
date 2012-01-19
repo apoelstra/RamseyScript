@@ -20,15 +20,21 @@ static const char *_word_get_type (const ramsey_t *rt)
 static void _word_recurse (ramsey_t *rt, global_data_t *state)
 {
   int i;
-  int *alphabet;
+  const int *alphabet;
   int alphabet_len;
-  assert (rt && (rt->type == TYPE_SEQUENCE || TYPE_WORD));
+  assert (rt && rt->type == TYPE_WORD);
+
+  if (!rt->r_alphabet)
+    {
+      fprintf (stderr, "Cannot recurse on words without an alphabet!\n");
+      return;
+    }
 
   if (!recursion_preamble (rt, state))
     return;
 
-  alphabet = state->alphabet->get_priv_data (state->alphabet);
-  alphabet_len = state->alphabet->get_length (state->alphabet);
+  alphabet = rt->r_alphabet->get_priv_data_const (rt->r_alphabet);
+  alphabet_len = rt->r_alphabet->get_length (rt->r_alphabet);
   for (i = 0; i < alphabet_len; ++i)
     {
       rt->append (rt, alphabet[i]);

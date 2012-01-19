@@ -278,7 +278,7 @@ static void _coloring_reset (ramsey_t *rt)
 
   for (i = 0; i < c->n_cells; ++i)
     c->sequence[i]->reset (c->sequence[i]);
-  recursion_reset (rt);
+  recursion_init (rt);
 }
 
 static void _coloring_destroy (ramsey_t *rt)
@@ -311,7 +311,7 @@ ramsey_t *coloring_new (int n_colors)
       rv->destroy = _coloring_destroy;
       rv->randomize = _coloring_randomize;
       rv->recurse = _coloring_recurse;
-      recursion_reset (rv);
+      recursion_init (rv);
 
       rv->find_value  = _coloring_find_value;
       rv->get_length  = _coloring_get_length;

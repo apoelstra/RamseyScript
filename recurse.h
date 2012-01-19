@@ -5,6 +5,7 @@
 
 int recursion_preamble (ramsey_t *rt, global_data_t *state);
 void recursion_postamble (ramsey_t *rt);
-void recursion_reset (ramsey_t *rt);
+void recursion_init (ramsey_t *rt);
+void recursion_reset (ramsey_t *rt, global_data_t *state);
 
 #endif

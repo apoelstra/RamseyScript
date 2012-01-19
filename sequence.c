@@ -23,19 +23,20 @@ struct _sequence {
   int *value;
   int length;
   int max_length;
-  const ramsey_t *gap_set;
 };
 
 static const char *_sequence_get_type (const ramsey_t *rt)
 {
-  return (rt->type == TYPE_SEQUENCE) ? "sequence" : "word";
+  assert (rt && rt->type == TYPE_SEQUENCE);
+  return "sequence";
 }
 
 static const ramsey_t *_sequence_find_value (const ramsey_t *rt, int value)
 {
   struct _sequence *s = (struct _sequence *) rt;
   int i;
-  assert (rt && (rt->type == TYPE_SEQUENCE || TYPE_WORD));
+  assert (rt && (rt->type == TYPE_SEQUENCE || rt->type == TYPE_WORD ||
+                 rt->type == TYPE_PERMUTATION));
 
   for (i = 0; i < s->length; ++i)
     if (s->value[i] == value)
@@ -48,13 +49,12 @@ static int _sequence_run_filters (ramsey_t *rt)
 {
   struct _sequence *s = (struct _sequence *) rt;
   int i;
-  assert (rt && (rt->type == TYPE_SEQUENCE || TYPE_WORD));
+  assert (rt && (rt->type == TYPE_SEQUENCE || rt->type == TYPE_WORD ||
+                 rt->type == TYPE_PERMUTATION));
 
   for (i = 0; i < s->n_filters; ++i)
-    {
-      if (!s->filter[i]->run (rt))
-        return 0;
-    }
+    if (!s->filter[i]->run (rt))
+      return 0;
   return 1;
 }
 
@@ -62,7 +62,8 @@ static int _sequence_add_filter (ramsey_t *rt, filter_t *f)
 {
   struct _sequence *s = (struct _sequence *) rt;
   assert (f);
-  assert (rt && (rt->type == TYPE_SEQUENCE || TYPE_WORD));
+  assert (rt && (rt->type == TYPE_SEQUENCE || rt->type == TYPE_WORD ||
+                 rt->type == TYPE_PERMUTATION));
 
   if (!f->supports (f, rt->type))
     {
@@ -88,14 +89,14 @@ static int _sequence_add_filter (ramsey_t *rt, filter_t *f)
 static int _cheap_gap_set_filter (const ramsey_t *rt)
 {
   const struct _sequence *s = (const struct _sequence *) rt;
-  return (s->length < 2 || s->gap_set->find_value
-             (s->gap_set, s->value[s->length - 1] - s->value[s->length - 2]));
+  return (s->length < 2 || rt->r_gap_set->find_value
+             (rt->r_gap_set, s->value[s->length - 1] - s->value[s->length - 2]));
 }
 
 static int _sequence_add_gap_set (ramsey_t *rt, const ramsey_t *gap_set)
 {
-  struct _sequence *s = (struct _sequence *) rt;
-  assert (rt && (rt->type == TYPE_SEQUENCE || TYPE_WORD));
+  assert (rt && (rt->type == TYPE_SEQUENCE || rt->type == TYPE_WORD ||
+                 rt->type == TYPE_PERMUTATION));
 
   if (gap_set->type != TYPE_SEQUENCE)
     {
@@ -104,7 +105,7 @@ static int _sequence_add_gap_set (ramsey_t *rt, const ramsey_t *gap_set)
       return 0;
     }
 
-  s->gap_set = gap_set;
+  rt->r_gap_set = gap_set;
   return rt->add_filter (rt, filter_new_custom (_cheap_gap_set_filter));
 }
 
@@ -112,15 +113,16 @@ static int _sequence_add_gap_set (ramsey_t *rt, const ramsey_t *gap_set)
 static void _sequence_recurse (ramsey_t *rt, global_data_t *state)
 {
   int i;
-  int *gap_set;
+  const int *gap_set;
   int gap_set_len;
-  assert (rt && (rt->type == TYPE_SEQUENCE || TYPE_WORD));
+  assert (rt && (rt->type == TYPE_SEQUENCE || rt->type == TYPE_WORD ||
+                 rt->type == TYPE_PERMUTATION));
 
   if (!recursion_preamble (rt, state))
     return;
 
-  gap_set = state->gap_set->get_priv_data (state->gap_set);
-  gap_set_len = state->gap_set->get_length (state->gap_set);
+  gap_set = rt->r_gap_set->get_priv_data_const (rt->r_gap_set);
+  gap_set_len = rt->r_gap_set->get_length (rt->r_gap_set);
   for (i = 0; i < gap_set_len; ++i)
     {
       rt->append (rt, rt->get_maximum (rt) + gap_set[i]);
@@ -137,7 +139,8 @@ static void _sequence_print_real (const ramsey_t *rt, int start, stream_t *out)
   struct _sequence *s = (struct _sequence *) rt;
   int i;
 
-  assert (rt && (rt->type == TYPE_SEQUENCE || TYPE_WORD));
+  assert (rt && (rt->type == TYPE_SEQUENCE || rt->type == TYPE_WORD ||
+                 rt->type == TYPE_PERMUTATION));
   assert (start >= 0);
 
   out->write (out, "[");
@@ -162,14 +165,15 @@ static const char *_sequence_parse (ramsey_t *rt, const char *data)
 {
   int value;
 
-  assert (rt && (rt->type == TYPE_SEQUENCE || TYPE_WORD));
+  assert (rt && (rt->type == TYPE_SEQUENCE || rt->type == TYPE_WORD ||
+                 rt->type == TYPE_PERMUTATION));
 
   while (*data && *data != '[')
     ++data;
   if (*data == '[')
     ++data;
 
-  while ((value = strtoul (data, (char **) &data, 0)))
+  while ((value = strtol (data, (char **) &data, 0)))
     {
       rt->append (rt, value);
       while (*data && (isspace (*data) || *data == ','))
@@ -181,11 +185,11 @@ static const char *_sequence_parse (ramsey_t *rt, const char *data)
           while (*data && (isspace (*data) || *data == ','))
             ++data;
           /* Read ascending run */
-          if ((next_value = strtoul (data, (char **) &data, 0)) && next_value > value)
+          if ((next_value = strtol (data, (char **) &data, 0)) && next_value > value)
             while (value++ < next_value)
               rt->append(rt, value);
           /* Read decending run */
-          if ((next_value = strtoul (data, (char **) &data, 0)) && next_value < value)
+          if ((next_value = strtol (data, (char **) &data, 0)) && next_value < value)
             while (value-- > next_value)
               rt->append(rt, value);
         }
@@ -210,14 +214,16 @@ static void _sequence_randomize (ramsey_t *rt, int n)
 static int _sequence_get_length (const ramsey_t *rt)
 {
   struct _sequence *s = (struct _sequence *) rt;
-  assert (rt && (rt->type == TYPE_SEQUENCE || TYPE_WORD));
+  assert (rt && (rt->type == TYPE_SEQUENCE || rt->type == TYPE_WORD ||
+                 rt->type == TYPE_PERMUTATION));
   return s->length;
 }
 
 static int _sequence_get_maximum (const ramsey_t *rt)
 {
   struct _sequence *s = (struct _sequence *) rt;
-  assert (rt && (rt->type == TYPE_SEQUENCE || TYPE_WORD));
+  assert (rt && (rt->type == TYPE_SEQUENCE || rt->type == TYPE_WORD ||
+                 rt->type == TYPE_PERMUTATION));
   return s->value[s->length - 1];
 }
 
@@ -242,14 +248,16 @@ static const ramsey_t **_sequence_get_cells_const (const ramsey_t *rt)
 static void *_sequence_get_priv_data (ramsey_t *rt)
 {
   struct _sequence *s = (struct _sequence *) rt;
-  assert (rt && (rt->type == TYPE_SEQUENCE || TYPE_WORD));
+  assert (rt && (rt->type == TYPE_SEQUENCE || rt->type == TYPE_WORD ||
+                 rt->type == TYPE_PERMUTATION));
   return s->value;
 }
 
 static const void *_sequence_get_priv_data_const (const ramsey_t *rt)
 {
   const struct _sequence *s = (const struct _sequence *) rt;
-  assert (rt && (rt->type == TYPE_SEQUENCE || TYPE_WORD));
+  assert (rt && (rt->type == TYPE_SEQUENCE || rt->type == TYPE_WORD ||
+                 rt->type == TYPE_PERMUTATION));
   return s->value;
 }
 
@@ -257,7 +265,8 @@ static const void *_sequence_get_priv_data_const (const ramsey_t *rt)
 int _sequence_append (ramsey_t *rt, int value)
 {
   struct _sequence *s = (struct _sequence *) rt;
-  assert (rt && (rt->type == TYPE_SEQUENCE || TYPE_WORD));
+  assert (rt && (rt->type == TYPE_SEQUENCE || rt->type == TYPE_WORD ||
+                 rt->type == TYPE_PERMUTATION));
   if (s->length == s->max_length)
     {
       void *tmp = realloc (s->value, 2 * s->max_length * sizeof *s->value);
@@ -273,7 +282,8 @@ int _sequence_append (ramsey_t *rt, int value)
 int _sequence_deappend (ramsey_t *rt)
 {
   struct _sequence *s = (struct _sequence *) rt;
-  assert (rt && (rt->type == TYPE_SEQUENCE || TYPE_WORD));
+  assert (rt && (rt->type == TYPE_SEQUENCE || rt->type == TYPE_WORD ||
+                 rt->type == TYPE_PERMUTATION));
   if (s->length)
     --s->length;
   return 1;
@@ -299,7 +309,8 @@ int _sequence_cell_deappend (ramsey_t *rt, int cell)
 static void _sequence_empty (ramsey_t *rt)
 {
   struct _sequence *s = (struct _sequence *) rt;
-  assert (rt && (rt->type == TYPE_SEQUENCE || TYPE_WORD));
+  assert (rt && (rt->type == TYPE_SEQUENCE || rt->type == TYPE_WORD ||
+                 rt->type == TYPE_PERMUTATION));
 
   s->length = 0;
 }
@@ -308,21 +319,23 @@ static void _sequence_reset (ramsey_t *rt)
 {
   struct _sequence *s = (struct _sequence *) rt;
   int i;
-  assert (rt && (rt->type == TYPE_SEQUENCE || TYPE_WORD));
+  assert (rt && (rt->type == TYPE_SEQUENCE || rt->type == TYPE_WORD ||
+                 rt->type == TYPE_PERMUTATION));
 
   for (i = 0; i < s->n_filters; ++i)
     s->filter[i]->destroy (s->filter[i]);
 
   s->length = 0;
   s->n_filters = 0;
-  recursion_reset (rt);
+  recursion_init (rt);
 }
 
 static void _sequence_destroy (ramsey_t *rt)
 {
   struct _sequence *s = (struct _sequence *) rt;
   int i;
-  assert (rt && (rt->type == TYPE_SEQUENCE || TYPE_WORD));
+  assert (rt && (rt->type == TYPE_SEQUENCE || rt->type == TYPE_WORD ||
+                 rt->type == TYPE_PERMUTATION));
 
   for (i = 0; i < s->n_filters; ++i)
     s->filter[i]->destroy (s->filter[i]);
@@ -348,7 +361,7 @@ ramsey_t *sequence_new ()
       rv->destroy = _sequence_destroy;
       rv->randomize = _sequence_randomize;
       rv->recurse = _sequence_recurse;
-      recursion_reset (rv);
+      recursion_init (rv);
 
       rv->find_value  = _sequence_find_value;
       rv->get_length  = _sequence_get_length;
@@ -367,7 +380,6 @@ ramsey_t *sequence_new ()
       rv->add_gap_set = _sequence_add_gap_set;
       rv->run_filters = _sequence_run_filters;
 
-      s->gap_set   = NULL;
       s->length    = 0;
       s->n_filters = 0;
       s->max_length = DEFAULT_MAX_LENGTH;

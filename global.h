@@ -3,21 +3,29 @@
 
 typedef struct _ramsey_t ramsey_t;
 typedef struct _global_data global_data_t;
+typedef struct _dump_t dump_t;
 typedef int bool;
 
 typedef enum _e_ramsey_type {
-  TYPE_INVALID,
   TYPE_SEQUENCE,
   TYPE_COLORING,
   TYPE_WORD,
   TYPE_PERMUTATION
 } e_ramsey_type;
 
+typedef enum _e_setting_type {
+  TYPE_STRING,
+  TYPE_INTEGER,
+  TYPE_RAMSEY
+} e_setting_type;
 
-#include "stream.h"
+#include "dump.h"
 #include "filter.h"
+#include "setting.h"
+#include "stream.h"
 
 #define VERSION "0.2"
+#define SETTING(s) (state->settings->get_setting (state->settings, (s)))
 
 struct _ramsey_t {
   e_ramsey_type type;
@@ -25,8 +33,14 @@ struct _ramsey_t {
   /* Recursion state variables */
   int r_depth;
   int r_iterations;
+  int r_max_depth;
+  int r_max_iterations;
   int r_max_found;
+  int r_prune_tree;
+  const ramsey_t *r_gap_set;
+  const ramsey_t *r_alphabet;
 
+  /* vtable */
   const char *(*get_type) (const ramsey_t *);
 
   const char *(*parse) (ramsey_t *, const char *data);
@@ -61,29 +75,23 @@ struct _ramsey_t {
   const void *(*get_priv_data_const) (const ramsey_t *);
 };
 
-struct _filter_cell {
+typedef struct _filter_list {
   filter_t *data;
-  struct _filter_cell *next;
-};
+  struct _filter_list *next;
+} filter_list;
+
+typedef struct _dump_list {
+  dump_t *data;
+  struct _dump_list *next;
+} dump_list;
 
 struct _global_data {
-  int max_iterations;
-  int max_depth;
+  setting_list_t *settings;
 
-  bool prune_tree;
-  int n_colors;
-  int ap_length;
-  int random_length;
-  ramsey_t *alphabet;
-  ramsey_t *gap_set;
-  struct _filter_cell *filters;
+  filter_list *filters;
+  dump_list   *dumps;
 
-  stream_t *dump_stream;
-  bool dump_iters;
-  int dump_depth;
-  ramsey_t *iters_data;
-
-  int kill_now;
+  int kill_now;   /* used in threaded implementations */
 
   stream_t *out_stream;
   stream_t *in_stream;
