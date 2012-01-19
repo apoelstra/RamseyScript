@@ -91,7 +91,8 @@ struct _global_data {
   filter_list *filters;
   dump_list   *dumps;
 
-  int kill_now;   /* used in threaded implementations */
+  bool interactive;
+  bool kill_now;   /* used in threaded implementations */
 
   stream_t *out_stream;
   stream_t *in_stream;

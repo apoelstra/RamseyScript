@@ -19,6 +19,7 @@ int main (int argc, char *argv[])
       struct _global_data *defs = set_defaults ();
       defs->out_stream = stdout_stream_new ();
       defs->in_stream = stdin_stream_new ();
+      defs->interactive = 1;
 
       puts ("Welcome to RamseyScript CLI " VERSION);
       puts ("All code used in this project is public domain.");

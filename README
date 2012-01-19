@@ -24,12 +24,6 @@ Sets a variable. Not all variables are effective for each search space.
             format [c1 c2 c3 ... cn].
             Default value: [1 2 3 4]
 
- ap-length: The length of arithmetic progressions to check when using
-            AP-related filters. (This may be broken up into a min/max
-            pair if needed. But for now the only supported value is 3,
-            so this would be superfluous.)
-            Default value: 3
-
  dump-file: The file to output dump output (see 'dump'), or "-" to use
             stdout.
             Default value: -
@@ -43,7 +37,7 @@ Sets a variable. Not all variables are effective for each search space.
             if the gap-set is a coloring (i.e., a sequence of sequences)
             then each color of the gap-set defines the allowable gap
             sizes for the respective colors in the search space.
-            Default value: [1 ... 1000]
+            Default value: [-1000 ... 1000]
 
  max-depth: The maximum depth to search the space, or 0 for no maximum.
             Default value: 0

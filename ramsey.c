@@ -36,6 +36,7 @@ struct _global_data *set_defaults ()
       rv->filters  = NULL;
       rv->dumps    = NULL;
       rv->kill_now = 0;
+      rv->interactive = 0;
     }
   return rv;
 }
@@ -85,6 +86,11 @@ void process (struct _global_data *state)
   int i;
 
   /* Parse */
+  if (state->interactive)
+    {
+      printf ("ramsey> ");
+      fflush (stdout);
+    }
   while ((buf = state->in_stream->read_line (state->in_stream)))
     {
       char *tok;
@@ -253,7 +259,23 @@ void process (struct _global_data *state)
               seed->destroy (seed);
             }
         }
+      /* Interactive mode bail commands */
+      else if (strmatch (tok, "quit"))
+        return;
+      else if (strmatch (tok, "exit"))
+        return;
+      else if (state->interactive)
+        fprintf (stderr, "Unrecognized command ``%s''. Type 'quit' to quit.\n"
+                         "See the README file for a full language specification.\n", tok);
+      else
+        fprintf (stderr, "Unrecognized command ``%s''.\n", tok);
+
       free (buf);
+      if (state->interactive)
+        {
+          printf ("ramsey> ");
+          fflush (stdout);
+        }
     }
 }
 
