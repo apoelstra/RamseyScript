@@ -124,6 +124,14 @@ void process (struct _global_data *state)
           else
             fprintf (stderr, "Failed to add setting ``%s''.\n", name);
         }
+      /* get <variable> */
+      else if (strmatch (tok, "get"))
+        {
+          const setting_t *set;
+          tok = strtok (NULL, " #\t\n");
+          if (tok && (set = SETTING (tok)))
+            set->print (set, state->out_stream);
+        }
       /* unset <variable> */
       else if (strmatch (tok, "unset"))
         {
@@ -323,13 +331,6 @@ void process (struct _global_data *state)
         {
           if (strmatch (tok, "quit") || strmatch (tok, "exit"))
             return;
-          else if (strmatch (tok, "get"))
-            {
-              const setting_t *set;
-              tok = strtok (NULL, " #\t\n");
-              if (tok && (set = SETTING (tok)))
-                set->print (set, state->out_stream);
-            }
           else 
             fprintf (stderr, "Unrecognized command ``%s''. Type 'quit' to quit.\n"
                              "See the README file for a full language specification.\n", tok);

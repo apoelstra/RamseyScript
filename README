@@ -68,6 +68,12 @@ max-iterations: The number of iterations to run before stopping, or 0 to
 
 
 
+  get <variable>
+
+Prints the value of <variable>.
+
+
+
   unset <variable>
 
 Unsets a previously-set variable. If the variable does not exist, does nothing.
