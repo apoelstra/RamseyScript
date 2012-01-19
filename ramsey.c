@@ -135,46 +135,86 @@ void process (struct _global_data *state)
       /* filter <no-double-3-aps|no-additive-squares> */
       else if (strmatch (tok, "filter"))
         {
-          filter_t *new_filter;
-
           tok = strtok (NULL, " #\t\n");
-          new_filter = filter_new (tok);
-          if (new_filter != NULL)
+          /* Delete all filters */
+          if (strmatch (tok, "clear"))
             {
-              filter_list *new_cell = malloc (sizeof *new_cell);
-              new_cell->next = state->filters;
-              new_cell->data = new_filter;
-              state->filters = new_cell;
-              stream_printf (state->out_stream, "Added filter ``%s''.\n",
-                             new_filter->get_type (new_filter));
+              filter_list *flist = state->filters;
+              /* Apply filters */
+              while (flist)
+                {
+                  filter_list *tmp = flist;
+                  flist = flist->next;
+                  if (state->interactive)
+                    stream_printf (state->out_stream, "Removed filter ``%s''.\n",
+                                   tmp->data->get_type (tmp->data));
+                  tmp->data->destroy (tmp->data);
+                  free (tmp);
+                }
+              state->filters = NULL;
+            }
+          /* Add a new filter */
+          else
+            {
+              filter_t *new_filter = filter_new (tok);
+              if (new_filter != NULL)
+                {
+                  filter_list *new_cell = malloc (sizeof *new_cell);
+                  new_cell->next = state->filters;
+                  new_cell->data = new_filter;
+                  state->filters = new_cell;
+                  stream_printf (state->out_stream, "Added filter ``%s''.\n",
+                                 new_filter->get_type (new_filter));
+                }
             }
 	}
       /* dump <iterations-per-length> */
       else if (strmatch (tok, "dump"))
         {
-          dump_t *new_dump;
-          stream_t *dump_stream;
-          const setting_t *dump_depth_set = SETTING ("dump_depth");
-          const setting_t *dump_file_set  = SETTING ("dump_file");
-          int dump_depth = 0;
-
-          if (dump_depth_set)
-            dump_depth = dump_depth_set->get_int_value (dump_depth_set);
-          if (dump_file_set && strcmp (dump_file_set->get_text (dump_file_set), "-"))
-            dump_stream = file_stream_new (dump_file_set->get_text (dump_file_set));
-          else
-            dump_stream = stdout_stream_new ();
-
           tok = strtok (NULL, " #\t\n");
-          new_dump = dump_new (tok, dump_depth, dump_stream);
-          if (new_dump != NULL)
+          /* Delete all dumps */
+          if (strmatch (tok, "clear"))
             {
-              dump_list *new_cell = malloc (sizeof *new_cell);
-              new_cell->next = state->dumps;
-              new_cell->data = new_dump;
-              state->dumps = new_cell;
-              stream_printf (state->out_stream, "Added dump ``%s''.\n",
-                             new_dump->get_type (new_dump));
+              dump_list *dlist = state->dumps;
+              /* Apply filters */
+              while (dlist)
+                {
+                  dump_list *tmp = dlist;
+                  dlist = dlist->next;
+                  if (state->interactive)
+                    stream_printf (state->out_stream, "Removed dump ``%s''.\n",
+                                   tmp->data->get_type (tmp->data));
+                  tmp->data->destroy (tmp->data);
+                  free (tmp);
+                }
+              state->dumps = NULL;
+            }
+          /* Add a new dump */
+          else
+            {
+              dump_t *new_dump;
+              stream_t *dump_stream;
+              const setting_t *dump_depth_set = SETTING ("dump_depth");
+              const setting_t *dump_file_set  = SETTING ("dump_file");
+              int dump_depth = 0;
+
+              if (dump_depth_set)
+                dump_depth = dump_depth_set->get_int_value (dump_depth_set);
+              if (dump_file_set && strcmp (dump_file_set->get_text (dump_file_set), "-"))
+                dump_stream = file_stream_new (dump_file_set->get_text (dump_file_set));
+              else
+                dump_stream = stdout_stream_new ();
+
+              new_dump = dump_new (tok, dump_depth, dump_stream);
+              if (new_dump != NULL)
+                {
+                  dump_list *new_cell = malloc (sizeof *new_cell);
+                  new_cell->next = state->dumps;
+                  new_cell->data = new_dump;
+                  state->dumps = new_cell;
+                  stream_printf (state->out_stream, "Added dump ``%s''.\n",
+                                 new_dump->get_type (new_dump));
+                }
             }
         }
       /* search <seqences|colorings|words> [seed] */
