@@ -62,6 +62,7 @@ static void _file_stream_close (stream_t *s)
   struct _file_stream *priv = (struct _file_stream *) s;
   if (priv->mode == STREAM_CLOSED)
     return;
+  priv->mode = STREAM_CLOSED;
   fclose (priv->fh);
   priv->fh = NULL;
 }
