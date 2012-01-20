@@ -22,7 +22,7 @@ Sets a variable. Not all variables are effective for each search space.
 
       alphabet: The alphabet to use when searching words. Specified in the
                 format [c1 c2 c3 ... cn].
-                Default value: [1 2 3 4]
+                Default value: (none)
 
      dump-file: The file to output dump output (see 'dump'), or "-" to use
                 stdout.
@@ -37,14 +37,13 @@ Sets a variable. Not all variables are effective for each search space.
                 if the gap-set is a coloring (i.e., a sequence of sequences)
                 then each color of the gap-set defines the allowable gap
                 sizes for the respective colors in the search space.
-                Default value: [-1000 ... 1000]
+                Default value: (none)
 
-     max-depth: The maximum depth to search the space, or 0 for no maximum.
-                Default value: 0
+     max-depth: The maximum depth to search the space.
+                Default value: (none)
 
-max-iterations: The number of iterations to run before stopping, or 0 to
-                search the entire space.
-                Default value: 0
+max-iterations: The number of iterations to run before stopping.
+                Default value: (none)
 
     prune-tree: Whether or not the search tree should be pruned; i.e., if some
                 element is filtered out, should new elements be built from it?

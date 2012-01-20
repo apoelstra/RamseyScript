@@ -30,7 +30,6 @@ struct _global_data *set_defaults ()
       NEW_SET ("prune_tree",     "1");
       NEW_SET ("n_colors",       "3");
       NEW_SET ("random_length",  "10");
-      NEW_SET ("gap_set",        "[-1000 ... 1000]");
       NEW_SET ("dump_depth",     "400");
 #undef NEW_SET
       rv->filters  = NULL;
