@@ -151,7 +151,7 @@ void process (struct _global_data *state)
         {
           tok = strtok (NULL, " #\t\n");
           /* Delete all filters */
-          if (strmatch (tok, "clear"))
+          if ((tok != NULL) && strmatch (tok, "clear"))
             {
               filter_list *flist = state->filters;
               /* Apply filters */
@@ -168,7 +168,7 @@ void process (struct _global_data *state)
               state->filters = NULL;
             }
           /* Add a new filter */
-          else
+          else if (tok != NULL)
             {
               filter_t *new_filter = filter_new (tok);
               if (new_filter != NULL)
@@ -187,7 +187,7 @@ void process (struct _global_data *state)
         {
           tok = strtok (NULL, " #\t\n");
           /* Delete all dumps */
-          if (strmatch (tok, "clear"))
+          if (tok != NULL && strmatch (tok, "clear"))
             {
               dump_list *dlist = state->dumps;
               /* Apply filters */
@@ -204,7 +204,7 @@ void process (struct _global_data *state)
               state->dumps = NULL;
             }
           /* Add a new dump */
-          else
+          else if (tok != NULL)
             {
               dump_t *new_dump;
               stream_t *dump_stream;
