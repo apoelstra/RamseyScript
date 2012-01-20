@@ -159,6 +159,7 @@ EXAMPLES
 ## This will find that there is no such coloring of [1, 17],
 ## though there is one of [1, 16].
 
+set n-colors 2
 filter no-double-3-aps
 search colorings
 
@@ -168,6 +169,7 @@ search colorings
 ## Explore the space of 3-colorings of [1, N] with no double-3-ap's.
 ## One does exist of [1, 390], but this is all that is known so far.
 
+set n-colors 3
 filter no-double-3-aps
 set max-iterations 10000000
 
