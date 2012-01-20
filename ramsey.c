@@ -127,10 +127,17 @@ void process (struct _global_data *state)
       /* get <variable> */
       else if (strmatch (tok, "get"))
         {
-          const setting_t *set;
           tok = strtok (NULL, " #\t\n");
-          if (tok && (set = SETTING (tok)))
-            set->print (set, state->out_stream);
+          if (tok && *tok)
+            {
+              const setting_t *set = SETTING (tok);
+              if (set)
+                set->print (set, state->out_stream);
+              else
+                fprintf (stderr, "No such variable ``%s''.\n", tok);
+            }
+          else
+            state->settings->print (state->settings, state->out_stream);
         }
       /* unset <variable> */
       else if (strmatch (tok, "unset"))

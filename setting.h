@@ -22,6 +22,8 @@ struct _setting_t {
 };
 
 struct _setting_list_t {
+  void (*print) (const setting_list_t *slist, stream_t *out);
+
   setting_t *(*add_setting) (setting_list_t *, setting_t *);
   setting_t *(*get_setting) (const setting_list_t *, const char *name);
   int  (*remove_setting) (setting_list_t *, const char *name);

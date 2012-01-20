@@ -146,6 +146,22 @@ static int _setting_list_remove_setting (setting_list_t *slist, const char *name
   return 0;
 }
 
+static void _setting_list_print (const setting_list_t *slist, stream_t *out)
+{
+  struct _setting_list_priv *priv = (struct _setting_list_priv *) slist;
+  int i;
+  for (i = 0; i < HASH_TABLE_SIZE; ++i)
+    {
+      struct _setting_priv *set = priv->setting[i];
+      while (set)
+        {
+          setting_t *s = (setting_t *) set;
+          s->print (s, out);
+          set = set->next;
+        }
+    }
+}
+
 static void _setting_list_destroy (setting_list_t *slist)
 {
   if (slist != NULL)
@@ -174,6 +190,7 @@ setting_list_t *setting_list_new ()
       rv->add_setting = _setting_list_add_setting;
       rv->get_setting = _setting_list_get_setting;
       rv->remove_setting = _setting_list_remove_setting;
+      rv->print       = _setting_list_print;
       rv->destroy     = _setting_list_destroy;
 
       for (i = 0; i < HASH_TABLE_SIZE; ++i)
@@ -233,18 +250,19 @@ static long _setting_get_int_value (const setting_t *set)
 static void _setting_print (const setting_t *set, stream_t *out)
 {
   const struct _setting_priv *priv = (const struct _setting_priv *) set;
+  stream_printf (out, "%s = ", priv->name);
   switch (set->type)
     {
     case TYPE_STRING:
-      stream_printf (out, "string: %s\n", priv->text);
+      stream_printf (out, "(string) %s\n", priv->text);
       break;
     case TYPE_INTEGER:
-      stream_printf (out, "integer: %ld\n", priv->int_data);
+      stream_printf (out, "(integer) %ld\n", priv->int_data);
       break;
     case TYPE_RAMSEY:
       {
         const ramsey_t *rt = priv->ramsey_data;
-        stream_printf (out, "%s: ", rt->get_type (rt));
+        stream_printf (out, "(%s): ", rt->get_type (rt));
         rt->print (rt, out);
         out->write (out, "\n");
       }
