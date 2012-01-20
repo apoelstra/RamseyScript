@@ -126,7 +126,7 @@ static void _sequence_recurse (ramsey_t *rt, global_data_t *state)
 
   if (rt->r_gap_set == NULL)
     {
-      fputs ("Error: cannot search sequnces without a gap set.\n", stderr);
+      fputs ("Error: cannot search sequences without a gap set.\n", stderr);
       return;
     }
 
