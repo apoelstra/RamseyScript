@@ -239,15 +239,16 @@ void process (struct _global_data *state)
           tok = strtok (NULL, " #\t\n");
           if (tok && strmatch (tok, "sequences"))
             seed = sequence_new ();
-          else if (strmatch (tok, "colorings") ||
-                   strmatch (tok, "partitions"))
+          else if (tok && (strmatch (tok, "colorings") ||
+                           strmatch (tok, "partitions")))
             {
               const setting_t *n_colors_set = SETTING ("n_colors");
               seed = coloring_new (n_colors_set->get_int_value (n_colors_set));
             }
           else if (tok && strmatch (tok, "words"))
             seed = word_new ();
-          else if (tok && strmatch (tok, "permutations"))
+          else if (tok && (strmatch (tok, "permutations") ||
+                           strmatch (tok, "perms")))
             seed = permutation_new ();
           else
             fprintf (stderr, "Unrecognized search space ``%s''\n", tok);
