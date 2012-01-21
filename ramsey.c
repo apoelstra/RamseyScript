@@ -21,7 +21,7 @@
 
 #define strmatch(s, r) (!strcmp ((s), (r)))
 
-struct _global_data *set_defaults ()
+struct _global_data *set_defaults (stream_t *in, stream_t *out, stream_t *err)
 {
   struct _global_data *rv = malloc (sizeof *rv);
   if (rv)
@@ -33,10 +33,20 @@ struct _global_data *set_defaults ()
       NEW_SET ("random_length",  "10");
       NEW_SET ("dump_depth",     "400");
 #undef NEW_SET
+      /* Set max-length as a target by default.
+       * We do this purely for historical reasons */
+      rv->targets = malloc (sizeof *rv->targets);
+      rv->targets->data = target_new ("max_length", out);
+      rv->targets->next = NULL;
+      /**/
       rv->filters  = NULL;
       rv->dumps    = NULL;
       rv->kill_now = 0;
       rv->interactive = 0;
+
+      rv->in_stream  = in;
+      rv->out_stream = out;
+      rv->err_stream = err;
     }
   return rv;
 }

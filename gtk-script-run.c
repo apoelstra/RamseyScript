@@ -38,11 +38,9 @@ struct _GtkScriptRunClass
 static void *_thread_body (gpointer r)
 {
   GtkScriptRun *run = r;
-  run->tdata = set_defaults ();
+  run->tdata = set_defaults (run->script_stream, run->output_stream, run->output_stream); 
 
   /* Open streams */
-  run->tdata->out_stream = run->output_stream;
-  run->tdata->in_stream  = run->script_stream;
   run->output_stream->open (run->output_stream, STREAM_WRITE);
   run->script_stream->open (run->script_stream, STREAM_READ);
 

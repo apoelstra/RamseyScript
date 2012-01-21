@@ -16,9 +16,9 @@ int main (int argc, char *argv[])
 
   if (argc < 2)
     { 
-      struct _global_data *defs = set_defaults ();
-      defs->out_stream = stdout_stream_new ();
-      defs->in_stream = stdin_stream_new ();
+      struct _global_data *defs = set_defaults (stdin_stream_new (),
+                                                stdout_stream_new (),
+                                                stderr_stream_new ());
       defs->interactive = 1;
 
       puts ("Welcome to RamseyScript CLI " VERSION);
@@ -33,15 +33,16 @@ int main (int argc, char *argv[])
       int i;
       for (i = 1; argv[i]; ++i)
         {
-          struct _global_data *defs = set_defaults ();
-          defs->out_stream = stdout_stream_new ();
-          defs->in_stream = file_stream_new (argv[i]);
+          struct _global_data *defs = set_defaults (file_stream_new (argv[i]),
+                                                    stdout_stream_new (),
+                                                    stderr_stream_new ());
           if (!defs->in_stream->open (defs->in_stream, STREAM_READ))
             fprintf (stderr, "Failed to open script ``%s''\n", argv[i]);
           else
             process (defs);
           defs->in_stream->destroy (defs->in_stream);
           defs->out_stream->destroy (defs->out_stream);
+          defs->err_stream->destroy (defs->out_stream);
         }
     }
 
