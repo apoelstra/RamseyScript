@@ -6,6 +6,7 @@
 
 #include "global.h"
 #include "coloring.h"
+#include "ramsey.h"
 #include "sequence.h"
 #include "setting.h"
 

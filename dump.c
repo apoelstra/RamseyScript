@@ -5,6 +5,7 @@
 #include <stdio.h>
 
 #include "dump.h"
+#include "ramsey.h"
 #include "stream.h"
 
 struct _dump_priv {

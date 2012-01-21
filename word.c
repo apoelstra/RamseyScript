@@ -6,6 +6,7 @@
 #include <ctype.h>
 
 #include "word.h"
+#include "ramsey.h"
 #include "recurse.h"
 #include "stream.h"
 #include "sequence.h"

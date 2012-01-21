@@ -6,6 +6,7 @@
 
 #include "global.h"
 #include "filter.h"
+#include "ramsey.h"
 
 #define strmatch(s, r) (!strcmp ((s), (r)))
 

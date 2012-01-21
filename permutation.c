@@ -6,6 +6,7 @@
 #include <ctype.h>
 
 #include "permutation.h"
+#include "ramsey.h"
 #include "recurse.h"
 #include "stream.h"
 #include "sequence.h"
