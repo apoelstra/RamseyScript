@@ -4,12 +4,12 @@
 #include <string.h>
 #include <stdio.h>
 
-#include "dump.h"
+#include "global.h"
 #include "ramsey.h"
 #include "stream.h"
 
 struct _dump_priv {
-  dump_t parent;
+  data_collector_t parent;
 
   stream_t *out;
   int size;
@@ -17,32 +17,32 @@ struct _dump_priv {
 };
 
 /* RECORD FUNCTIONS */
-static const char *_iters_per_length_get_type (const dump_t *dump)
+static const char *_iters_per_length_get_type (const data_collector_t *dc)
 {
-  (void) dump;
+  (void) dc;
   return "iterations-per-length";
 }
 
-static void _iters_per_length_record (dump_t *dump, ramsey_t *ram)
+static void _iters_per_length_record (data_collector_t *dc, ramsey_t *ram)
 {
   int idx = ram->get_length (ram);
-  struct _dump_priv *priv = (struct _dump_priv *) dump;
+  struct _dump_priv *priv = (struct _dump_priv *) dc;
   if (idx >= 0 && idx <= priv->size)
     ++priv->data[idx];
 }
 
 /* GENERIC DUMP FUNCTIONS */
-static void _dump_reset (dump_t *dump)
+static void _dump_reset (data_collector_t *dc)
 {
-  const struct _dump_priv *priv = (struct _dump_priv *) dump;
+  const struct _dump_priv *priv = (struct _dump_priv *) dc;
   int i;
   for (i = 0; i <= priv->size; ++i)
     priv->data[i] = 0;
 }
 
-static void _dump_output  (const dump_t *dump)
+static void _dump_output  (const data_collector_t *dc)
 {
-  const struct _dump_priv *priv = (struct _dump_priv *) dump;
+  const struct _dump_priv *priv = (struct _dump_priv *) dc;
   int i;
   priv->out->open (priv->out, STREAM_APPEND);
   stream_printf (priv->out, "[ %d", priv->data[1]);
@@ -52,18 +52,18 @@ static void _dump_output  (const dump_t *dump)
   priv->out->close (priv->out);
 }
 
-static void _dump_destroy (dump_t *dump)
+static void _dump_destroy (data_collector_t *dc)
 {
-  struct _dump_priv *priv = (struct _dump_priv *) dump;
-  if (dump)
+  struct _dump_priv *priv = (struct _dump_priv *) dc;
+  if (dc)
     free (priv->data);
-  free (dump);
+  free (dc);
 }
 
-dump_t *dump_new (const char *data, size_t size, stream_t *out)
+data_collector_t *dump_new (const char *data, size_t size, stream_t *out)
 {
   struct _dump_priv *priv = malloc (sizeof *priv);
-  dump_t *rv = (dump_t *) priv;
+  data_collector_t *rv = (data_collector_t *) priv;
 
   assert (data != NULL);
 
@@ -89,7 +89,7 @@ dump_t *dump_new (const char *data, size_t size, stream_t *out)
         }
       else
         {
-          fprintf (stderr, "Warning: unknown dump type ``%s''.\n",
+          fprintf (stderr, "Warning: unknown dc type ``%s''.\n",
                    data);
           rv->destroy (rv);
           return NULL;

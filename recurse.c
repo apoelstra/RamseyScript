@@ -24,7 +24,7 @@ int recursion_preamble (ramsey_t *rt, global_data_t *state)
 
   if (filter_success)
     {
-      dump_list *dlist;
+      dc_list *dlist;
       for (dlist = state->dumps; dlist; dlist = dlist->next)
         dlist->data->record (dlist->data, rt);
       ++rt->r_iterations;

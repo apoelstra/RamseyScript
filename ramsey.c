@@ -189,11 +189,11 @@ void process (struct _global_data *state)
           /* Delete all dumps */
           if (tok != NULL && strmatch (tok, "clear"))
             {
-              dump_list *dlist = state->dumps;
+              dc_list *dlist = state->dumps;
               /* Apply filters */
               while (dlist)
                 {
-                  dump_list *tmp = dlist;
+                  dc_list *tmp = dlist;
                   dlist = dlist->next;
                   if (state->interactive)
                     stream_printf (state->out_stream, "Removed dump ``%s''.\n",
@@ -206,7 +206,7 @@ void process (struct _global_data *state)
           /* Add a new dump */
           else if (tok != NULL)
             {
-              dump_t *new_dump;
+              data_collector_t *new_dump;
               stream_t *dump_stream;
               const setting_t *dump_depth_set = SETTING ("dump_depth");
               const setting_t *dump_file_set  = SETTING ("dump_file");
@@ -222,7 +222,7 @@ void process (struct _global_data *state)
               new_dump = dump_new (tok, dump_depth, dump_stream);
               if (new_dump != NULL)
                 {
-                  dump_list *new_cell = malloc (sizeof *new_cell);
+                  dc_list *new_cell = malloc (sizeof *new_cell);
                   new_cell->next = state->dumps;
                   new_cell->data = new_dump;
                   state->dumps = new_cell;
@@ -258,7 +258,7 @@ void process (struct _global_data *state)
           else
             {
               filter_list *flist = state->filters;
-              dump_list   *dlist = state->dumps;
+              dc_list     *dlist = state->dumps;
               const setting_t *max_iters_set = SETTING ("max_iterations");
               const setting_t *max_depth_set = SETTING ("max_depth");
               const setting_t *alphabet_set  = SETTING ("alphabet");
