@@ -16,6 +16,7 @@
 #include "recurse.h"
 #include "setting.h"
 #include "sequence.h"
+#include "target.h"
 #include "word.h"
 
 #define strmatch(s, r) (!strcmp ((s), (r)))
@@ -154,7 +155,6 @@ void process (struct _global_data *state)
           if ((tok != NULL) && strmatch (tok, "clear"))
             {
               filter_list *flist = state->filters;
-              /* Apply filters */
               while (flist)
                 {
                   filter_list *tmp = flist;
@@ -190,7 +190,6 @@ void process (struct _global_data *state)
           if (tok != NULL && strmatch (tok, "clear"))
             {
               dc_list *dlist = state->dumps;
-              /* Apply filters */
               while (dlist)
                 {
                   dc_list *tmp = dlist;
@@ -231,6 +230,41 @@ void process (struct _global_data *state)
                 }
             }
         }
+      /* target <max-length> */
+      else if (strmatch (tok, "target"))
+        {
+          tok = strtok (NULL, " #\t\n");
+          /* Delete all target */
+          if (tok != NULL && strmatch (tok, "clear"))
+            {
+              dc_list *dlist = state->targets;
+              while (dlist)
+                {
+                  dc_list *tmp = dlist;
+                  dlist = dlist->next;
+                  if (state->interactive)
+                    stream_printf (state->out_stream, "Removed target ``%s''.\n",
+                                   tmp->data->get_type (tmp->data));
+                  tmp->data->destroy (tmp->data);
+                  free (tmp);
+                }
+              state->targets = NULL;
+            }
+          /* Add a new target */
+          else if (tok != NULL)
+            {
+              data_collector_t *new_target = target_new (tok, state->out_stream);
+              if (new_target != NULL)
+                {
+                  dc_list *new_cell = malloc (sizeof *new_cell);
+                  new_cell->next = state->targets;
+                  new_cell->data = new_target;
+                  state->targets = new_cell;
+                  stream_printf (state->out_stream, "Added target ``%s''.\n",
+                                 new_target->get_type (new_target));
+                }
+            }
+        }
       /* search <seqences|colorings|words> [seed] */
       else if (strmatch (tok, "search"))
         {
@@ -257,8 +291,8 @@ void process (struct _global_data *state)
             fprintf (stderr, "No seed. Bad search space or allocation failure.\n");
           else
             {
-              filter_list *flist = state->filters;
-              dc_list     *dlist = state->dumps;
+              filter_list *flist;
+              dc_list     *dlist;
               const setting_t *max_iters_set = SETTING ("max_iterations");
               const setting_t *max_depth_set = SETTING ("max_depth");
               const setting_t *alphabet_set  = SETTING ("alphabet");
@@ -267,17 +301,13 @@ void process (struct _global_data *state)
               time_t start = time (NULL);
 
               /* Apply filters */
-              while (flist)
-                {
-                  seed->add_filter (seed, flist->data->clone (flist->data));
-                  flist = flist->next;
-                }
+              for (flist = state->filters; flist; flist = flist->next)
+                seed->add_filter (seed, flist->data->clone (flist->data));
               /* Reset dump data */
-              while (dlist)
-                {
-                  dlist->data->reset (dlist->data);
-                  dlist = dlist->next;
-                }
+              for (dlist = state->dumps; dlist; dlist = dlist->next)
+                dlist->data->reset (dlist->data);
+              for (dlist = state->targets; dlist; dlist = dlist->next)
+                dlist->data->reset (dlist->data);
 
               /* Parse seed */
               tok = strtok (NULL, "\n");
@@ -307,6 +337,10 @@ void process (struct _global_data *state)
               if (gap_set_set && gap_set_set->type == TYPE_RAMSEY)
                 stream_printf (state->out_stream, "  Gap set: \t%s\n", gap_set_set->get_text (gap_set_set));
 
+              stream_printf (state->out_stream, "  Targets: \t");
+              for (dlist = state->targets; dlist; dlist = dlist->next)
+                stream_printf (state->out_stream, "%s ", dlist->data->get_type (dlist->data));
+              stream_printf (state->out_stream, "\n");
               stream_printf (state->out_stream, "  Filters: \t");
               for (flist = state->filters; flist; flist = flist->next)
                 stream_printf (state->out_stream, "%s ", flist->data->get_type (flist->data));

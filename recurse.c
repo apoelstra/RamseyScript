@@ -27,17 +27,10 @@ int recursion_preamble (ramsey_t *rt, global_data_t *state)
       dc_list *dlist;
       for (dlist = state->dumps; dlist; dlist = dlist->next)
         dlist->data->record (dlist->data, rt);
-      ++rt->r_iterations;
+      for (dlist = state->targets; dlist; dlist = dlist->next)
+        dlist->data->record (dlist->data, rt);
 
-      if (rt->get_length (rt) > rt->r_max_found)
-        {
-          stream_printf (state->out_stream,
-                         "New maximal %s (length %3d): ",
-                         rt->get_type (rt), rt->get_length (rt));
-          rt->print (rt, state->out_stream);
-          stream_printf (state->out_stream, "\n");
-          rt->r_max_found = rt->get_length (rt);
-        }
+      ++rt->r_iterations;
     }
   return 1;
 }

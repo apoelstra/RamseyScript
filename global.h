@@ -50,7 +50,7 @@ struct _global_data {
   setting_list_t *settings;
 
   filter_list *filters;
-  dc_list     *dumps;
+  dc_list     *dumps, *targets;
 
   bool interactive;
   bool kill_now;   /* used in threaded implementations */
