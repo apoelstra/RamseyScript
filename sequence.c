@@ -272,7 +272,7 @@ static const void *_sequence_get_priv_data_const (const ramsey_t *rt)
 }
 
 /* APPEND / DEAPPEND */
-int _sequence_append (ramsey_t *rt, int value)
+static int _sequence_append (ramsey_t *rt, int value)
 {
   struct _sequence *s = (struct _sequence *) rt;
   assert (rt && (rt->type == TYPE_SEQUENCE || rt->type == TYPE_WORD ||
@@ -289,7 +289,7 @@ int _sequence_append (ramsey_t *rt, int value)
   return 1;
 }
 
-int _sequence_deappend (ramsey_t *rt)
+static int _sequence_deappend (ramsey_t *rt)
 {
   struct _sequence *s = (struct _sequence *) rt;
   assert (rt && (rt->type == TYPE_SEQUENCE || rt->type == TYPE_WORD ||
@@ -299,7 +299,7 @@ int _sequence_deappend (ramsey_t *rt)
   return 1;
 }
 
-int _sequence_cell_append (ramsey_t *rt, int value, int cell)
+static int _sequence_cell_append (ramsey_t *rt, int value, int cell)
 {
   (void) rt;
   (void) value;
@@ -307,7 +307,7 @@ int _sequence_cell_append (ramsey_t *rt, int value, int cell)
   return 0;
 }
 
-int _sequence_cell_deappend (ramsey_t *rt, int cell)
+static int _sequence_cell_deappend (ramsey_t *rt, int cell)
 {
   (void) rt;
   (void) cell;
