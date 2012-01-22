@@ -35,7 +35,7 @@ struct _ramsey_t {
    *          and may modify or free it at its discretion. */
   int (*add_filter)  (ramsey_t *, filter_t *);
   int (*add_gap_set) (ramsey_t *, const ramsey_t *);
-  int (*run_filters) (ramsey_t *);
+  int (*run_filters) (const ramsey_t *);
 
   void (*recurse)       (ramsey_t *, global_data_t *);
 

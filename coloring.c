@@ -37,9 +37,9 @@ static const ramsey_t *_coloring_find_value (const ramsey_t *rt, int value)
 }
 
 /* FILTERS */
-static int _coloring_run_filters (ramsey_t *rt)
+static int _coloring_run_filters (const ramsey_t *rt)
 {
-  struct _coloring *c = (struct _coloring *) rt;
+  const struct _coloring *c = (struct _coloring *) rt;
   int i;
   assert (rt && rt->type == TYPE_COLORING);
 

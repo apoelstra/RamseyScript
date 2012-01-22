@@ -34,7 +34,7 @@ static const char *_sequence_get_type (const ramsey_t *rt)
 
 static const ramsey_t *_sequence_find_value (const ramsey_t *rt, int value)
 {
-  struct _sequence *s = (struct _sequence *) rt;
+  const struct _sequence *s = (struct _sequence *) rt;
   int i;
   assert (rt && (rt->type == TYPE_SEQUENCE || rt->type == TYPE_WORD ||
                  rt->type == TYPE_PERMUTATION));
@@ -46,7 +46,7 @@ static const ramsey_t *_sequence_find_value (const ramsey_t *rt, int value)
 }
 
 /* FILTERS */
-static int _sequence_run_filters (ramsey_t *rt)
+static int _sequence_run_filters (const ramsey_t *rt)
 {
   struct _sequence *s = (struct _sequence *) rt;
   int i;
