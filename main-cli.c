@@ -42,7 +42,7 @@ int main (int argc, char *argv[])
             process (defs);
           defs->in_stream->destroy (defs->in_stream);
           defs->out_stream->destroy (defs->out_stream);
-          defs->err_stream->destroy (defs->out_stream);
+          defs->err_stream->destroy (defs->err_stream);
         }
     }
 
