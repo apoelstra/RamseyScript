@@ -284,9 +284,14 @@ static void _setting_destroy (setting_t *set)
 
 setting_t *setting_new (const char *name, const char *text)
 {
-  struct _setting_priv *priv = malloc (sizeof *priv);
-  setting_t *rv = (setting_t *) priv;
+  struct _setting_priv *priv;
+  setting_t *rv;
 
+  if (name == NULL || text == NULL)
+    return NULL;
+
+  priv = malloc (sizeof *priv);
+  rv = (setting_t *) priv;
   if (rv != NULL)
     {
       const char *scan = text;
