@@ -287,7 +287,10 @@ void process (struct _global_data *state)
                            strmatch (tok, "partitions")))
             {
               const setting_t *n_colors_set = SETTING ("n_colors");
-              seed = coloring_new (n_colors_set->get_int_value (n_colors_set));
+              if (n_colors_set)
+                seed = coloring_new (n_colors_set->get_int_value (n_colors_set));
+              else
+                fprintf (stderr, "Error: unset variable ``n-colors''.\n");
             }
           else if (tok && strmatch (tok, "words"))
             seed = word_new ();
