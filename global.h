@@ -10,7 +10,8 @@ typedef enum _e_ramsey_type {
   TYPE_SEQUENCE,
   TYPE_COLORING,
   TYPE_WORD,
-  TYPE_PERMUTATION
+  TYPE_PERMUTATION,
+  TYPE_LATTICE
 } e_ramsey_type;
 
 typedef enum _e_setting_type {

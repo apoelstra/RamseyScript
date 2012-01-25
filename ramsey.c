@@ -11,6 +11,7 @@
 #include "dump.h"
 #include "file-stream.h"
 #include "filter.h"
+#include "lattice.h"
 #include "permutation.h"
 #include "ramsey.h"
 #include "recurse.h"
@@ -297,6 +298,18 @@ void process (struct _global_data *state)
           else if (tok && (strmatch (tok, "permutations") ||
                            strmatch (tok, "perms")))
             seed = permutation_new ();
+          else if (tok && strmatch (tok, "lattices"))
+            {
+              const setting_t *n_colors_set  = SETTING ("n_colors");
+              const setting_t *n_columns_set = SETTING ("n_columns");
+              if (n_colors_set && n_columns_set)
+                seed = lattice_new (n_columns_set->get_int_value (n_columns_set),
+                                    n_colors_set->get_int_value (n_colors_set));
+              else if (n_colors_set == NULL)
+                fprintf (stderr, "Error: unset variable ``n-colors''.\n");
+              else
+                fprintf (stderr, "Error: unset variable ``n-columns''.\n");
+            }
           else
             fprintf (stderr, "Unrecognized search space ``%s''\n", tok);
 
