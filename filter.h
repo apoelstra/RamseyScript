@@ -9,6 +9,7 @@ typedef enum _e_filter_type {
   FILTER_NO_3_AP,
   FILTER_NO_DOUBLE_3_AP,
   FILTER_NO_ADDITIVE_SQUARE,
+  FILTER_NO_ODD_LATTICE_AP,
   FILTER_CUSTOM
 } e_filter_type;
 
