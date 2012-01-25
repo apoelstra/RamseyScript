@@ -22,10 +22,19 @@ static const char *_max_length_get_type (const data_collector_t *dc)
   return "max-length";
 }
 
+static const char *_any_length_get_type (const data_collector_t *dc)
+{
+  (void) dc;
+  return "any-length";
+}
+
 static void _max_length_record (data_collector_t *dc, ramsey_t *ram)
 {
   long len = ram->get_length (ram);
   struct _target_priv *priv = (struct _target_priv *) dc;
+
+  assert (dc != NULL);
+  assert (ram != NULL);
 
   if (len > priv->max_recorded)
     {
@@ -35,6 +44,20 @@ static void _max_length_record (data_collector_t *dc, ramsey_t *ram)
       stream_printf (priv->out, "\n");
       priv->max_recorded = len;
     }
+}
+
+static void _any_length_record (data_collector_t *dc, ramsey_t *ram)
+{
+  long len = ram->get_length (ram);
+  struct _target_priv *priv = (struct _target_priv *) dc;
+
+  assert (dc != NULL);
+  assert (ram != NULL);
+
+  stream_printf (priv->out, "Found %s (length %3d): ",
+                 ram->get_type (ram), len);
+  ram->print (ram, priv->out);
+  stream_printf (priv->out, "\n");
 }
 
 /* GENERIC TARGET FUNCTIONS */
@@ -75,6 +98,11 @@ data_collector_t *target_new (const char *data, stream_t *out)
         {
           rv->get_type = _max_length_get_type;
           rv->record   = _max_length_record;
+        }
+      else if (!strcmp (data, "any_length"))
+        {
+          rv->get_type = _any_length_get_type;
+          rv->record   = _any_length_record;
         }
       else
         {
