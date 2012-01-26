@@ -4,12 +4,9 @@
 #include <assert.h>
 #include <ctype.h>
 
-#include "global.h"
-#include "coloring.h"
 #include "ramsey.h"
-#include "recurse.h"
+#include "coloring.h"
 #include "sequence.h"
-#include "stream.h"
 
 struct _coloring {
   ramsey_t parent;
@@ -298,65 +295,70 @@ static void _coloring_destroy (ramsey_t *rt)
   free (rt);
 }
 
-ramsey_t *coloring_new (int n_colors)
+void *coloring_new_direct (int n_colors)
 {
   struct _coloring *c = malloc (sizeof *c);
   ramsey_t *rv = (ramsey_t *) c;
-
-  if (c != NULL)
+  if (c == NULL)
     {
-      rv->type = TYPE_COLORING;
-      rv->get_type = _coloring_get_type;
-
-      rv->print   = _coloring_print;
-      rv->parse   = _coloring_parse;
-      rv->empty   = _coloring_empty;
-      rv->reset   = _coloring_reset;
-      rv->destroy = _coloring_destroy;
-      rv->randomize = _coloring_randomize;
-      rv->recurse = _coloring_recurse;
-      recursion_init (rv);
-
-      rv->find_value  = _coloring_find_value;
-      rv->get_length  = _coloring_get_length;
-      rv->get_maximum = _coloring_get_length;
-      rv->get_n_cells = _coloring_get_n_cells;
-      rv->append      = _coloring_append;
-      rv->cell_append = _coloring_cell_append;
-      rv->deappend    = _coloring_deappend;
-      rv->cell_deappend = _coloring_cell_deappend;
-      rv->get_cells   = _coloring_get_cells;
-      rv->get_cells_const = _coloring_get_cells_const;
-      rv->get_priv_data   = _coloring_get_priv_data;
-      rv->get_priv_data_const = _coloring_get_priv_data_const;
-
-      rv->add_filter  = _coloring_add_filter;
-      rv->add_gap_set = _coloring_add_gap_set;
-      rv->run_filters = _coloring_run_filters;
-
-      c->n_cells = n_colors;
-      c->sequence = malloc (n_colors * sizeof *c->sequence);
-      if (c->sequence == NULL)
-        {
-          free (c);
-          rv = NULL;
-        }
-      else
-        {
-          int i;
-          for (i = 0; i < n_colors; ++i)
-            c->sequence[i] = sequence_new ();
-        }
+      fprintf (stderr, "Out of memory creating coloring!\n");
+      return NULL;
     }
-  return rv;
+
+  rv->type = TYPE_COLORING;
+  rv->get_type = _coloring_get_type;
+
+  rv->print   = _coloring_print;
+  rv->parse   = _coloring_parse;
+  rv->empty   = _coloring_empty;
+  rv->reset   = _coloring_reset;
+  rv->destroy = _coloring_destroy;
+  rv->randomize = _coloring_randomize;
+  rv->recurse = _coloring_recurse;
+  recursion_init (rv);
+
+  rv->find_value  = _coloring_find_value;
+  rv->get_length  = _coloring_get_length;
+  rv->get_maximum = _coloring_get_length;
+  rv->get_n_cells = _coloring_get_n_cells;
+  rv->append      = _coloring_append;
+  rv->cell_append = _coloring_cell_append;
+  rv->deappend    = _coloring_deappend;
+  rv->cell_deappend = _coloring_cell_deappend;
+  rv->get_cells   = _coloring_get_cells;
+  rv->get_cells_const = _coloring_get_cells_const;
+  rv->get_priv_data   = _coloring_get_priv_data;
+  rv->get_priv_data_const = _coloring_get_priv_data_const;
+
+  rv->add_filter  = _coloring_add_filter;
+  rv->add_gap_set = _coloring_add_gap_set;
+  rv->run_filters = _coloring_run_filters;
+
+  c->n_cells = n_colors;
+  c->sequence = malloc (c->n_cells * sizeof *c->sequence);
+  if (c->sequence == NULL)
+    {
+      fprintf (stderr, "Out of memory creating coloring!\n");
+      free (c);
+      return NULL;
+    }
+  else
+    {
+      int i;
+      for (i = 0; i < c->n_cells; ++i)
+        c->sequence[i] = sequence_new_direct ();
+    }
+  return c;
 }
 
-/* PROTOTYPE */
-const ramsey_t *coloring_prototype ()
+void *coloring_new (const global_data_t *state)
 {
-  static ramsey_t *rv;
-  if (rv == NULL)
-    rv = coloring_new (1);
-  return rv;
+  setting_t *n_colors_set = SETTING ("n_colors");
+  if (n_colors_set == NULL)
+    {
+      fprintf (stderr, "Error: coloring requires variable ``n_colors'' set.\n");
+      return NULL;
+    }
+  return coloring_new_direct (n_colors_set->get_int_value (n_colors_set));
 }
 

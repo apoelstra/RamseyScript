@@ -5,10 +5,8 @@
 #include <assert.h>
 #include <ctype.h>
 
-#include "permutation.h"
 #include "ramsey.h"
-#include "recurse.h"
-#include "stream.h"
+#include "permutation.h"
 #include "sequence.h"
 
 static const char *_permutation_get_type (const ramsey_t *rt)
@@ -58,9 +56,9 @@ static void _permutation_recurse (ramsey_t *rt, global_data_t *state)
   recursion_postamble (rt);
 }
 
-ramsey_t *permutation_new ()
+void *permutation_new (const global_data_t *state)
 {
-  ramsey_t *rv = sequence_new ();
+  ramsey_t *rv = sequence_new (state);
 
   if (rv != NULL)
     {
@@ -69,15 +67,6 @@ ramsey_t *permutation_new ()
       rv->recurse  = _permutation_recurse;
       rv->add_filter = _permutation_add_filter;
     }
-  return rv;
-}
-
-/* PROTOTYPE */
-const ramsey_t *permutation_prototype ()
-{
-  static ramsey_t *rv;
-  if (rv == NULL)
-    rv = permutation_new ();
   return rv;
 }
 

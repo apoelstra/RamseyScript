@@ -6,7 +6,7 @@
 #include <gtk/gtk.h>
 
 #include "global.h"
-#include "ramsey.h"
+#include "process.h"
 #include "stream.h"
 #include "string-stream.h"
 #include "gtk-text-buffer-stream.h"

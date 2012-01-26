@@ -5,9 +5,7 @@
 #include <ctype.h>
 
 #include "global.h"
-#include "coloring.h"
-#include "ramsey.h"
-#include "sequence.h"
+#include "ramsey/ramsey.h"
 #include "setting.h"
 
 #define HASH_TABLE_SIZE	1009
@@ -322,31 +320,7 @@ setting_t *setting_new (const char *name, const char *text)
         }
       else if (*scan == '[')
         {
-          const char *scan2 = scan + 1;
-          while (*scan2 && isspace (*scan2))
-            ++scan2;
-          if (isdigit (*scan2) || *scan2 == '-')
-            priv->ramsey_data = sequence_new ();
-          else if (*scan2 == '[')
-            {
-              int n_colors = 1;
-              while (*scan2)
-                {
-                  if (*scan2 == '[')
-                    ++n_colors;
-                  ++scan2;
-                }
-              priv->ramsey_data = coloring_new (n_colors);
-            }
-          else 
-            {
-              fprintf (stderr, "Error: ``%s'' looks like a list but is not.\n",
-                       priv->name);
-              rv->destroy (rv);
-              return NULL;
-            }
-          if (priv->ramsey_data)
-            priv->ramsey_data->parse (priv->ramsey_data, scan);
+          priv->ramsey_data = ramsey_new_from_parse (scan);
           rv->type = TYPE_RAMSEY;
         }
     }

@@ -2,7 +2,7 @@
 #include <stdio.h>
 
 #include "global.h"
-#include "ramsey.h"
+#include "ramsey/ramsey.h"
 #include "recurse.h"
 
 /* Preamble that doesn't return 0 if filters fail (though it requires

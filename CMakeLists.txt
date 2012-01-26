@@ -10,11 +10,16 @@ FIND_PACKAGE(GTK2 COMPONENTS gtk)
 PKG_CHECK_MODULES(GTHREAD REQUIRED gthread-2.0)
 INCLUDE_DIRECTORIES(${GTK2_INCLUDE_DIRS} ${GTHREAD_INCLUDE_DIRS})
 
+FILE(GLOB filters filter/*.c)
+FILE(GLOB targets target/*.c)
+FILE(GLOB ramseys ramsey/*.c)
+FILE(GLOB dumps   dump/*.c)
+
 IF(GTK2_FOUND)
-  ADD_EXECUTABLE(ramsey main.c coloring.c dump.c file-stream.c filter.c lattice.c permutation.c ramsey.c recurse.c target.c sequence.c setting.c stream.c word.c
+  ADD_EXECUTABLE(ramsey-gtk main.c file-stream.c ${filters} ${targets} ${dumps} ${ramseys} process.c recurse.c setting.c stream.c
                  gtk-ui.c gtk-text-buffer-stream.c gtk-script-view.c gtk-script-run.c string-stream.c)
-  TARGET_LINK_LIBRARIES(ramsey ${GTK2_LIBRARIES} ${GTHREAD_LIBRARIES})
+  TARGET_LINK_LIBRARIES(ramsey-gtk ${GTK2_LIBRARIES} ${GTHREAD_LIBRARIES})
 ENDIF()
 
-ADD_EXECUTABLE(ramsey-cli main-cli.c coloring.c dump.c file-stream.c filter.c lattice.c permutation.c ramsey.c recurse.c target.c sequence.c setting.c stream.c word.c)
+ADD_EXECUTABLE(ramsey-cli main-cli.c file-stream.c ${filters} ${targets} ${dumps} ${ramseys} process.c recurse.c setting.c stream.c)
 

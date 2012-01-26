@@ -5,11 +5,9 @@
 #include <assert.h>
 #include <ctype.h>
 
-#include "word.h"
 #include "ramsey.h"
-#include "recurse.h"
-#include "stream.h"
 #include "sequence.h"
+#include "word.h"
 
 static const char *_word_get_type (const ramsey_t *rt)
 {
@@ -47,9 +45,9 @@ static void _word_recurse (ramsey_t *rt, global_data_t *state)
 }
 
 /* CONSTRUCTOR */
-ramsey_t *word_new ()
+void *word_new (const global_data_t *state)
 {
-  ramsey_t *rv = sequence_new ();
+  ramsey_t *rv = sequence_new (state);
 
   if (rv != NULL)
     {
@@ -57,15 +55,6 @@ ramsey_t *word_new ()
       rv->get_type = _word_get_type;
       rv->recurse  = _word_recurse;
     }
-  return rv;
-}
-
-/* PROTOTYPE */
-const ramsey_t *word_prototype ()
-{
-  static ramsey_t *rv;
-  if (rv == NULL)
-    rv = word_new ();
   return rv;
 }
 

@@ -1,17 +1,8 @@
 #ifndef FILTER_H
 #define FILTER_H
 
-#include "global.h"
-
-typedef struct _filter_t filter_t;
-
-typedef enum _e_filter_type {
-  FILTER_NO_3_AP,
-  FILTER_NO_DOUBLE_3_AP,
-  FILTER_NO_ADDITIVE_SQUARE,
-  FILTER_NO_ODD_LATTICE_AP,
-  FILTER_CUSTOM
-} e_filter_type;
+#include "../global.h"
+#include "../ramsey/ramsey.h"
 
 typedef enum _e_filter_mode {
   MODE_FULL,
@@ -19,7 +10,6 @@ typedef enum _e_filter_mode {
 } e_filter_mode;
 
 struct _filter_t {
-  e_filter_type type;
   e_filter_mode mode;
 
   const char *(*get_type) (const filter_t *);
@@ -32,7 +22,8 @@ struct _filter_t {
   void (*destroy)  (filter_t *);
 };
 
-filter_t *filter_new (const char *);
+filter_t *filter_new (const char *, const global_data_t *);
 filter_t *filter_new_custom (bool (*run) (const ramsey_t *));
+filter_t *filter_new_generic (void);
 
 #endif

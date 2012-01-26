@@ -3,6 +3,6 @@
 
 #include "ramsey.h"
 
-ramsey_t *lattice_new (int n_columns, int n_colors);
+void *lattice_new (const global_data_t *);
 
 #endif

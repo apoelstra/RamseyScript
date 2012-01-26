@@ -1,7 +1,9 @@
 #ifndef GLOBAL_H
 #define GLOBAL_H
 
+typedef struct _parser_t parser_t;
 typedef struct _ramsey_t ramsey_t;
+typedef struct _filter_t filter_t;
 typedef struct _data_collector_t data_collector_t;
 typedef struct _global_data global_data_t;
 typedef int bool;
@@ -20,13 +22,19 @@ typedef enum _e_setting_type {
   TYPE_RAMSEY
 } e_setting_type;
 
-#include "dump.h"
-#include "filter.h"
+#include "dump/dump.h"
+#include "filter/filter.h"
 #include "setting.h"
 #include "stream.h"
 
 #define VERSION "0.3"
 #define SETTING(s) (state->settings->get_setting (state->settings, (s)))
+
+struct _parser_t {
+  const char *name;
+  const char *help;
+  void *(*construct) (const global_data_t *);
+};
 
 struct _data_collector_t {
   const char *(*get_type) (const data_collector_t *);

@@ -5,10 +5,7 @@
 #include <assert.h>
 #include <ctype.h>
 
-#include "global.h"
 #include "ramsey.h"
-#include "recurse.h"
-#include "stream.h"
 #include "sequence.h"
 
 #define DEFAULT_MAX_LENGTH	400
@@ -144,31 +141,20 @@ static void _sequence_recurse (ramsey_t *rt, global_data_t *state)
 }
 
 /* PRINT / PARSE */
-static void _sequence_print_real (const ramsey_t *rt, int start, stream_t *out)
+static void _sequence_print (const ramsey_t *rt, stream_t *out)
 {
   struct _sequence *s = (struct _sequence *) rt;
   int i;
 
   assert (rt && (rt->type == TYPE_SEQUENCE || rt->type == TYPE_WORD ||
                  rt->type == TYPE_PERMUTATION));
-  assert (start >= 0);
 
   out->write (out, "[");
-  if (start < s->length)
-    stream_printf (out, "%d", s->value[start]);
-  for (i = start + 1; i < s->length; ++i)
+  if (s->length > 0)
+    stream_printf (out, "%d", s->value[0]);
+  for (i = 1; i < s->length; ++i)
     stream_printf (out, ", %d", s->value[i]);
   out->write (out, "]");
-}
-
-static void _sequence_print (const ramsey_t *rt, stream_t *out)
-{
-  _sequence_print_real (rt, 0, out);
-}
-
-static void _sequence_print1 (const ramsey_t *rt, stream_t *out)
-{
-  _sequence_print_real (rt, 1, out);
 }
 
 static const char *_sequence_parse (ramsey_t *rt, const char *data)
@@ -354,71 +340,68 @@ static void _sequence_destroy (ramsey_t *rt)
   free (s);
 }
 
-ramsey_t *sequence_new ()
+void *sequence_new_direct ()
 {
   struct _sequence *s = malloc (sizeof *s);
   ramsey_t *rv = (ramsey_t *) s;
 
-  if (s != NULL)
+  if (s == NULL)
     {
-      rv->type = TYPE_SEQUENCE;
-      rv->get_type = _sequence_get_type;
+      fprintf (stderr, "Out of memory creating sequence!\n");
+      return NULL;
+    }
 
-      rv->print   = _sequence_print;
-      rv->parse   = _sequence_parse;
-      rv->empty   = _sequence_empty;
-      rv->reset   = _sequence_reset;
-      rv->destroy = _sequence_destroy;
-      rv->randomize = _sequence_randomize;
-      rv->recurse = _sequence_recurse;
-      recursion_init (rv);
+  rv->type = TYPE_SEQUENCE;
+  rv->get_type = _sequence_get_type;
 
-      rv->find_value  = _sequence_find_value;
-      rv->get_length  = _sequence_get_length;
-      rv->get_maximum = _sequence_get_maximum;
-      rv->get_n_cells = _sequence_get_n_cells;
-      rv->append      = _sequence_append;
-      rv->cell_append = _sequence_cell_append;
-      rv->deappend    = _sequence_deappend;
-      rv->cell_deappend = _sequence_cell_deappend;
-      rv->get_cells   = _sequence_get_cells;
-      rv->get_cells_const = _sequence_get_cells_const;
-      rv->get_priv_data       = _sequence_get_priv_data;
-      rv->get_priv_data_const = _sequence_get_priv_data_const;
+  rv->print   = _sequence_print;
+  rv->parse   = _sequence_parse;
+  rv->empty   = _sequence_empty;
+  rv->reset   = _sequence_reset;
+  rv->destroy = _sequence_destroy;
+  rv->randomize = _sequence_randomize;
+  rv->recurse = _sequence_recurse;
+  recursion_init (rv);
 
-      rv->add_filter  = _sequence_add_filter;
-      rv->add_gap_set = _sequence_add_gap_set;
-      rv->run_filters = _sequence_run_filters;
+  rv->find_value  = _sequence_find_value;
+  rv->get_length  = _sequence_get_length;
+  rv->get_maximum = _sequence_get_maximum;
+  rv->get_n_cells = _sequence_get_n_cells;
+  rv->append      = _sequence_append;
+  rv->cell_append = _sequence_cell_append;
+  rv->deappend    = _sequence_deappend;
+  rv->cell_deappend = _sequence_cell_deappend;
+  rv->get_cells   = _sequence_get_cells;
+  rv->get_cells_const = _sequence_get_cells_const;
+  rv->get_priv_data       = _sequence_get_priv_data;
+  rv->get_priv_data_const = _sequence_get_priv_data_const;
 
-      s->length    = 0;
-      s->n_filters = 0;
-      s->max_length = DEFAULT_MAX_LENGTH;
-      s->value = malloc (s->max_length * sizeof *s->value);
-      s->max_filters = DEFAULT_MAX_FILTERS;
-      s->filter = malloc (s->max_filters * sizeof *s->filter);
+  rv->add_filter  = _sequence_add_filter;
+  rv->add_gap_set = _sequence_add_gap_set;
+  rv->run_filters = _sequence_run_filters;
 
-      if (s->value == NULL || s->filter == NULL)
-        {
-          free (s->value);
-          free (s->filter);
-          free (s);
-          rv = NULL;
-        }
+  s->length    = 0;
+  s->n_filters = 0;
+  s->max_length = DEFAULT_MAX_LENGTH;
+  s->value = malloc (s->max_length * sizeof *s->value);
+  s->max_filters = DEFAULT_MAX_FILTERS;
+  s->filter = malloc (s->max_filters * sizeof *s->filter);
+
+  if (s->value == NULL || s->filter == NULL)
+    {
+      fprintf (stderr, "Out of memory creating sequence!\n");
+      free (s->value);
+      free (s->filter);
+      free (s);
+      rv = NULL;
     }
   return rv;
 }
 
-ramsey_t *sequence_new_zeros (int size, bool one_indexed)
+void *sequence_new (const global_data_t *state)
 {
-  ramsey_t *rv = sequence_new ();
-
-  if (one_indexed)
-    rv->print = _sequence_print1;
-
-  if (rv != NULL)
-    while (size--)
-      rv->append (rv, 0);
-  return rv;
+  (void) state;
+  return sequence_new_direct ();
 }
 
 /* PROTOTYPE */
@@ -426,7 +409,7 @@ const ramsey_t *sequence_prototype ()
 {
   static ramsey_t *rv;
   if (rv == NULL)
-    rv = sequence_new ();
+    rv = sequence_new_direct ();
   return rv;
 }
 

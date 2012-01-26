@@ -7,18 +7,13 @@
 #include <strings.h>
 
 #include "global.h"
-#include "coloring.h"
-#include "dump.h"
+#include "dump/dump.h"
 #include "file-stream.h"
-#include "filter.h"
-#include "lattice.h"
-#include "permutation.h"
-#include "ramsey.h"
+#include "filter/filter.h"
 #include "recurse.h"
+#include "ramsey/ramsey.h"
 #include "setting.h"
-#include "sequence.h"
-#include "target.h"
-#include "word.h"
+#include "target/target.h"
 
 #define strmatch(s, r) (!strcmp ((s), (r)))
 
@@ -34,12 +29,6 @@ struct _global_data *set_defaults (stream_t *in, stream_t *out, stream_t *err)
       NEW_SET ("random_length",  "10");
       NEW_SET ("dump_depth",     "400");
 #undef NEW_SET
-      /* Set max-length as a target by default.
-       * We do this purely for historical reasons */
-      rv->targets = malloc (sizeof *rv->targets);
-      rv->targets->data = target_new ("max_length", out);
-      rv->targets->next = NULL;
-      /**/
       rv->filters  = NULL;
       rv->dumps    = NULL;
       rv->kill_now = 0;
@@ -48,46 +37,14 @@ struct _global_data *set_defaults (stream_t *in, stream_t *out, stream_t *err)
       rv->in_stream  = in;
       rv->out_stream = out;
       rv->err_stream = err;
+
+      /* Set max-length as a target by default.
+       * We do this purely for historical reasons */
+      rv->targets = malloc (sizeof *rv->targets);
+      rv->targets->data = target_new ("max_length", rv);
+      rv->targets->next = NULL;
+      /**/
     }
-  return rv;
-}
-
-ramsey_t *new_from_parse (const char *data)
-{
-  ramsey_t *rv = NULL;
-  const char *scan = data;
-  int lb_count  = 0;
-  while (*scan && (isspace (*scan) || *scan == '['))
-    {
-      if (*scan == '[')
-        ++lb_count;
-      ++scan;
-    }
-
-  switch (lb_count)
-    {
-    case 1:
-      rv = sequence_new ();
-      break;
-    case 2:
-      lb_count = 0;
-      scan = data;
-      while (*scan)
-        {
-          if (*scan == '[')
-            ++lb_count;
-          ++scan;
-        }
-      rv = coloring_new (lb_count - 1);
-      break;
-    default:
-      fprintf (stderr, "Failed to parse: %s\n", data);
-      break;
-    }
-
-  if (rv)
-    rv->parse (rv, data);
-
   return rv;
 }
 
@@ -181,7 +138,7 @@ void process (struct _global_data *state)
           /* Add a new filter */
           else if (tok != NULL)
             {
-              filter_t *new_filter = filter_new (tok);
+              filter_t *new_filter = filter_new (tok, state);
               if (new_filter != NULL)
                 {
                   filter_list *new_cell = malloc (sizeof *new_cell);
@@ -216,20 +173,7 @@ void process (struct _global_data *state)
           /* Add a new dump */
           else if (tok != NULL)
             {
-              data_collector_t *new_dump;
-              stream_t *dump_stream;
-              const setting_t *dump_depth_set = SETTING ("dump_depth");
-              const setting_t *dump_file_set  = SETTING ("dump_file");
-              int dump_depth = 0;
-
-              if (dump_depth_set)
-                dump_depth = dump_depth_set->get_int_value (dump_depth_set);
-              if (dump_file_set && strcmp (dump_file_set->get_text (dump_file_set), "-"))
-                dump_stream = file_stream_new (dump_file_set->get_text (dump_file_set));
-              else
-                dump_stream = stdout_stream_new ();
-
-              new_dump = dump_new (tok, dump_depth, dump_stream);
+              data_collector_t *new_dump = dump_new (tok, state);
               if (new_dump != NULL)
                 {
                   dc_list *new_cell = malloc (sizeof *new_cell);
@@ -264,7 +208,7 @@ void process (struct _global_data *state)
           /* Add a new target */
           else if (tok != NULL)
             {
-              data_collector_t *new_target = target_new (tok, state->out_stream);
+              data_collector_t *new_target = target_new (tok, state);
               if (new_target != NULL)
                 {
                   dc_list *new_cell = malloc (sizeof *new_cell);
@@ -282,36 +226,8 @@ void process (struct _global_data *state)
           ramsey_t *seed = NULL;
 
           tok = strtok (NULL, " #\t\n");
-          if (tok && strmatch (tok, "sequences"))
-            seed = sequence_new ();
-          else if (tok && (strmatch (tok, "colorings") ||
-                           strmatch (tok, "partitions")))
-            {
-              const setting_t *n_colors_set = SETTING ("n_colors");
-              if (n_colors_set)
-                seed = coloring_new (n_colors_set->get_int_value (n_colors_set));
-              else
-                fprintf (stderr, "Error: unset variable ``n-colors''.\n");
-            }
-          else if (tok && strmatch (tok, "words"))
-            seed = word_new ();
-          else if (tok && (strmatch (tok, "permutations") ||
-                           strmatch (tok, "perms")))
-            seed = permutation_new ();
-          else if (tok && strmatch (tok, "lattices"))
-            {
-              const setting_t *n_colors_set  = SETTING ("n_colors");
-              const setting_t *n_columns_set = SETTING ("n_columns");
-              if (n_colors_set && n_columns_set)
-                seed = lattice_new (n_columns_set->get_int_value (n_columns_set),
-                                    n_colors_set->get_int_value (n_colors_set));
-              else if (n_colors_set == NULL)
-                fprintf (stderr, "Error: unset variable ``n-colors''.\n");
-              else
-                fprintf (stderr, "Error: unset variable ``n-columns''.\n");
-            }
-          else
-            fprintf (stderr, "Unrecognized search space ``%s''\n", tok);
+          if (tok)
+            seed = ramsey_new (tok, state);
 
           if (seed == NULL)
             fprintf (stderr, "No seed. Bad search space or allocation failure.\n");

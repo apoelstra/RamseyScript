@@ -5,8 +5,7 @@
 
 #include "global.h"
 #include "file-stream.h"
-#include "ramsey.h"
-#include "stream.h"
+#include "process.h"
 
 struct _global_data global;
 

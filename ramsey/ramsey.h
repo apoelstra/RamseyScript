@@ -1,11 +1,10 @@
 #ifndef RAMSEY_H
 #define RAMSEY_H
 
-#include "global.h"
-#include "stream.h"
-
-struct _global_data *set_defaults (stream_t *in, stream_t *out, stream_t *err);
-void process (struct _global_data *state);
+#include "../global.h"
+#include "../stream.h"
+#include "../recurse.h"
+#include "../setting.h"
 
 struct _ramsey_t {
   e_ramsey_type type;
@@ -54,5 +53,8 @@ struct _ramsey_t {
   void *(*get_priv_data) (ramsey_t *);
   const void *(*get_priv_data_const) (const ramsey_t *);
 };
+
+ramsey_t *ramsey_new (const char *data, const global_data_t *state);
+ramsey_t *ramsey_new_from_parse (const char *data);
 
 #endif

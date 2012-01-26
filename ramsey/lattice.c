@@ -5,10 +5,8 @@
 #include <assert.h>
 #include <ctype.h>
 
-#include "global.h"
-#include "lattice.h"
 #include "ramsey.h"
-#include "recurse.h"
+#include "lattice.h"
 
 #define DEFAULT_MAX_LENGTH	400
 #define DEFAULT_MAX_FILTERS	20
@@ -275,69 +273,77 @@ static void _lattice_destroy (ramsey_t *rt)
   free (lat);
 }
 
-ramsey_t *lattice_new (int n_columns, int n_colors)
+void *lattice_new (const global_data_t *state)
 {
+  setting_t *n_colors_set  = SETTING("n_colors");
+  setting_t *n_columns_set = SETTING("n_columns");
   struct _lattice *lat = malloc (sizeof *lat);
   ramsey_t *rv = (ramsey_t *) lat;
 
-  if (lat != NULL)
+  if (n_colors_set == NULL)
     {
-      rv->type = TYPE_LATTICE;
-      rv->get_type = _lattice_get_type;
+      fprintf (stderr, "Error: coloring requires variable ``n_colors'' set.\n");
+      free (lat);
+      return NULL;
+    }
+  if (n_columns_set == NULL)
+    {
+      fprintf (stderr, "Error: coloring requires variable ``n_columns'' set.\n");
+      free (lat);
+      return NULL;
+    }
+  if (lat == NULL)
+    {
+      fprintf (stderr, "Out of memory creating lattice!\n");
+      return NULL;
+    }
 
-      rv->print   = _lattice_print;
-      rv->parse   = _lattice_parse;
-      rv->empty   = _lattice_empty;
-      rv->reset   = _lattice_reset;
-      rv->destroy = _lattice_destroy;
-      rv->randomize = _lattice_randomize;
-      rv->recurse = _lattice_recurse;
-      recursion_init (rv);
+  rv->type = TYPE_LATTICE;
+  rv->get_type = _lattice_get_type;
 
-      rv->find_value  = _lattice_find_value;
-      rv->get_length  = _lattice_get_length;
-      rv->get_maximum = _lattice_get_maximum;
-      rv->get_n_cells = _lattice_get_n_cells;
-      rv->append      = _lattice_append;
-      rv->cell_append = _lattice_cell_append;
-      rv->deappend    = _lattice_deappend;
-      rv->cell_deappend = _lattice_cell_deappend;
-      rv->get_cells   = _lattice_get_cells;
-      rv->get_cells_const = _lattice_get_cells_const;
-      rv->get_priv_data       = _lattice_get_priv_data;
-      rv->get_priv_data_const = _lattice_get_priv_data_const;
+  rv->print   = _lattice_print;
+  rv->parse   = _lattice_parse;
+  rv->empty   = _lattice_empty;
+  rv->reset   = _lattice_reset;
+  rv->destroy = _lattice_destroy;
+  rv->randomize = _lattice_randomize;
+  rv->recurse = _lattice_recurse;
+  recursion_init (rv);
 
-      rv->add_filter  = _lattice_add_filter;
-      rv->add_gap_set = _lattice_add_gap_set;
-      rv->run_filters = _lattice_run_filters;
+  rv->find_value  = _lattice_find_value;
+  rv->get_length  = _lattice_get_length;
+  rv->get_maximum = _lattice_get_maximum;
+  rv->get_n_cells = _lattice_get_n_cells;
+  rv->append      = _lattice_append;
+  rv->cell_append = _lattice_cell_append;
+  rv->deappend    = _lattice_deappend;
+  rv->cell_deappend = _lattice_cell_deappend;
+  rv->get_cells   = _lattice_get_cells;
+  rv->get_cells_const = _lattice_get_cells_const;
+  rv->get_priv_data       = _lattice_get_priv_data;
+  rv->get_priv_data_const = _lattice_get_priv_data_const;
 
-      lat->n_columns = n_columns;
-      lat->n_colors  = n_colors;
-      lat->top_value = 0;
-      lat->n_filters = 0;
-      lat->max_value = DEFAULT_MAX_LENGTH;
-      lat->value = malloc (lat->max_value * sizeof *lat->value);
-      lat->max_filters = DEFAULT_MAX_FILTERS;
-      lat->filter = malloc (lat->max_filters * sizeof *lat->filter);
+  rv->add_filter  = _lattice_add_filter;
+  rv->add_gap_set = _lattice_add_gap_set;
+  rv->run_filters = _lattice_run_filters;
 
-      if (lat->value == NULL || lat->filter == NULL)
-        {
-          free (lat->value);
-          free (lat->filter);
-          free (lat);
-          rv = NULL;
-        }
+  lat->n_columns = n_columns_set->get_int_value (n_columns_set);
+  lat->n_colors  = n_colors_set->get_int_value (n_colors_set);
+  lat->top_value = 0;
+  lat->n_filters = 0;
+  lat->max_value = DEFAULT_MAX_LENGTH;
+  lat->value = malloc (lat->max_value * sizeof *lat->value);
+  lat->max_filters = DEFAULT_MAX_FILTERS;
+  lat->filter = malloc (lat->max_filters * sizeof *lat->filter);
+
+  if (lat->value == NULL || lat->filter == NULL)
+    {
+      fprintf (stderr, "Out of memory creating lattice!\n");
+      free (lat->value);
+      free (lat->filter);
+      free (lat);
+      rv = NULL;
     }
   return rv;
 }
-
-/* PROTOTYPE */
-const ramsey_t *lattice_prototype ()
-{
-  static ramsey_t *rv;
-  if (rv == NULL)
-    rv = lattice_new (1, 1);
-  return rv;
-}
-
 
