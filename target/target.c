@@ -30,3 +30,16 @@ data_collector_t *target_new (const char *data, const global_data_t *state)
   return NULL;
 }
 
+void target_usage (stream_t *out)
+{
+  int i;
+  stream_printf (out,
+    "Usage: \n"
+    "  target clear     Remove all targets\n"
+    "  target <target>  Add a target\n"
+    "\n"
+    "Available targets:\n");
+  for (i = 0; i < g_n_targets; ++i)
+    stream_printf (out, "  %20s  %s\n", g_target[i].name, g_target[i].help);
+}
+

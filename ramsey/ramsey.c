@@ -85,3 +85,15 @@ ramsey_t *ramsey_new_from_parse (const char *data)
   return rv;
 }
 
+void ramsey_usage (stream_t *out)
+{
+  int i;
+  stream_printf (out,
+    "Usage: \n"
+    "  search <space>  Recursively explore a space of Ramsey objects\n"
+    "\n"
+    "Available spaces:\n");
+  for (i = 0; i < g_n_ramseys; ++i)
+    stream_printf (out, "  %20s  %s\n", g_ramsey[i].name, g_ramsey[i].help);
+}
+

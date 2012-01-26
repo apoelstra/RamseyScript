@@ -56,5 +56,6 @@ struct _ramsey_t {
 
 ramsey_t *ramsey_new (const char *data, const global_data_t *state);
 ramsey_t *ramsey_new_from_parse (const char *data);
+void ramsey_usage (stream_t *out);
 
 #endif

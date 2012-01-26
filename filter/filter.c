@@ -65,7 +65,7 @@ filter_t *filter_new (const char *data, const global_data_t *state)
       for (i = 0; i < g_n_filters; ++i)
         if (!strcmp (g_filter[i].name, data))
           return g_filter[i].construct (state);
-      fprintf (stderr, "Error: unknown filter type ``%s''.\n", data);
+      fprintf (stderr, "Error: unknown filter ``%s''.\n", data);
     }
 
   return NULL;
@@ -99,4 +99,18 @@ filter_t *filter_new_generic ()
   rv->destroy = _filter_destroy;
   return rv;
 }
+
+void filter_usage (stream_t *out)
+{
+  int i;
+  stream_printf (out,
+    "Usage: \n"
+    "  filter clear      Remove all filters\n"
+    "  filter <filter>   Add a filter\n"
+    "\n"
+    "Available filters:\n");
+  for (i = 0; i < g_n_filters; ++i)
+    stream_printf (out, "  %20s  %s\n", g_filter[i].name, g_filter[i].help);
+}
+
 

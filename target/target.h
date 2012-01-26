@@ -5,5 +5,6 @@
 #include "../stream.h"
 
 data_collector_t *target_new (const char *, const global_data_t *);
+void target_usage (stream_t *out);
 
 #endif

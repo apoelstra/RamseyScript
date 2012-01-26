@@ -148,7 +148,11 @@ void process (struct _global_data *state)
                   stream_printf (state->out_stream, "Added filter ``%s''.\n",
                                  new_filter->get_type (new_filter));
                 }
+              else
+                filter_usage (state->out_stream);
             }
+          else
+            filter_usage (state->out_stream);
 	}
       /* dump <iterations-per-length> */
       else if (strmatch (tok, "dump"))
@@ -183,7 +187,11 @@ void process (struct _global_data *state)
                   stream_printf (state->out_stream, "Added dump ``%s''.\n",
                                  new_dump->get_type (new_dump));
                 }
+              else
+                dump_usage (state->out_stream);
             }
+          else
+            dump_usage (state->out_stream);
         }
       /* target <max-length> */
       else if (strmatch (tok, "target"))
@@ -218,7 +226,11 @@ void process (struct _global_data *state)
                   stream_printf (state->out_stream, "Added target ``%s''.\n",
                                  new_target->get_type (new_target));
                 }
+              else
+                target_usage (state->out_stream);
             }
+          else
+            target_usage (state->out_stream);
         }
       /* search <seqences|colorings|words> [seed] */
       else if (strmatch (tok, "search"))
@@ -230,7 +242,7 @@ void process (struct _global_data *state)
             seed = ramsey_new (tok, state);
 
           if (seed == NULL)
-            fprintf (stderr, "No seed. Bad search space or allocation failure.\n");
+            ramsey_usage (state->out_stream);
           else
             {
               filter_list *flist;
