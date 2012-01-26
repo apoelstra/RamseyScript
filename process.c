@@ -89,6 +89,8 @@ void process (struct _global_data *state)
               if (state->interactive)
                 new_set->print (new_set, state->out_stream);
             }
+          else if (name == NULL)
+            printf ("Usage: set <variable> <value>\n");
           else
             fprintf (stderr, "Failed to add setting ``%s''.\n", name);
         }
@@ -111,9 +113,13 @@ void process (struct _global_data *state)
       else if (strmatch (tok, "unset"))
         {
           const char *name = strtok (NULL, " #\t\n");
-          if (state->settings->remove_setting (state->settings, name))
-            if (state->interactive)
-              stream_printf (state->out_stream, "Removed ``%s''.\n", name);
+          if (name == NULL)
+            printf ("Usage: unset <variable>\n");
+          else if (state->settings->remove_setting (state->settings, name))
+            {
+              if (state->interactive)
+                stream_printf (state->out_stream, "Removed ``%s''.\n", name);
+            }
         }
       /* filter <no-double-3-aps|no-additive-squares> */
       else if (strmatch (tok, "filter"))
@@ -322,14 +328,26 @@ void process (struct _global_data *state)
             }
         }
       /* Interactive mode commands */
+      else if (strmatch (tok, "help"))
+        stream_printf (state->out_stream,
+          "Commands:\n"
+          "     set: set a variable\n"
+          "   unset: unset a variable\n"
+          "     get: see all variables\n"
+          "\n"
+          "    dump: set a data dump\n"
+          "  filter: set a filter\n"
+          "  search: recursively explore Ramsey objects\n"
+          "  target: set a target\n"
+          "\n"
+          "    help: display this message.\n"
+          "    quit: exit the program.\n"
+        );
+      else if (strmatch (tok, "quit") || strmatch (tok, "exit"))
+        return;
       else if (state->interactive)
-        {
-          if (strmatch (tok, "quit") || strmatch (tok, "exit"))
-            return;
-          else 
-            fprintf (stderr, "Unrecognized command ``%s''. Type 'quit' to quit.\n"
-                             "See the README file for a full language specification.\n", tok);
-        }
+        fprintf (stderr, "Unrecognized command ``%s''. Type 'help' for help, or\n"
+                         "see the README file for a full language specification.\n", tok);
       else
         fprintf (stderr, "Unrecognized command ``%s''.\n", tok);
 
