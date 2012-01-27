@@ -83,7 +83,7 @@ static int _coloring_add_gap_set (ramsey_t *rt, const ramsey_t *gap_set)
   else if (gap_set->type == TYPE_COLORING)
     {
       int i;
-      const ramsey_t **cell = gap_set->get_cells_const (gap_set);
+      const ramsey_t * const* cell = gap_set->get_priv_data_const (gap_set);
       for (i = 0; i < c->n_cells; ++i)
         if (!c->sequence[i]->add_gap_set (c->sequence[i], cell[i]))
           return 0;
@@ -206,28 +206,16 @@ static int _coloring_get_n_cells (const ramsey_t *rt)
   return ((const struct _coloring *) rt)->n_cells;
 }
 
-static ramsey_t **_coloring_get_cells (ramsey_t *rt)
+static void *_coloring_get_priv_data (ramsey_t *rt)
 {
   assert (rt && rt->type == TYPE_COLORING);
   return ((struct _coloring *) rt)->sequence;
 }
 
-static const ramsey_t **_coloring_get_cells_const (const ramsey_t *rt)
-{
-  assert (rt && rt->type == TYPE_COLORING);
-  return (const ramsey_t **) _coloring_get_cells ((ramsey_t *) rt);
-}
-
-static void *_coloring_get_priv_data (ramsey_t *rt)
-{
-  (void) rt;
-  return NULL;
-}
-
 static const void *_coloring_get_priv_data_const (const ramsey_t *rt)
 {
-  (void) rt;
-  return NULL;
+  assert (rt && rt->type == TYPE_COLORING);
+  return ((struct _coloring *) rt)->sequence;
 }
 
 /* APPEND / DEAPPEND */
@@ -325,9 +313,7 @@ void *coloring_new_direct (int n_colors)
   rv->cell_append = _coloring_cell_append;
   rv->deappend    = _coloring_deappend;
   rv->cell_deappend = _coloring_cell_deappend;
-  rv->get_cells   = _coloring_get_cells;
-  rv->get_cells_const = _coloring_get_cells_const;
-  rv->get_priv_data   = _coloring_get_priv_data;
+  rv->get_priv_data = _coloring_get_priv_data;
   rv->get_priv_data_const = _coloring_get_priv_data_const;
 
   rv->add_filter  = _coloring_add_filter;

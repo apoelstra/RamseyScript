@@ -166,18 +166,6 @@ static int _lattice_get_n_cells (const ramsey_t *rt)
   return lat->n_columns;
 }
 
-static ramsey_t **_lattice_get_cells (ramsey_t *rt)
-{
-  (void) rt;
-  return NULL;
-}
-
-static const ramsey_t **_lattice_get_cells_const (const ramsey_t *rt)
-{
-  (void) rt;
-  return NULL;
-}
-
 static void *_lattice_get_priv_data (ramsey_t *rt)
 {
   struct _lattice *lat = (struct _lattice *) rt;
@@ -318,8 +306,6 @@ void *lattice_new (const global_data_t *state)
   rv->cell_append = _lattice_cell_append;
   rv->deappend    = _lattice_deappend;
   rv->cell_deappend = _lattice_cell_deappend;
-  rv->get_cells   = _lattice_get_cells;
-  rv->get_cells_const = _lattice_get_cells_const;
   rv->get_priv_data       = _lattice_get_priv_data;
   rv->get_priv_data_const = _lattice_get_priv_data_const;
 

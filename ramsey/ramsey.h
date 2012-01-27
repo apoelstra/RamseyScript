@@ -45,8 +45,6 @@ struct _ramsey_t {
   int (*cell_append) (ramsey_t *, int value, int cell);
   int (*deappend)    (ramsey_t *);
   int (*cell_deappend) (ramsey_t *, int cell);
-  struct _ramsey_t **(*get_cells) (ramsey_t *);
-  const struct _ramsey_t **(*get_cells_const) (const ramsey_t *);
 
   const ramsey_t *(*find_value) (const ramsey_t *, int);
 

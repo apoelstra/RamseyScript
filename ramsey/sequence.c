@@ -229,18 +229,6 @@ static int _sequence_get_n_cells (const ramsey_t *rt)
   return 1;
 }
 
-static ramsey_t **_sequence_get_cells (ramsey_t *rt)
-{
-  (void) rt;
-  return NULL;
-}
-
-static const ramsey_t **_sequence_get_cells_const (const ramsey_t *rt)
-{
-  (void) rt;
-  return NULL;
-}
-
 static void *_sequence_get_priv_data (ramsey_t *rt)
 {
   struct _sequence *s = (struct _sequence *) rt;
@@ -371,8 +359,6 @@ void *sequence_new_direct ()
   rv->cell_append = _sequence_cell_append;
   rv->deappend    = _sequence_deappend;
   rv->cell_deappend = _sequence_cell_deappend;
-  rv->get_cells   = _sequence_get_cells;
-  rv->get_cells_const = _sequence_get_cells_const;
   rv->get_priv_data       = _sequence_get_priv_data;
   rv->get_priv_data_const = _sequence_get_priv_data_const;
 
