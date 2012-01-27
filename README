@@ -24,6 +24,9 @@ Sets a variable. Not all variables are effective for each search space.
                 format [c1 c2 c3 ... cn].
                 Default value: (none)
 
+     ap_length: The length of AP's filtered out by the no-double-n-ap filter
+                Default value: (none)
+
      dump-file: The file to output dump output (see 'dump'), or "-" to use
                 stdout.
                 Default value: -
