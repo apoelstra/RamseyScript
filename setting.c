@@ -99,7 +99,7 @@ static setting_t *_setting_list_add_setting (setting_list_t *slist, setting_t *s
   return set;
 }
 
-static setting_t *_setting_list_get_setting (const setting_list_t *slist, const char *name)
+static const setting_t *_setting_list_get_setting (const setting_list_t *slist, const char *name)
 {
   const struct _setting_list_priv *priv = (struct _setting_list_priv *) slist;
   unsigned hash = _hash (name);

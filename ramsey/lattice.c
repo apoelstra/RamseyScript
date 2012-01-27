@@ -263,8 +263,8 @@ static void _lattice_destroy (ramsey_t *rt)
 
 void *lattice_new (const global_data_t *state)
 {
-  setting_t *n_colors_set  = SETTING("n_colors");
-  setting_t *n_columns_set = SETTING("n_columns");
+  const setting_t *n_colors_set  = SETTING("n_colors");
+  const setting_t *n_columns_set = SETTING("n_columns");
   struct _lattice *lat = malloc (sizeof *lat);
   ramsey_t *rv = (ramsey_t *) lat;
 

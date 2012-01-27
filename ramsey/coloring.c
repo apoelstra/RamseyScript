@@ -339,7 +339,7 @@ void *coloring_new_direct (int n_colors)
 
 void *coloring_new (const global_data_t *state)
 {
-  setting_t *n_colors_set = SETTING ("n_colors");
+  const setting_t *n_colors_set = SETTING ("n_colors");
   if (n_colors_set == NULL)
     {
       fprintf (stderr, "Error: coloring requires variable ``n_colors'' set.\n");
