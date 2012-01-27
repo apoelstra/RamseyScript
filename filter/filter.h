@@ -23,7 +23,8 @@ struct _filter_t {
 };
 
 filter_t *filter_new (const char *, const global_data_t *);
-filter_t *filter_new_custom (bool (*run) (const filter_t *f, const ramsey_t *));
+filter_t *filter_new_custom (const char *name,
+                             bool (*run) (const filter_t *f, const ramsey_t *));
 filter_t *filter_new_generic (void);
 void filter_usage (stream_t *out);
 

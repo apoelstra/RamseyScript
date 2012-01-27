@@ -21,11 +21,16 @@ const int g_n_filters = sizeof g_filter / sizeof g_filter[0];
 /* end INSTALL FILTERS HERE */
 
 
+struct _custom_priv {
+  filter_t parent;
+  const char *name;
+};
+
 /* Custom filter functions */
 static const char *_filter_custom_get_type (const filter_t *flt)
 {
-  (void) flt;
-  return "(unnamed)";
+  struct _custom_priv *priv = (struct _custom_priv *) flt;
+  return priv->name;
 }
 
 static bool _filter_custom_supports (const filter_t *flt, e_ramsey_type type)
@@ -71,9 +76,11 @@ filter_t *filter_new (const char *data, const global_data_t *state)
   return NULL;
 }
 
-filter_t *filter_new_custom (bool (*run) (const filter_t *f, const ramsey_t *))
+filter_t *filter_new_custom (const char *name,
+                             bool (*run) (const filter_t *f, const ramsey_t *))
 {
-  filter_t *rv = filter_new_generic ();
+  struct _custom_priv *priv = malloc (sizeof *priv);
+  filter_t *rv = (filter_t *) priv;
   if (rv != NULL)
     {
       rv->run = run;
@@ -82,6 +89,7 @@ filter_t *filter_new_custom (bool (*run) (const filter_t *f, const ramsey_t *))
       rv->set_mode = _filter_custom_set_mode;
       rv->clone    = _filter_clone;
       rv->destroy  = _filter_destroy;
+      priv->name = name;
     }
   return rv;
 }

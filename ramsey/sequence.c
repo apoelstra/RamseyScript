@@ -108,7 +108,7 @@ static int _sequence_add_gap_set (ramsey_t *rt, const ramsey_t *gap_set)
     }
 
   rt->r_gap_set = gap_set;
-  return rt->add_filter (rt, filter_new_custom (_cheap_gap_set_filter));
+  return rt->add_filter (rt, filter_new_custom ("gap-set", _cheap_gap_set_filter));
 }
 
 /* RECURSION */
