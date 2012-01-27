@@ -5,13 +5,14 @@
 #include "filter.h"
 
 /* No double-3-aps */
-static bool check_sequence3 (const ramsey_t *rt)
+static bool check_sequence3 (const filter_t *f, const ramsey_t *rt)
 {
   int len = rt->get_length (rt);
   const int *val = rt->get_priv_data_const (rt);
   int i, j;
 
   assert (val != NULL);
+  (void) f;
 
   if (len >= 3)
     for (i = 0; i < len; ++i)
@@ -21,13 +22,14 @@ static bool check_sequence3 (const ramsey_t *rt)
   return 1;
 }
 
-static bool cheap_check_sequence3 (const ramsey_t *rt)
+static bool cheap_check_sequence3 (const filter_t *f, const ramsey_t *rt)
 {
   int  len = rt->get_length (rt);
   const int *val = rt->get_priv_data_const (rt);
   int i;
 
   assert (val != NULL);
+  (void) f;
 
   if (len >= 3)
     for (i = !(len % 2); i < len - 1; i += 2)

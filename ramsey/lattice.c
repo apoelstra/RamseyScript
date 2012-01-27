@@ -47,7 +47,7 @@ static int _lattice_run_filters (const ramsey_t *rt)
   assert (rt && rt->type == TYPE_LATTICE);
 
   for (i = 0; i < lat->n_filters; ++i)
-    if (!lat->filter[i]->run (rt))
+    if (!lat->filter[i]->run (lat->filter[i], rt))
       return 0;
   return 1;
 }

@@ -5,13 +5,15 @@
 #include "filter.h"
 
 /* No odd-length AP's (on lattices) */
-static bool cheap_check_odd_lattice_ap (const ramsey_t *rt)
+static bool cheap_check_odd_lattice_ap (const filter_t *f, const ramsey_t *rt)
 {
   int len = rt->get_maximum (rt);
   int wid = rt->get_n_cells (rt);
   int i;
   int gap;
   const int *val = rt->get_priv_data_const (rt);
+
+  (void) f;
 
   /* Only AP's involving the latest addition */
 

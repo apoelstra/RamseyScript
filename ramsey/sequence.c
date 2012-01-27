@@ -51,7 +51,7 @@ static int _sequence_run_filters (const ramsey_t *rt)
                  rt->type == TYPE_PERMUTATION));
 
   for (i = 0; i < s->n_filters; ++i)
-    if (!s->filter[i]->run (rt))
+    if (!s->filter[i]->run (s->filter[i], rt))
       return 0;
   return 1;
 }
@@ -84,9 +84,10 @@ static int _sequence_add_filter (ramsey_t *rt, filter_t *f)
   return 1;
 }
 
-static int _cheap_gap_set_filter (const ramsey_t *rt)
+static int _cheap_gap_set_filter (const filter_t *f, const ramsey_t *rt)
 {
   const struct _sequence *s = (const struct _sequence *) rt;
+  (void) f;
   return (s->length < 2 || rt->r_gap_set->find_value
              (rt->r_gap_set, s->value[s->length - 1] - s->value[s->length - 2]));
 }

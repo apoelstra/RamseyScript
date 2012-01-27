@@ -14,7 +14,7 @@ struct _filter_t {
 
   const char *(*get_type) (const filter_t *);
 
-  bool (*run)      (const ramsey_t *);
+  bool (*run)      (const filter_t *, const ramsey_t *);
 
   bool (*supports) (const filter_t *, e_ramsey_type);
   bool (*set_mode) (filter_t *, e_filter_mode);
@@ -23,7 +23,7 @@ struct _filter_t {
 };
 
 filter_t *filter_new (const char *, const global_data_t *);
-filter_t *filter_new_custom (bool (*run) (const ramsey_t *));
+filter_t *filter_new_custom (bool (*run) (const filter_t *f, const ramsey_t *));
 filter_t *filter_new_generic (void);
 void filter_usage (stream_t *out);
 

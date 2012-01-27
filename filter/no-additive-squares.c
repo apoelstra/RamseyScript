@@ -5,11 +5,13 @@
 #include "filter.h"
 
 /* No additive squares */
-static bool cheap_check_additive_square (const ramsey_t *rt)
+static bool cheap_check_additive_square (const filter_t *f, const ramsey_t *rt)
 {
   int  len = rt->get_length (rt);
   const int *val = rt->get_priv_data_const (rt);
   int i, sum1, sum2;
+
+  (void) f;
 
   for (i = 1; i <= len / 2; ++i)
     {

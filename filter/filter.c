@@ -71,7 +71,7 @@ filter_t *filter_new (const char *data, const global_data_t *state)
   return NULL;
 }
 
-filter_t *filter_new_custom (bool (*run) (const ramsey_t *))
+filter_t *filter_new_custom (bool (*run) (const filter_t *f, const ramsey_t *))
 {
   filter_t *rv = filter_new_generic ();
   if (rv != NULL)

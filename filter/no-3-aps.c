@@ -6,13 +6,14 @@
 
 #include "filter.h"
 
-static bool check_3_ap (const ramsey_t *rt)
+static bool check_3_ap (const filter_t *f, const ramsey_t *rt)
 {
   int len = rt->get_length (rt);
   const int *val = rt->get_priv_data_const (rt);
   int i, j, k;
 
   assert (val != NULL);
+  (void) f;
 
   for (i = 0; i < len; ++i)
     for (j = i + 1; j < len; ++j)
@@ -22,13 +23,14 @@ static bool check_3_ap (const ramsey_t *rt)
   return 1;
 }
 
-static bool cheap_check_3_ap (const ramsey_t *rt)
+static bool cheap_check_3_ap (const filter_t *f, const ramsey_t *rt)
 {
   int len = rt->get_length (rt);
   const int *val = rt->get_priv_data_const (rt);
   int i, j;
 
   assert (val != NULL);
+  (void) f;
 
   for (i = 0; i < len; ++i)
     for (j = i + 1; j < len; ++j)
