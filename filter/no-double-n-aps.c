@@ -11,7 +11,7 @@
 struct _priv {
   filter_t parent;
 
-  char name[30];
+  char name[50];
   int ap_length;
 };
 
@@ -124,7 +124,7 @@ void *filter_double_n_ap_new (const global_data_t *state)
       filter_t *rv = (filter_t *) priv;
 
       priv->ap_length = ap_length_set->get_int_value (ap_length_set);
-      sprintf (priv->name, "no-%d-aps", priv->ap_length);
+      sprintf (priv->name, "no-double-%d-aps", priv->ap_length);
 
       rv->mode = MODE_LAST_ONLY;
       rv->destroy  = _filter_destroy;
