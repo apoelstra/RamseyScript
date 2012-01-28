@@ -255,6 +255,7 @@ void process (struct _global_data *state)
               dc_list     *dlist;
               const setting_t *max_iters_set = SETTING ("max_iterations");
               const setting_t *max_depth_set = SETTING ("max_depth");
+              const setting_t *stall_after_set = SETTING ("stall_after");
               const setting_t *alphabet_set  = SETTING ("alphabet");
               const setting_t *gap_set_set   = SETTING ("gap_set");
               const setting_t *rand_len_set  = SETTING ("random_length");
@@ -284,6 +285,9 @@ void process (struct _global_data *state)
               if (max_iters_set)
                 stream_printf (state->out_stream, "  Stop after: \t%ld iterations\n",
                                max_iters_set->get_int_value (max_iters_set));
+              if (stall_after_set)
+                stream_printf (state->out_stream, "  Stall after: \t%ld iterations\n",
+                               stall_after_set->get_int_value (stall_after_set));
               if (max_depth_set)
                 stream_printf (state->out_stream, "  Max. depth: \t%ld\n",
                                max_depth_set->get_int_value (max_depth_set));

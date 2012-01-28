@@ -16,6 +16,8 @@ struct _ramsey_t {
   int r_max_iterations;
   int r_max_found;
   int r_prune_tree;
+  int r_stall_after;
+  int r_stall_index;
   const ramsey_t *r_gap_set;
   const ramsey_t *r_alphabet;
 

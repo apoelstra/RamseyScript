@@ -19,6 +19,9 @@ int recursion_preamble (ramsey_t *rt, global_data_t *state)
     return 0;
   if (rt->r_max_depth && rt->r_depth >= rt->r_max_depth)
     return 0;
+  if (rt->r_stall_after &&
+      (rt->r_iterations - rt->r_stall_index > rt->r_stall_after))
+    return 0;
 
   ++rt->r_depth;
 
@@ -26,9 +29,11 @@ int recursion_preamble (ramsey_t *rt, global_data_t *state)
     {
       dc_list *dlist;
       for (dlist = state->dumps; dlist; dlist = dlist->next)
-        dlist->data->record (dlist->data, rt);
+        if (dlist->data->record (dlist->data, rt))
+          rt->r_stall_index = rt->r_iterations;
       for (dlist = state->targets; dlist; dlist = dlist->next)
-        dlist->data->record (dlist->data, rt);
+        if (dlist->data->record (dlist->data, rt))
+          rt->r_stall_index = rt->r_iterations;
 
       ++rt->r_iterations;
     }
@@ -46,6 +51,8 @@ void recursion_init (ramsey_t *rt)
   rt->r_iterations =
   rt->r_depth =
   rt->r_max_iterations =
+  rt->r_stall_after =
+  rt->r_stall_index =
   rt->r_max_depth =
   rt->r_max_found = 
   rt->r_prune_tree = 0;
@@ -57,7 +64,8 @@ void recursion_reset (ramsey_t *rt, global_data_t *state)
 {
   const setting_t *max_iters_set = SETTING ("max_iterations");
   const setting_t *max_depth_set = SETTING ("max_depth");
-  const setting_t *prune_tree_set = SETTING ("prune_tree");
+  const setting_t *stall_after_set = SETTING ("stall_after");
+  const setting_t *prune_tree_set  = SETTING ("prune_tree");
   const setting_t *gap_set_set   = SETTING ("gap_set");
   const setting_t *alphabet_set  = SETTING ("alphabet");
 
@@ -67,6 +75,8 @@ void recursion_reset (ramsey_t *rt, global_data_t *state)
     rt->r_max_iterations = max_iters_set->get_int_value (max_iters_set);
   if (max_depth_set)
     rt->r_max_depth = max_depth_set->get_int_value (max_depth_set);
+  if (stall_after_set)
+    rt->r_stall_after = stall_after_set->get_int_value (stall_after_set);
   if (prune_tree_set)
     rt->r_prune_tree = prune_tree_set->get_int_value (prune_tree_set);
   if (gap_set_set)
