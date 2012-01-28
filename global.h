@@ -40,7 +40,7 @@ struct _data_collector_t {
   const char *(*get_type) (const data_collector_t *);
 
   void (*reset)   (data_collector_t *);
-  void (*record)  (data_collector_t *, ramsey_t *);
+  int  (*record)  (data_collector_t *, ramsey_t *);
   void (*output)  (const data_collector_t *);
   void (*destroy) (data_collector_t *);
 };

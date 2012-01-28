@@ -20,12 +20,16 @@ static const char *_dump_get_type (const data_collector_t *dc)
   return "iterations-per-length";
 }
 
-static void _dump_record (data_collector_t *dc, ramsey_t *ram)
+static int _dump_record (data_collector_t *dc, ramsey_t *ram)
 {
   int idx = ram->get_length (ram);
   struct _dump_priv *priv = (struct _dump_priv *) dc;
   if (idx >= 0 && idx <= priv->size)
-    ++priv->data[idx];
+    {
+      ++priv->data[idx];
+      return 1;
+    }
+  return 0;
 }
 
 static void _dump_reset (data_collector_t *dc)

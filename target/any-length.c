@@ -17,7 +17,7 @@ static const char *_target_get_type (const data_collector_t *dc)
   return "any-length";
 }
 
-static void _target_record (data_collector_t *dc, ramsey_t *ram)
+static int _target_record (data_collector_t *dc, ramsey_t *ram)
 {
   long len = ram->get_length (ram);
   struct _target_priv *priv = (struct _target_priv *) dc;
@@ -29,6 +29,7 @@ static void _target_record (data_collector_t *dc, ramsey_t *ram)
                  ram->get_type (ram), len);
   ram->print (ram, priv->out);
   stream_printf (priv->out, "\n");
+  return 1;
 }
 
 static void _target_reset (data_collector_t *dc)
