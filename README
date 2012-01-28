@@ -61,6 +61,10 @@ max-iterations: The number of iterations to run before stopping.
            
                 Default value: 1
 
+   stall-after: Like max-iterations, but resets its counter every time a target
+                (i.e., new object of maximum length) is reached.
+                Default value: (none)
+
       n-colors: The number of colors to use when searching colorings.
                 Default value: 3
 
