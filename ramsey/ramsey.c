@@ -64,7 +64,7 @@ ramsey_t *ramsey_new_from_parse (const char *data)
   /* A coloring? */
   else if (*scan == '[')
     {
-      int n_colors = 1;
+      int n_colors = 0;
       while (*scan)
         {
           if (*scan == '[')
