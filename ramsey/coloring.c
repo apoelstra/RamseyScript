@@ -11,6 +11,7 @@
 struct _coloring {
   ramsey_t parent;
 
+  int has_symmetry;  /* gap set on each color is the same */
   int n_cells;
   ramsey_t **sequence;
 };
@@ -76,6 +77,7 @@ static int _coloring_add_gap_set (ramsey_t *rt, const ramsey_t *gap_set)
   if (gap_set->type == TYPE_SEQUENCE)
     {
       int i;
+      c->has_symmetry = 1;
       for (i = 0; i < c->n_cells; ++i)
         if (!c->sequence[i]->add_gap_set (c->sequence[i], gap_set))
           return 0;
@@ -84,6 +86,7 @@ static int _coloring_add_gap_set (ramsey_t *rt, const ramsey_t *gap_set)
     {
       int i;
       const ramsey_t * const* cell = gap_set->get_priv_data_const (gap_set);
+      c->has_symmetry = 0;
       for (i = 0; i < c->n_cells; ++i)
         if (!c->sequence[i]->add_gap_set (c->sequence[i], cell[i]))
           return 0;
@@ -118,7 +121,7 @@ static void _coloring_real_recurse (ramsey_t *rt, int max_value, global_data_t *
 
       /* Only bother with one empty cell, since by symmetry they'll
        *  all behave the same. */
-      if (c->sequence[i]->get_length (c->sequence[i]) == 0)
+      if (c->has_symmetry && c->sequence[i]->get_length (c->sequence[i]) == 0)
         break;
     }
 
@@ -320,6 +323,7 @@ void *coloring_new_direct (int n_colors)
   rv->add_gap_set = _coloring_add_gap_set;
   rv->run_filters = _coloring_run_filters;
 
+  c->has_symmetry = 1;
   c->n_cells = n_colors;
   c->sequence = malloc (c->n_cells * sizeof *c->sequence);
   if (c->sequence == NULL)
