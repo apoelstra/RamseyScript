@@ -1,5 +1,5 @@
-#ifndef NO_N_APS_H
-#define NO_N_APS_H
+#ifndef NO_DOUBLE_N_APS_H
+#define NO_DOUBLE_N_APS_H
 
 #include "../global.h"
 
