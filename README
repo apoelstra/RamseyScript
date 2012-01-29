@@ -62,7 +62,7 @@ max-iterations: The number of iterations to run before stopping.
                 Default value: 1
 
    stall-after: Like max-iterations, but resets its counter every time a target
-                (i.e., new object of maximum length) is reached.
+                (e.g., new object of maximum length) is reached.
                 Default value: (none)
 
       n-colors: The number of colors to use when searching colorings.
@@ -90,13 +90,24 @@ Unsets a previously-set variable. If the variable does not exist, does nothing.
 Filters
 ===============
 
-  filter <no-3-aps | no-double-3-aps | no-additive-squares>
+  filter <filter>
 
-Chooses which filter to when searching spaces.
+Adds a filter on the space to be searched. Multiple filters may be
+used. To delete filters, use "filter clear" and re-add the ones you
+want kept. ``filter'' should be one of:
 
              no-3-aps: Only recurse on objects with no 3-AP's
 
       no-double-3-aps: Only recurse on objects with no double-3-AP's
+
+      no-double-n-aps: Only recurse on objects with no double-AP's of
+                       length n, with n set by "set ap-length".
+
+   no-odd-lattice-aps: No arithmetic progressions on lattices, with
+                       length equal to the number of columns on the
+                       lattice. (So named because if the lattice has
+                       4 columns, all 4-AP's with odd gap size will
+                       appear as straight lines through grid points.)
 
   no-additive-squares: Only recurse on words with no additive squares
 
@@ -111,18 +122,23 @@ Removes all set filters.
 Search Spaces
 ===============
 
-  search <sequences | colorings | words | permutations> [seed]
+  search <space> [seed]
 
 Selects a search space and recursively explores it, looking for longer
 and longer elements which satisfy the given filter. There is no default
 value. If you do not specify a 'search' line, the program will do
-nothing.
+nothing. ``space'' should be one of:
 
 
    colorings: The space of r-colorings of integers, for some given r.
               For colorings, the seed may be RANDOM, in which case a
               seed of length random-length is generated.
               Default seed: [[1] [] []]
+
+    lattices: The space of r-colorings of integers, organized as a
+              grid of m columns (with r and m given). This allows a
+              geometric interpretation of some Ramsey-type problems.
+              Default seed: []
 
   partitions: synonym of 'colorings'
 
@@ -135,6 +151,31 @@ permutations: The space of permutations of [1,n]. You cannot change
 
        words: The space of words on some given alphabet
               Default seed: []
+
+
+
+==============
+Targets
+==============
+
+  target <target>
+
+Chooses a goal to achieve when searching through Ramsey objects. Whenever
+a target is reached (e.g., a new object of maximal length is found), the
+current object is output. Multiple targets may be specified.
+
+By default, the "max-length" target is set. ``target'' should be one of:
+
+  max-length: Output the current object every time one is found one maximal
+              length is found.
+
+  any-length: Output every object found while recursing.
+
+
+
+  target clear
+
+Removes all set targets.
 
 
 
