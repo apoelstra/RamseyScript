@@ -15,19 +15,20 @@ struct _priv {
   int ap_length;
 };
 
-static int _check_recurse (const int *data, int len, int seek, int gap, int ap_len)
+static int _check_recurse (const int *val, int len, int seek, int gap, int ap_len)
 {
   if (ap_len == 0)
+    return 1;
+  else if (len == 0)
     return 0;
   else
     {
-      int i = len;
-      while (i-- && data[i] != seek)
-        ;
-      if (data[i] == seek)
-        return _check_recurse (data, i, seek - gap, gap, ap_len - 1);
+      int i = len - 1;
+      for (i = len - 1; i >= 0; --i)
+        if (val[i] == seek)
+          return _check_recurse (val, i, val[i] - gap, gap, ap_len - 1);
+      return 0;
     }
-  return 1;
 }
 
 static bool check_n_ap (const filter_t *flt, const ramsey_t *rt)
@@ -36,6 +37,7 @@ static bool check_n_ap (const filter_t *flt, const ramsey_t *rt)
   int len = rt->get_length (rt);
   const int *val = rt->get_priv_data_const (rt);
   int i, gap, max_gap = 0;
+  int min, max;
   bool found = 0;
 
   assert (val != NULL);
@@ -43,13 +45,19 @@ static bool check_n_ap (const filter_t *flt, const ramsey_t *rt)
   if (priv->ap_length == 1 && len > 0)
     return 0;
 
+  min = max = val[0];
   for (i = 0; i < len - 1; ++i)
-    if (abs(val[i] - val[i + 1]) > max_gap)
-      max_gap = abs(val[i] - val[i + 1]);
+    {
+      if (val[i] < min)
+        min = val[i];
+      if (val[i] > max)
+        max = val[i];
+    }
+  max_gap = (max - min + 1) / (priv->ap_length - 1) + 1;
 
   for (i = 0; i < len && !found; ++i)
     for (gap = -max_gap; gap <= max_gap && !found; ++gap)
-      found = _check_recurse (val, i + 1, val[i] - gap, gap, priv->ap_length - 1);
+      found = _check_recurse (val, i, val[i] - gap, gap, priv->ap_length - 1);
 
   return !found;
 }
@@ -59,14 +67,21 @@ static bool cheap_check_n_ap (const filter_t *flt, const ramsey_t *rt)
   const struct _priv *priv = (struct _priv *) flt;
   int len = rt->get_length (rt);
   const int *val = rt->get_priv_data_const (rt);
-  int i, gap, max_gap = 0;
+  int i, gap;
+  int min, max, max_gap = 0;
   bool found = 0;
 
   assert (val != NULL);
 
+  min = max = val[0];
   for (i = 0; i < len - 1; ++i)
-    if (abs(val[i] - val[i + 1]) > max_gap)
-      max_gap = abs(val[i] - val[i + 1]);
+    {
+      if (val[i] < min)
+        min = val[i];
+      if (val[i] > max)
+        max = val[i];
+    }
+  max_gap = (max - min + 1) / (priv->ap_length - 1) + 1;
 
   for (gap = -max_gap; gap <= max_gap && !found; ++gap)
     found = _check_recurse (val, len, val[len - 1] - gap, gap, priv->ap_length - 1);
