@@ -85,9 +85,10 @@ static int _coloring_add_gap_set (ramsey_t *rt, const ramsey_t *gap_set)
   else if (gap_set->type == TYPE_COLORING)
     {
       int i;
+      int gap_set_cells = gap_set->get_n_cells (gap_set);
       const ramsey_t * const* cell = gap_set->get_priv_data_const (gap_set);
       c->has_symmetry = 0;
-      for (i = 0; i < c->n_cells; ++i)
+      for (i = 0; i < c->n_cells && i < gap_set_cells; ++i)
         if (!c->sequence[i]->add_gap_set (c->sequence[i], cell[i]))
           return 0;
     }
