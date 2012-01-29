@@ -11,6 +11,7 @@
 #include "no-double-n-aps.h"
 #include "no-additive-squares.h"
 #include "no-3-aps.h"
+#include "no-n-aps.h"
 #include "no-odd-lattice-aps.h"
 const parser_t g_filter[] = {
   { "no_double_3_aps",     "Eliminate objects containing double 3-AP's.",  filter_double_3_ap_new },
@@ -18,6 +19,7 @@ const parser_t g_filter[] = {
     filter_double_n_ap_new },
   { "no_additive_squares", "Eliminate words containing additive squares.", filter_additive_square_new },
   { "no_3_aps",            "Eliminate objects containing 3-AP's.",         filter_3_ap_new },
+  { "no_n_aps",            "Eliminate objects containing n-AP's, with n == ap_length", filter_n_ap_new },
   { "no_odd_lattice_aps",  "Eliminate lattices containing monochromatic lines.", filter_odd_lattice_ap_new }
 };
 const int g_n_filters = sizeof g_filter / sizeof g_filter[0];

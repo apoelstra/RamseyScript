@@ -98,6 +98,9 @@ want kept. ``filter'' should be one of:
 
              no-3-aps: Only recurse on objects with no 3-AP's
 
+             no-n-aps: Only recurse on objects with no n-AP's, with
+                       n set by "set ap-length"
+
       no-double-3-aps: Only recurse on objects with no double-3-AP's
 
       no-double-n-aps: Only recurse on objects with no double-AP's of
