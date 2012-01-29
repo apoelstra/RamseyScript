@@ -27,7 +27,7 @@ typedef enum _e_setting_type {
 #include "setting.h"
 #include "stream.h"
 
-#define VERSION "0.3"
+#define VERSION "0.4"
 #define SETTING(s) (state->settings->get_setting (state->settings, (s)))
 
 struct _parser_t {
