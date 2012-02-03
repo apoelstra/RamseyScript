@@ -1,0 +1,56 @@
+
+INSTALLING FROM SOURCE
+=======================
+
+Chances are, you can just type
+
+  cmake && make
+
+and that will build the program. It will produce
+two output files, ramsey-cli and ramsey-gtk. The
+first is the command-line version, and the second
+a Gtk wrapper.
+
+If you have changed things, and need to rebuild,
+you might want to try deleting CMakeCache.txt to
+force cmake to find new files:
+
+  rm CMakeCache.txt
+  cmake && make
+
+
+
+To cross-compile, obtain a toolchain file for your platform
+(search the Internet, or modify the following). Then give it
+to cmake like:
+
+  rm CMakeCache.txt
+  cmake -DCMAKE_TOOLCHAIN_FILE=Toolchain-win32.cmake
+  make
+
+
+For reference, here is my Toolchain-win32.cmake file.
+
+
+#### START #####
+# the name of the target operating system
+SET(CMAKE_SYSTEM_NAME Windows)
+
+# which compilers to use for C and C++
+SET(CMAKE_C_COMPILER i686-pc-mingw32-gcc)
+SET(CMAKE_CXX_COMPILER i686-pc-mingw32-g++)
+SET(CMAKE_RC_COMPILER i686-pc-mingw32-windres)
+
+# here is the target environment located
+SET(CMAKE_FIND_ROOT_PATH /usr/i686-pc-mingw32/sys-root/mingw/)
+
+# adjust the default behaviour of the FIND_XXX() commands:
+# search headers and libraries in the target environment, search 
+# programs in the host environment
+set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
+set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
+set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
+
+ADD_DEFINITIONS(-mwindows -mms-bitfields)
+####  END  #####
+
