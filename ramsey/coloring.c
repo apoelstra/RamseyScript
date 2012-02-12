@@ -22,8 +22,14 @@
 #include "coloring.h"
 #include "sequence.h"
 
+#define DEFAULT_MAX_FILTERS	20
+
 struct _coloring {
   ramsey_t parent;
+
+  filter_t **filter;
+  int n_filters;
+  int max_filters;
 
   int has_symmetry;  /* gap set on each color is the same */
   int n_cells;
@@ -55,11 +61,14 @@ static int _coloring_run_filters (const ramsey_t *rt)
   int i;
   assert (rt && rt->type == TYPE_COLORING);
 
+  for (i = 0; i < c->n_filters; ++i)
+    if (!c->filter[i]->run (c->filter[i], rt))
+      return 0;
+
   for (i = 0; i < c->n_cells; ++i)
-    {
-      if (!c->sequence[i]->run_filters (c->sequence[i]))
-        return 0;
-    }
+    if (!c->sequence[i]->run_filters (c->sequence[i]))
+      return 0;
+
   return 1;
 }
 
@@ -69,15 +78,37 @@ static int _coloring_add_filter (ramsey_t *rt, filter_t *f)
   int i;
   assert (rt && rt->type == TYPE_COLORING);
 
-  for (i = 0; i < c->n_cells; ++i)
+
+  if (f->supports (f, TYPE_COLORING))
     {
-      if (i > 0)
-        f = f->clone (f);
-      if (!c->sequence[i]->add_filter (c->sequence[i], f))
-        return 0;
+      if (c->n_filters == c->max_filters)
+        {
+          void *new_alloc = realloc (c->filter, 2 * c->max_filters);
+          if (new_alloc == NULL)
+            return 0;
+          c->filter = new_alloc;
+          c->max_filters *= 2;
+        }
+
+      f->set_mode (f, MODE_LAST_ONLY);
+      c->filter[c->n_filters++] = f;
+      return 1;
+    }
+  else if (f->supports (f, TYPE_SEQUENCE))
+    {
+      for (i = 0; i < c->n_cells; ++i)
+        {
+          if (i > 0)
+            f = f->clone (f);
+          if (!c->sequence[i]->add_filter (c->sequence[i], f))
+            return 0;
+        }
+      return 1;
     }
 
-  return 1;
+  fprintf (stderr, "Warning: filter ``%s'' does not support colorings.\n",
+           f->get_type (f));
+  return 0;
 }
 
 static int _coloring_add_gap_set (ramsey_t *rt, const ramsey_t *gap_set)
@@ -338,12 +369,17 @@ void *coloring_new_direct (int n_colors)
   rv->add_gap_set = _coloring_add_gap_set;
   rv->run_filters = _coloring_run_filters;
 
+  c->n_filters = 0;
+  c->max_filters = DEFAULT_MAX_FILTERS;
+  c->filter = malloc (c->max_filters * sizeof *c->filter);
   c->has_symmetry = 1;
   c->n_cells = n_colors;
   c->sequence = malloc (c->n_cells * sizeof *c->sequence);
-  if (c->sequence == NULL)
+  if (c->sequence == NULL || c->filter == NULL)
     {
       fprintf (stderr, "Out of memory creating coloring!\n");
+      free (c->sequence);
+      free (c->filter);
       free (c);
       return NULL;
     }
