@@ -62,7 +62,6 @@ static bool _filter_supports (const filter_t *flt, e_ramsey_type type)
 {
   (void) flt;
   return type == TYPE_SEQUENCE ||
-         type == TYPE_COLORING ||
          type == TYPE_PERMUTATION;
 }
 
