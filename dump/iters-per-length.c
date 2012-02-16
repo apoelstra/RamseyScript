@@ -25,7 +25,7 @@ struct _dump_priv {
 
   stream_t *out;
   int size;
-  int *data;
+  long int *data;
 };
 
 static const char *_dump_get_type (const data_collector_t *dc)
@@ -59,9 +59,9 @@ static void _dump_output  (const data_collector_t *dc)
   const struct _dump_priv *priv = (struct _dump_priv *) dc;
   int i;
   priv->out->open (priv->out, STREAM_APPEND);
-  stream_printf (priv->out, "[ %d", priv->data[1]);
+  stream_printf (priv->out, "[ %ld", priv->data[1]);
   for (i = 2; i < priv->size; ++i)
-    stream_printf (priv->out, ", %d", priv->data[i]);
+    stream_printf (priv->out, ", %ld", priv->data[i]);
   stream_printf (priv->out, " ]\n");
   priv->out->close (priv->out);
 }
