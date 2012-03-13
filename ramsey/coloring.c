@@ -23,6 +23,7 @@
 #include "sequence.h"
 
 #define DEFAULT_MAX_FILTERS	20
+#define DEFAULT_MAX_INTLIST	400
 
 struct _coloring {
   ramsey_t parent;
@@ -33,8 +34,18 @@ struct _coloring {
 
   int has_symmetry;  /* gap set on each color is the same */
   int n_cells;
+
+  /* Colors as a word-on-finite-alphabet */
+  int n_int_list;
+  int max_int_list;
+  int *int_list;
+
+  /* Colors as partitions */
   ramsey_t **sequence;
 };
+
+static int _coloring_cell_append (ramsey_t *rt, int value, int cell);
+static int _coloring_cell_deappend (ramsey_t *rt, int cell);
 
 static const char *_coloring_get_type (const ramsey_t *rt)
 {
@@ -45,12 +56,10 @@ static const char *_coloring_get_type (const ramsey_t *rt)
 static const ramsey_t *_coloring_find_value (const ramsey_t *rt, int value)
 {
   struct _coloring *c = (struct _coloring *) rt;
-  int i;
   assert (rt && rt->type == TYPE_SEQUENCE);
 
-  for (i = 0; i < c->n_cells; ++i)
-    if (c->sequence[i]->find_value (c->sequence[i], value))
-      return c->sequence[i];
+  if (value > 0 && value <= c->n_int_list)
+    return c->sequence[c->int_list[value - 1]];
   return NULL;
 }
 
@@ -92,6 +101,7 @@ static int _coloring_add_filter (ramsey_t *rt, filter_t *f)
 
       f->set_mode (f, MODE_LAST_ONLY);
       c->filter[c->n_filters++] = f;
+      c->has_symmetry = 0;  /* this is a kludge so filters needn't permute */
       return 1;
     }
   else if (f->supports (f, TYPE_SEQUENCE))
@@ -161,9 +171,9 @@ static void _coloring_real_recurse (ramsey_t *rt, int max_value, global_data_t *
 
   for (i = 0; i < c->n_cells; ++i)
     {
-      c->sequence[i]->append (c->sequence[i], max_value + 1);
+      _coloring_cell_append ((ramsey_t *) c, max_value + 1, i);
       _coloring_real_recurse (rt, max_value + 1, state);
-      c->sequence[i]->deappend (c->sequence[i]);
+      _coloring_cell_deappend ((ramsey_t *) c, i);
 
       /* Only bother with one empty cell, since by symmetry they'll
        *  all behave the same. */
@@ -195,6 +205,32 @@ static const char *_coloring_parse (ramsey_t *rt, const char *data)
     ++data;
   for (i = 0; i < c->n_cells; ++i)
     data = c->sequence[i]->parse (c->sequence[i], data);
+
+  /* Copy sequences into int_list */
+  {
+    int sum = 0;
+    for (i = 0; i < c->n_cells; ++i)
+      sum += c->sequence[i]->get_length (c->sequence[i]);
+    if (c->max_int_list <= sum)
+      {
+        void *tmp = realloc (c->int_list, 2 * sum * sizeof *c->int_list);
+        if (tmp)
+          {
+            c->max_int_list = sum * 2;
+            c->int_list = tmp;
+          }
+        else
+          fprintf (stderr, "OOM in coloring_parse. Bad Things will happen.\n");
+      }
+    c->n_int_list = sum;
+    for (i = 0; i < c->n_cells; ++i)
+      {
+        const int *data = c->sequence[i]->get_priv_data_const (c->sequence[i]);
+        int j;
+        for (j = 0; j < c->sequence[i]->get_length (c->sequence[i]); ++j)
+          c->int_list[data[j]] = i;
+      }
+  }
 
   return data;
 }
@@ -239,14 +275,8 @@ static void _coloring_randomize (ramsey_t *rt, int n)
 /* ACCESSORS */
 static int _coloring_get_length (const ramsey_t *rt)
 {
-  const struct _coloring *c = (const struct _coloring *) rt;
-  int sum = 0;
-  int i;
-
   assert (rt && rt->type == TYPE_COLORING);
-  for (i = 0; i < c->n_cells; ++i)
-    sum += c->sequence[i]->get_length (c->sequence[i]);
-  return sum;
+  return ((const struct _coloring *) rt)->n_int_list;
 }
 
 static int _coloring_get_n_cells (const ramsey_t *rt)
@@ -270,9 +300,29 @@ static const void *_coloring_get_priv_data_const (const ramsey_t *rt)
 /* APPEND / DEAPPEND */
 static int _coloring_cell_append (ramsey_t *rt, int value, int cell)
 {
-  ramsey_t *seq = ((struct _coloring *) rt)->sequence[cell];
+  struct _coloring *c = (struct _coloring *) rt;
+  ramsey_t *seq;
   assert (rt && rt->type == TYPE_COLORING);
-  return seq->append (seq, value);
+
+  seq = c->sequence[cell];
+  if (seq->append (seq, value))
+    {
+      c->int_list[c->n_int_list] = cell;
+      if (c->n_int_list == c->max_int_list - 1)
+        {
+          void *tmp = realloc (c->int_list, c->max_int_list * 2 *
+                                            sizeof *c->int_list);
+          if (tmp)
+            {
+              c->int_list = tmp;
+              c->max_int_list *= 2;
+            }
+          else return 0;
+        }
+      ++c->n_int_list;
+      return 1;
+    }
+  return 0;
 }
 
 static int _coloring_append (ramsey_t *rt, int value)
@@ -283,9 +333,15 @@ static int _coloring_append (ramsey_t *rt, int value)
 
 static int _coloring_cell_deappend (ramsey_t *rt, int cell)
 {
-  ramsey_t *seq = ((struct _coloring *) rt)->sequence[cell];
+  struct _coloring *c = (struct _coloring *) rt;
+  ramsey_t *seq = c->sequence[cell];
   assert (rt && rt->type == TYPE_COLORING);
-  return seq->deappend (seq);
+  if (seq->deappend (seq))
+    {
+      --c->n_int_list;
+      return 1;
+    }
+  return 0;
 }
 
 static int _coloring_deappend (ramsey_t *rt)
@@ -305,6 +361,7 @@ static void _coloring_empty (ramsey_t *rt)
 
   for (i = 0; i < c->n_cells; ++i)
     c->sequence[i]->empty (c->sequence[i]);
+  c->n_int_list = 0;
 }
 
 static void _coloring_reset (ramsey_t *rt)
@@ -316,6 +373,7 @@ static void _coloring_reset (ramsey_t *rt)
 
   for (i = 0; i < c->n_cells; ++i)
     c->sequence[i]->reset (c->sequence[i]);
+  c->n_int_list = 0;
   recursion_init (rt);
 }
 
@@ -372,12 +430,18 @@ void *coloring_new_direct (int n_colors)
   c->n_filters = 0;
   c->max_filters = DEFAULT_MAX_FILTERS;
   c->filter = malloc (c->max_filters * sizeof *c->filter);
+
+  c->n_int_list = 0;
+  c->max_int_list = DEFAULT_MAX_INTLIST;
+  c->int_list = malloc (c->max_int_list * sizeof *c->int_list);
+
   c->has_symmetry = 1;
   c->n_cells = n_colors;
   c->sequence = malloc (c->n_cells * sizeof *c->sequence);
-  if (c->sequence == NULL || c->filter == NULL)
+  if (c->sequence == NULL || c->filter == NULL || c->int_list == NULL)
     {
       fprintf (stderr, "Out of memory creating coloring!\n");
+      free (c->int_list);
       free (c->sequence);
       free (c->filter);
       free (c);
