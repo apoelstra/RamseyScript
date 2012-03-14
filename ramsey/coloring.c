@@ -101,7 +101,6 @@ static int _coloring_add_filter (ramsey_t *rt, filter_t *f)
 
       f->set_mode (f, MODE_LAST_ONLY);
       c->filter[c->n_filters++] = f;
-      c->has_symmetry = 0;  /* this is a kludge so filters needn't permute */
       return 1;
     }
   else if (f->supports (f, TYPE_SEQUENCE))
