@@ -344,6 +344,11 @@ void process (struct _global_data *state)
             }
         }
       /* Interactive mode commands */
+      else if (strmatch (tok, "echo"))
+        {
+          tok = strtok (NULL, "\n");
+          stream_printf (state->out_stream, "%s\n", tok);
+        }
       else if (strmatch (tok, "help"))
         stream_printf (state->out_stream,
           "Commands:\n"
@@ -356,6 +361,7 @@ void process (struct _global_data *state)
           "  search: recursively explore Ramsey objects\n"
           "  target: set a target\n"
           "\n"
+          "    echo: output some text.\n"
           "    help: display this message.\n"
           "    quit: exit the program.\n"
         );
