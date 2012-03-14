@@ -40,7 +40,7 @@ static int _target_record (data_collector_t *dc, ramsey_t *ram)
   assert (dc != NULL);
   assert (ram != NULL);
 
-  if (len > priv->max_recorded)
+  if (len >= priv->max_recorded)
     {
       stream_printf (priv->out, "New maximal %s (length %3d): ",
                      ram->get_type (ram), len);
