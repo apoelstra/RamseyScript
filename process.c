@@ -290,8 +290,6 @@ void process (struct _global_data *state)
                 seed->parse (seed, tok);
               else if (tok && strmatch (tok, "random"))
                 seed->randomize (seed, rand_len_set->get_int_value (rand_len_set));
-              else
-                seed->append (seed, 1);
 
               /* Output header */
               stream_printf (state->out_stream, "#### Starting %s search ####\n",
