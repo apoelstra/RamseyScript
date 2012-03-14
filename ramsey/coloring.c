@@ -297,6 +297,12 @@ static const void *_coloring_get_priv_data_const (const ramsey_t *rt)
   return ((struct _coloring *) rt)->sequence;
 }
 
+static const void *_coloring_get_alt_priv_data_const (const ramsey_t *rt)
+{
+  assert (rt && rt->type == TYPE_COLORING);
+  return ((struct _coloring *) rt)->int_list;
+}
+
 /* APPEND / DEAPPEND */
 static int _coloring_cell_append (ramsey_t *rt, int value, int cell)
 {
@@ -422,6 +428,7 @@ void *coloring_new_direct (int n_colors)
   rv->cell_deappend = _coloring_cell_deappend;
   rv->get_priv_data = _coloring_get_priv_data;
   rv->get_priv_data_const = _coloring_get_priv_data_const;
+  rv->get_alt_priv_data_const = _coloring_get_alt_priv_data_const;
 
   rv->add_filter  = _coloring_add_filter;
   rv->add_gap_set = _coloring_add_gap_set;

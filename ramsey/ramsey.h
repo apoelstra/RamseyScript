@@ -66,6 +66,7 @@ struct _ramsey_t {
 
   void *(*get_priv_data) (ramsey_t *);
   const void *(*get_priv_data_const) (const ramsey_t *);
+  const void *(*get_alt_priv_data_const) (const ramsey_t *);
 };
 
 ramsey_t *ramsey_new (const char *data, const global_data_t *state);
