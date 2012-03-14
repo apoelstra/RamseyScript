@@ -106,6 +106,13 @@ want kept. ``filter'' should be one of:
       no-double-n-aps: Only recurse on objects with no double-AP's of
                        length n, with n set by "set ap-length".
 
+       no-rainbow-aps: Only recurse on colorings with no rainbow-AP's
+                       (i.e., arithmetic progressions with one entry
+                       of each color). Note that this filter must be
+                       used with a different filter, since by itself,
+                       it simply tells the program to color every
+                       number the same.
+
    no-odd-lattice-aps: No arithmetic progressions on lattices, with
                        length equal to the number of columns on the
                        lattice. (So named because if the lattice has
