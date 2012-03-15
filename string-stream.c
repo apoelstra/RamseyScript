@@ -89,12 +89,12 @@ static void _string_stream_close (stream_t *obj)
 static char *_string_stream_read_line (stream_t *obj)
 {
   struct _string_stream *priv = (struct _string_stream *) obj;
+  g_mutex_lock (priv->mutex);
   if (priv->mode & STREAM_READ)
     {
       int copy_len;
       char *rv;
 
-      g_mutex_lock (priv->mutex);
       if (*priv->read_idx == '\0')
         {
           g_mutex_unlock (priv->mutex);
@@ -117,19 +117,20 @@ static char *_string_stream_read_line (stream_t *obj)
       g_mutex_unlock (priv->mutex);
       return rv;
     }
+  g_mutex_unlock (priv->mutex);
   return NULL;
 }
  
 static int _string_stream_write (stream_t *obj, const char *line)
 {
   struct _string_stream *priv = (struct _string_stream *) obj;
+  g_mutex_lock (priv->mutex);
   if (priv->mode & STREAM_READ)
     {
       int windex = priv->write_idx - priv->data;
       int rindex = priv->read_idx - priv->data;
       int add_len;
 
-      g_mutex_lock (priv->mutex);
       add_len = strlen (line);
       while (priv->max_len < windex + add_len + 1)
         {
@@ -150,10 +151,11 @@ static int _string_stream_write (stream_t *obj, const char *line)
       g_mutex_unlock (priv->mutex);
       return add_len;
     }
+  g_mutex_unlock (priv->mutex);
   return 0;
 }
 
-void _string_stream_destroy (stream_t *stream)
+static void _string_stream_destroy (stream_t *stream)
 {
   struct _string_stream *priv = (struct _string_stream *) stream;
   g_mutex_free (priv->mutex);
