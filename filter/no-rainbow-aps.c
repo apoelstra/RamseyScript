@@ -59,7 +59,37 @@ static bool check_rainbow (const filter_t *f, const ramsey_t *rt)
 
 static bool cheap_check_rainbow (const filter_t *f, const ramsey_t *rt)
 {
-  return check_rainbow (f, rt);
+  int ap_length  = rt->get_n_cells (rt);
+  int col_length = rt->get_length (rt);
+  const int *col = rt->get_alt_priv_data_const (rt);
+  int i, j;
+
+  int *count = malloc (ap_length * sizeof *count);
+
+  assert (f);
+  assert (rt && rt->type == TYPE_COLORING);
+
+  /* loop i over gap sizes */
+  for (i = 1; col_length - (ap_length - 1) * i > 0; ++i)
+    {
+      memset (count, 0, ap_length * sizeof *count);
+      /* loop j over actual AP */
+      for (j = 0; j < ap_length; ++j)
+        if (!count[col[col_length - j * i - 1]])
+            ++count[col[col_length - j * i - 1]];
+        else
+          /* not a rainbow AP */
+          break;
+        /* did we get through the entire AP without seeing a color twice? */
+        if (j == ap_length)
+          {
+            free (count);
+            return 0;
+          }
+     }
+
+  free (count);
+  return 1;
 }
 
 static const char *_filter_get_type (const filter_t *flt)
