@@ -23,18 +23,30 @@
 #include "stream.h"
 #include "string-stream.h"
 
+/*! \file string-stream.c 
+ *  \brief Implementation of a string-based stream. */
+
+/*! \brief The initial size of the internal string buffer of a string. */
 #define STRING_DEFAULT_LEN 1000
 
+/*! \brief Private data for the string stream type. */
 struct _string_stream
 {
+  /*! \brief parent struct. */
   stream_t parent;
 
+  /*! \brief Read/write state of the stream. */
   enum e_stream_mode mode;
 
+  /*! \brief Low-level string data. */
   char *data;
+  /*! \brief Read cursor pointing into the string. */
   char *read_idx;
+  /*! \brief Write cursor pointing into the string. */
   char *write_idx;
+  /*! \brief Amount of memory currently allocated to the string. */
   int max_len;
+  /*! \brief for thread-safety. */
   GMutex *mutex;
 };
 
