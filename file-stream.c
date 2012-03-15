@@ -12,6 +12,9 @@
  * If not, see <http://creativecommons.org/publicdomain/zero/1.0/>.
  */
 
+/*! \file file-stream.c
+ *  \brief Implementation of file-based stream.
+ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -20,13 +23,19 @@
 #include "global.h"
 #include "file-stream.h"
 
+/*! \brief Amount of memory to allocate by default for single-line reads. */
 #define DEFAULT_READ_LEN	1000
 
+/*! \brief Private data for the file stream type. */
 struct _file_stream {
+  /*! \brief parent struct. */
   stream_t parent;
 
+  /*! \brief Internal copy of associated file's name. */
   char *filename;
+  /*! \brief Read/write state of the stream. */
   enum e_stream_mode mode;
+  /*! \brief Low-level file handle. */
   FILE *fh;
 };
 
