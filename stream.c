@@ -19,7 +19,16 @@
 
 #include "stream.h"
 
+/*! \file stream.c
+ *  \brief Generic stream-related functions.
+ */
+
+/*! \brief Maximum expanded string length for stream_printf()
+ *
+ * This is a hard limit and should probably be fixed in the future.
+ */
 #define PRINT_BUFSIZ	4000
+
 void stream_printf (stream_t *output, const char *fmt, ...)
 {
   va_list args;
