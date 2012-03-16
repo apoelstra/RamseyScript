@@ -22,22 +22,42 @@
 #include "ramsey/ramsey.h"
 #include "setting.h"
 
+/*! \brief Size of script variable hash table.
+ *
+ * The hash function prefers this value to be prime.
+ */
 #define HASH_TABLE_SIZE	1009
 
+/*! \brief Private data for script variable type. */
 struct _setting_priv {
+  /*! \brief parent struct. */
   setting_t parent;
 
+  /*! \brief Internal copy of the variable's name. */
   char *name;
+  /*! \brief Internal copy of the variable's text value. */
   char *text;
 
+  /*! \brief Value associated with integer variables. */
   long int_data;
+  /*! \brief Value associated with Ramsey-object variables. 
+   *
+   *  This value belongs to its _setting_t, and should NOT be freed
+   *  separately. It can only be accessed in a non-const way to allow
+   *  recursion. (Perhaps in future we should make this const-only
+   *  and add a clone() method to ramsey_t to get a non-const copy.)
+   */
   ramsey_t *ramsey_data;
 
+  /*! \brief Next pointer for linked lists. */
   struct _setting_priv *next;
 };
 
+/*! \brief Private data for variable table type. */
 struct _setting_list_priv {
+  /*! \brief parent struct. */
   setting_list_t parent;
+  /*! \brief Hash table data. */
   struct _setting_priv *setting[HASH_TABLE_SIZE];
 };
 
