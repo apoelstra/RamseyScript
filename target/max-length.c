@@ -32,7 +32,7 @@ static const char *_target_get_type (const data_collector_t *dc)
   return "max-length";
 }
 
-static int _target_record (data_collector_t *dc, ramsey_t *ram)
+static int _target_record (data_collector_t *dc, const ramsey_t *ram)
 {
   long len = ram->get_length (ram);
   struct _target_priv *priv = (struct _target_priv *) dc;
