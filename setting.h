@@ -50,7 +50,7 @@ struct _setting_t {
   /*! \brief Get the value of an integer variable. */
   long      (*get_int_value)    (const setting_t *);
   /*! \brief Get the value of an Ramsey object variable. */
-  ramsey_t *(*get_ramsey_value) (const setting_t *);
+  const ramsey_t *(*get_ramsey_value) (const setting_t *);
 
   /*! \brief Destroys a variable and frees its associated variables. */
   void  (*destroy)       (setting_t *);

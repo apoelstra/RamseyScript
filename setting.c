@@ -42,10 +42,7 @@ struct _setting_priv {
   long int_data;
   /*! \brief Value associated with Ramsey-object variables. 
    *
-   *  This value belongs to its _setting_t, and should NOT be freed
-   *  separately. It can only be accessed in a non-const way to allow
-   *  recursion. (Perhaps in future we should make this const-only
-   *  and add a clone() method to ramsey_t to get a non-const copy.)
+   *  This value belongs to its _setting_t, and will be freed by it.
    */
   ramsey_t *ramsey_data;
 
@@ -260,7 +257,7 @@ static const char *_setting_get_text (const setting_t *set)
   return priv->text;
 }
 
-static ramsey_t *_setting_get_ramsey_value (const setting_t *set)
+static const ramsey_t *_setting_get_ramsey_value (const setting_t *set)
 {
   const struct _setting_priv *priv = (const struct _setting_priv *) set;
   if (set->type == TYPE_RAMSEY)
