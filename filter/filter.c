@@ -47,6 +47,12 @@ struct _custom_priv {
   const char *name;
 };
 
+/* Generic filter functions */ 
+static bool _filter_get_symmetry (const filter_t *flt)
+{
+  return 1;
+}
+
 /* Custom filter functions */
 static const char *_filter_custom_get_type (const filter_t *flt)
 {
@@ -105,6 +111,7 @@ filter_t *filter_new_custom (const char *name,
   if (rv != NULL)
     {
       rv->run = run;
+      rv->get_symmetry = _filter_get_symmetry;
       rv->get_type = _filter_custom_get_type;
       rv->supports = _filter_custom_supports;
       rv->set_mode = _filter_custom_set_mode;
@@ -124,6 +131,7 @@ filter_t *filter_new_generic ()
       return NULL;
     }
 
+  rv->get_symmetry = _filter_get_symmetry;
   rv->clone   = _filter_clone;
   rv->destroy = _filter_destroy;
   return rv;

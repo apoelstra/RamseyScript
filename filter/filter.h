@@ -30,6 +30,7 @@ struct _filter_t {
 
   bool (*run)      (const filter_t *, const ramsey_t *);
 
+  bool (*get_symmetry) (const filter_t *);
   bool (*supports) (const filter_t *, e_ramsey_type);
   bool (*set_mode) (filter_t *, e_filter_mode);
   filter_t *(*clone) (const filter_t *);
