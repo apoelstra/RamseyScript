@@ -35,4 +35,10 @@ struct _global_data *set_defaults (stream_t *in, stream_t *out, stream_t *err);
  */
 void process (struct _global_data *state);
 
+/*! \brief Outputs a user-friendly usage message to a given stream.
+ *
+ * \param [in] out  The stream to output to.
+ */
+void ramsey_usage (stream_t *out);
+
 #endif

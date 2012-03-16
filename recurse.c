@@ -68,7 +68,6 @@ void recursion_init (ramsey_t *rt)
   rt->r_stall_after =
   rt->r_stall_index =
   rt->r_max_depth =
-  rt->r_max_found = 
   rt->r_prune_tree = 0;
   rt->r_gap_set = NULL;
   rt->r_alphabet = NULL;
