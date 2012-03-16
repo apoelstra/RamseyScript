@@ -262,6 +262,25 @@ static void _lattice_reset (ramsey_t *rt)
   recursion_init (rt);
 }
 
+static ramsey_t *_lattice_clone (const ramsey_t *rt)
+{
+  const struct _lattice *old_lat = (struct _lattice *) rt;
+  struct _lattice *lat = malloc (sizeof *lat);
+  int i;
+
+  assert (rt && rt->type == TYPE_LATTICE);
+  if (lat == NULL)
+    return NULL;
+
+  memcpy (lat, rt, sizeof *lat);
+
+  lat->filter = malloc (lat->max_filters * sizeof *lat->filter);
+  for (i = 0; i < lat->max_filters; ++i)
+    lat->filter[i] = old_lat->filter[i]->clone (old_lat->filter[i]);
+
+  return (ramsey_t *) lat;
+}
+
 static void _lattice_destroy (ramsey_t *rt)
 {
   struct _lattice *lat = (struct _lattice *) rt;
@@ -307,6 +326,7 @@ void *lattice_new (const global_data_t *state)
   rv->parse   = _lattice_parse;
   rv->empty   = _lattice_empty;
   rv->reset   = _lattice_reset;
+  rv->clone   = _lattice_clone;
   rv->destroy = _lattice_destroy;
   rv->randomize = _lattice_randomize;
   rv->recurse = _lattice_recurse;

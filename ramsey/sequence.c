@@ -329,6 +329,27 @@ static void _sequence_reset (ramsey_t *rt)
   recursion_init (rt);
 }
 
+static ramsey_t *_sequence_clone (const ramsey_t *rt)
+{
+  const struct _sequence *old_s = (struct _sequence *) rt;
+  struct _sequence *s = malloc (sizeof *s);
+  int i;
+
+  assert (rt && rt->type == TYPE_SEQUENCE);
+  if (s == NULL)
+    return NULL;
+
+  memcpy (s, rt, sizeof *s);
+
+  s->filter = malloc (s->max_filters * sizeof *s->filter);
+  s->value  = malloc (s->max_length * sizeof *s->value);
+  memcpy (s->value, old_s->value, s->max_length * sizeof *s->value);
+  for (i = 0; i < s->max_filters; ++i)
+    s->filter[i] = old_s->filter[i]->clone (old_s->filter[i]);
+
+  return (ramsey_t *) s;
+}
+
 static void _sequence_destroy (ramsey_t *rt)
 {
   struct _sequence *s = (struct _sequence *) rt;
@@ -361,6 +382,7 @@ void *sequence_new_direct ()
   rv->parse   = _sequence_parse;
   rv->empty   = _sequence_empty;
   rv->reset   = _sequence_reset;
+  rv->clone   = _sequence_clone;
   rv->destroy = _sequence_destroy;
   rv->randomize = _sequence_randomize;
   rv->recurse = _sequence_recurse;

@@ -15,6 +15,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <assert.h>
 #include <ctype.h>
 
@@ -382,6 +383,32 @@ static void _coloring_reset (ramsey_t *rt)
   recursion_init (rt);
 }
 
+static ramsey_t *_coloring_clone (const ramsey_t *rt)
+{
+  const struct _coloring *old_c = (struct _coloring *) rt;
+  struct _coloring *c = malloc (sizeof *c);
+  int i;
+
+  assert (rt && rt->type == TYPE_COLORING);
+
+  if (c == NULL)
+    return NULL;
+
+  memcpy (c, rt, sizeof *c);
+
+  c->filter   = malloc (c->max_filters * sizeof *c->filter);
+  c->int_list = malloc (c->max_int_list * sizeof *c->int_list);
+  c->sequence = malloc (c->n_cells * sizeof *c->sequence);
+
+  memcpy (c->int_list, old_c->int_list, c->max_int_list * sizeof *c->filter);
+  for (i = 0; i < c->max_filters; ++i)
+    c->filter[i] = old_c->filter[i]->clone (old_c->filter[i]);
+  for (i = 0; i < c->n_cells; ++i)
+    c->sequence[i] = old_c->sequence[i]->clone (old_c->sequence[i]);
+
+  return (ramsey_t *) c;
+}
+
 static void _coloring_destroy (ramsey_t *rt)
 {
   struct _coloring *c = (struct _coloring *) rt;
@@ -412,6 +439,7 @@ void *coloring_new_direct (int n_colors)
   rv->parse   = _coloring_parse;
   rv->empty   = _coloring_empty;
   rv->reset   = _coloring_reset;
+  rv->clone   = _coloring_clone;
   rv->destroy = _coloring_destroy;
   rv->randomize = _coloring_randomize;
   rv->recurse = _coloring_recurse;

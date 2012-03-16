@@ -80,6 +80,8 @@ struct _ramsey_t {
   void (*empty)        (ramsey_t *);
   /*! \brief Empty the object, as well as remove all filters and other data. */
   void (*reset)        (ramsey_t *);
+  /*! \brief Make an exact copy of the object.  */
+  ramsey_t *(*clone)   (const ramsey_t *);
   /*! \brief Free the object and its associated resources. */
   void (*destroy)      (ramsey_t *);
 
