@@ -50,6 +50,7 @@ struct _custom_priv {
 /* Generic filter functions */ 
 static bool _filter_get_symmetry (const filter_t *flt)
 {
+  (void) flt;
   return 1;
 }
 

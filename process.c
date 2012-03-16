@@ -24,6 +24,7 @@
 #include "dump/dump.h"
 #include "file-stream.h"
 #include "filter/filter.h"
+#include "process.h"
 #include "recurse.h"
 #include "ramsey/ramsey.h"
 #include "setting.h"
