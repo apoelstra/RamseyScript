@@ -12,6 +12,9 @@
  * If not, see <http://creativecommons.org/publicdomain/zero/1.0/>.
  */
 
+/*! \file gtk-text-buffer-stream.c
+ *  \brief Implementation of a GtkTextBuffer-based stream.
+ */
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -20,13 +23,19 @@
 
 #include "stream.h"
 
+/*! \brief Private data for the textbuffer stream type. */
 struct _tb_stream
 {
+  /*! \brief parent struct. */
   stream_t parent;
 
+  /*! \brief Pointer to associated GtkTextBuffer. */
   GtkTextBuffer *tb;
+  /*! \brief Internally maintained read iterator. */
   GtkTextIter startln;
+  /*! \brief Internally maintained read iterator. */
   GtkTextIter endln;
+  /*! \brief Whether or not there is text left to read. */
   gboolean alive;
 };
 
@@ -72,7 +81,7 @@ static int _text_buffer_write (stream_t *obj, const char *line)
   return 0;
 }
 
-void _text_buffer_destroy (stream_t *stream)
+static void _text_buffer_destroy (stream_t *stream)
 {
   struct _tb_stream *priv = (struct _tb_stream *) stream;
   if (stream)

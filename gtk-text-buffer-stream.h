@@ -17,6 +17,24 @@
 
 #include "stream.h"
 
+/*! \brief Create a new GtkTextBuffer-based stream.
+ *
+ *  This stream type lets GtkTextBuffer interface with the rest of
+ *  the code. For example, you can run a script directly from the
+ *  buffer of a text view, and capture the output to another text
+ *  view.
+ *
+ *  However, it is recommended to use a string_stream_t as an intermediary,
+ *  in order to get thread safety (if this is a concern), and because
+ *  running scripts takes a long time, so a user will be able to modify a
+ *  GtkTextBuffer stream while it is running, potentially invalidating
+ *  iterators and causing EOF to be read prematurely.
+ *
+ *  Calling open() always resets the read pointer, regardless of what mode
+ *  is passed, and writing is always done to the end of the buffer. 
+ *
+ *  \return A newly-allocated stream, or NULL on failure.
+ */
 stream_t *text_buffer_stream_new (GtkTextBuffer *buff);
 
 #endif
