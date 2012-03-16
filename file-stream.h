@@ -12,6 +12,10 @@
  * If not, see <http://creativecommons.org/publicdomain/zero/1.0/>.
  */
 
+/*! \file file-stream.h
+ *  \brief Defines file-based streams and related functions.
+ */
+
 #ifndef FILE_STREAM_H
 #define FILE_STREAM_H
 

@@ -12,6 +12,10 @@
  * If not, see <http://creativecommons.org/publicdomain/zero/1.0/>.
  */
 
+/*! \file gtk-text-buffer-stream.h
+ *  \brief Defines GtkTextBuffer-based streams and related functions.
+ */
+
 #ifndef GTK_TEXT_BUFFER_STREAM_H
 #define GTK_TEXT_BUFFER_STREAM_H
 
@@ -32,6 +36,9 @@
  *
  *  Calling open() always resets the read pointer, regardless of what mode
  *  is passed, and writing is always done to the end of the buffer. 
+ *
+ *  \param [in] buff  The GtkTextBuffer that the stream should be based on.
+ *                    The stream will keep a ref to this object.
  *
  *  \return A newly-allocated stream, or NULL on failure.
  */
