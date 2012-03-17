@@ -35,6 +35,8 @@ struct _sequence {
   int *value;
   int length;
   int max_length;
+
+  ramsey_t *gap_set;
 };
 
 static const char *_sequence_get_type (const ramsey_t *rt)
@@ -98,53 +100,27 @@ static int _sequence_add_filter (ramsey_t *rt, filter_t *f)
   return 1;
 }
 
-static int _cheap_gap_set_filter (const filter_t *f, const ramsey_t *rt)
-{
-  const struct _sequence *s = (const struct _sequence *) rt;
-  (void) f;
-  return (s->length < 2 || rt->r_gap_set->find_value
-             (rt->r_gap_set, s->value[s->length - 1] - s->value[s->length - 2]));
-}
-
-static int _sequence_add_gap_set (ramsey_t *rt, const ramsey_t *gap_set)
-{
-  assert (rt && (rt->type == TYPE_SEQUENCE || rt->type == TYPE_WORD ||
-                 rt->type == TYPE_PERMUTATION));
-
-  if (gap_set == NULL)
-    return 0;
-
-  if (gap_set->type != TYPE_SEQUENCE)
-    {
-      fprintf (stderr, "Warning: bad gap set type ``%s'' for sequence search.\n",
-                       gap_set->get_type (gap_set));
-      return 0;
-    }
-
-  rt->r_gap_set = gap_set;
-  return rt->add_filter (rt, filter_new_custom ("gap-set", _cheap_gap_set_filter));
-}
-
 /* RECURSION */
 static void _sequence_recurse (ramsey_t *rt, global_data_t *state)
 {
   int i;
   const int *gap_set;
   int gap_set_len;
+  struct _sequence *s = (struct _sequence *) rt;
   assert (rt && (rt->type == TYPE_SEQUENCE || rt->type == TYPE_WORD ||
                  rt->type == TYPE_PERMUTATION));
 
   if (!recursion_preamble (rt, state))
     return;
 
-  if (rt->r_gap_set == NULL)
+  if (s->gap_set == NULL)
     {
       fputs ("Error: cannot search sequences without a gap set.\n", stderr);
       return;
     }
 
-  gap_set = rt->r_gap_set->get_priv_data_const (rt->r_gap_set);
-  gap_set_len = rt->r_gap_set->get_length (rt->r_gap_set);
+  gap_set = s->gap_set->get_priv_data_const (s->gap_set);
+  gap_set_len = s->gap_set->get_length (s->gap_set);
   for (i = 0; i < gap_set_len; ++i)
     {
       rt->append (rt, rt->get_maximum (rt) + gap_set[i]);
@@ -344,7 +320,7 @@ static ramsey_t *_sequence_clone (const ramsey_t *rt)
   s->filter = malloc (s->max_filters * sizeof *s->filter);
   s->value  = malloc (s->max_length * sizeof *s->value);
   memcpy (s->value, old_s->value, s->max_length * sizeof *s->value);
-  for (i = 0; i < s->max_filters; ++i)
+  for (i = 0; i < s->n_filters; ++i)
     s->filter[i] = old_s->filter[i]->clone (old_s->filter[i]);
 
   return (ramsey_t *) s;
@@ -360,6 +336,8 @@ static void _sequence_destroy (ramsey_t *rt)
   for (i = 0; i < s->n_filters; ++i)
     s->filter[i]->destroy (s->filter[i]);
 
+  if (s->gap_set)
+    s->gap_set->destroy (s->gap_set);
   free (s->value);
   free (s);
 }
@@ -400,8 +378,9 @@ void *sequence_new_direct ()
   rv->get_priv_data_const = _sequence_get_priv_data_const;
 
   rv->add_filter  = _sequence_add_filter;
-  rv->add_gap_set = _sequence_add_gap_set;
   rv->run_filters = _sequence_run_filters;
+
+  s->gap_set = NULL;
 
   s->length    = 0;
   s->n_filters = 0;
@@ -423,8 +402,19 @@ void *sequence_new_direct ()
 
 void *sequence_new (const global_data_t *state)
 {
-  (void) state;
-  return sequence_new_direct ();
+  struct _sequence *rv = sequence_new_direct ();
+  if (rv == NULL)
+    return NULL;
+  else
+    {
+      const setting_t *gap_set_set = SETTING ("gap_set");
+      if (gap_set_set && gap_set_set->type == TYPE_RAMSEY)
+        {
+          const ramsey_t *gs = gap_set_set->get_ramsey_value (gap_set_set);
+          rv->gap_set = gs->clone (gs);
+        }
+    }
+  return rv;
 }
 
 /* PROTOTYPE */

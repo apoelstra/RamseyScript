@@ -121,42 +121,6 @@ static int _coloring_add_filter (ramsey_t *rt, filter_t *f)
   return 0;
 }
 
-static int _coloring_add_gap_set (ramsey_t *rt, const ramsey_t *gap_set)
-{
-  struct _coloring *c = (struct _coloring *) rt;
-  assert (rt && rt->type == TYPE_COLORING);
-
-  if (gap_set == NULL)
-    return 0;
-
-  if (gap_set->type == TYPE_SEQUENCE)
-    {
-      int i;
-      c->has_symmetry = 1;
-      for (i = 0; i < c->n_cells; ++i)
-        if (!c->sequence[i]->add_gap_set (c->sequence[i], gap_set))
-          return 0;
-    }
-  else if (gap_set->type == TYPE_COLORING)
-    {
-      int i;
-      int gap_set_cells = gap_set->get_n_cells (gap_set);
-      const ramsey_t * const* cell = gap_set->get_priv_data_const (gap_set);
-      c->has_symmetry = 0;
-      for (i = 0; i < c->n_cells && i < gap_set_cells; ++i)
-        if (!c->sequence[i]->add_gap_set (c->sequence[i], cell[i]))
-          return 0;
-    }
-  else
-    {
-      fprintf (stderr, "Bad gap set type ``%s'' for coloring search, sorry.\n",
-               gap_set->get_type (gap_set));
-      return 0;
-    }
-
-  return 1;
-}
-
 /* RECURSION */
 static void _coloring_real_recurse (ramsey_t *rt, int max_value, global_data_t *state)
 {
@@ -401,7 +365,7 @@ static ramsey_t *_coloring_clone (const ramsey_t *rt)
   c->sequence = malloc (c->n_cells * sizeof *c->sequence);
 
   memcpy (c->int_list, old_c->int_list, c->max_int_list * sizeof *c->filter);
-  for (i = 0; i < c->max_filters; ++i)
+  for (i = 0; i < c->n_filters; ++i)
     c->filter[i] = old_c->filter[i]->clone (old_c->filter[i]);
   for (i = 0; i < c->n_cells; ++i)
     c->sequence[i] = old_c->sequence[i]->clone (old_c->sequence[i]);
@@ -458,7 +422,6 @@ void *coloring_new_direct (int n_colors)
   rv->get_alt_priv_data_const = _coloring_get_alt_priv_data_const;
 
   rv->add_filter  = _coloring_add_filter;
-  rv->add_gap_set = _coloring_add_gap_set;
   rv->run_filters = _coloring_run_filters;
 
   c->n_filters = 0;

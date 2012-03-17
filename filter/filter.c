@@ -21,6 +21,7 @@
 #include "filter.h"
 
 /* INSTALL FILTERS HERE */
+#include "gap-set.h"
 #include "no-double-3-aps.h"
 #include "no-double-n-aps.h"
 #include "no-additive-squares.h"
@@ -29,6 +30,7 @@
 #include "no-odd-lattice-aps.h"
 #include "no-rainbow-aps.h"
 const parser_t g_filter[] = {
+  { "gap_set",             "Eliminate sequences whose gaps are outside of gap_set.", filter_gap_set_new },
   { "no_double_3_aps",     "Eliminate objects containing double 3-AP's.",  filter_double_3_ap_new },
   { "no_double_n_aps",     "Eliminate objects containing double n-AP's, with n == ap_length.",
     filter_double_n_ap_new },

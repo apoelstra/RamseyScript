@@ -94,15 +94,6 @@ static int _lattice_add_filter (ramsey_t *rt, filter_t *f)
   return 1;
 }
 
-static int _lattice_add_gap_set (ramsey_t *rt, const ramsey_t *gap_set)
-{
-  assert (rt && rt->type == TYPE_LATTICE);
-  (void) gap_set;
-  fprintf (stderr, "Warning: add_gap_set() unimplemented for ``%s''\n",
-           rt->get_type (rt));
-  return 0;
-}
-
 /* RECURSION */
 static void _lattice_recurse (ramsey_t *rt, global_data_t *state)
 {
@@ -275,7 +266,7 @@ static ramsey_t *_lattice_clone (const ramsey_t *rt)
   memcpy (lat, rt, sizeof *lat);
 
   lat->filter = malloc (lat->max_filters * sizeof *lat->filter);
-  for (i = 0; i < lat->max_filters; ++i)
+  for (i = 0; i < lat->n_filters; ++i)
     lat->filter[i] = old_lat->filter[i]->clone (old_lat->filter[i]);
 
   return (ramsey_t *) lat;
@@ -344,7 +335,6 @@ void *lattice_new (const global_data_t *state)
   rv->get_priv_data_const = _lattice_get_priv_data_const;
 
   rv->add_filter  = _lattice_add_filter;
-  rv->add_gap_set = _lattice_add_gap_set;
   rv->run_filters = _lattice_run_filters;
 
   lat->n_columns = n_columns_set->get_int_value (n_columns_set);

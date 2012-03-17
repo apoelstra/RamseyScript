@@ -69,7 +69,6 @@ void recursion_init (ramsey_t *rt)
   rt->r_stall_index =
   rt->r_max_depth =
   rt->r_prune_tree = 0;
-  rt->r_gap_set = NULL;
   rt->r_alphabet = NULL;
 }
 
@@ -79,7 +78,6 @@ void recursion_reset (ramsey_t *rt, global_data_t *state)
   const setting_t *max_depth_set = SETTING ("max_depth");
   const setting_t *stall_after_set = SETTING ("stall_after");
   const setting_t *prune_tree_set  = SETTING ("prune_tree");
-  const setting_t *gap_set_set   = SETTING ("gap_set");
   const setting_t *alphabet_set  = SETTING ("alphabet");
 
   recursion_init (rt);
@@ -92,8 +90,6 @@ void recursion_reset (ramsey_t *rt, global_data_t *state)
     rt->r_stall_after = stall_after_set->get_int_value (stall_after_set);
   if (prune_tree_set)
     rt->r_prune_tree = prune_tree_set->get_int_value (prune_tree_set);
-  if (gap_set_set)
-    rt->add_gap_set (rt, gap_set_set->get_ramsey_value (gap_set_set));
   if (alphabet_set)
     rt->r_alphabet = alphabet_set->get_ramsey_value (alphabet_set);
 }

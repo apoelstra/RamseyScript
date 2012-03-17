@@ -59,8 +59,6 @@ struct _ramsey_t {
   int r_stall_after;
   /*! \brief Current number of iterations with no progress. */
   int r_stall_index;
-  /*! \brief Set of allowable gaps for sequences. \todo Move this into the sequence object. */
-  const ramsey_t *r_gap_set;
   /*! \brief Alphabet for words. \todo Move this into the word object. */
   const ramsey_t *r_alphabet;
 
@@ -95,8 +93,6 @@ struct _ramsey_t {
    * except by destroying the Ramsey object, the behavior is undefined.
    */
   int (*add_filter)  (ramsey_t *, filter_t *);
-  /*! \brief Add a gap set to the object. \todo Make this its own filter. */
-  int (*add_gap_set) (ramsey_t *, const ramsey_t *);
   /*! \brief Run all attached filters on the object. Returns 1 for pass, 0 for fail. */
   int (*run_filters) (const ramsey_t *);
 
