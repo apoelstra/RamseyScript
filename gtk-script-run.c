@@ -149,7 +149,7 @@ GtkWidget *gtk_script_run_new (GtkScriptView *view)
   stream_line_copy (run->script_stream, script_stream);
   script_stream->destroy (script_stream);
 
-  free (label_text);
+  g_free (label_text);
   return GTK_WIDGET (run);
 }
 

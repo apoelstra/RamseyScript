@@ -122,7 +122,7 @@ static gboolean switch_page_callback (GtkNotebook *notebook, gpointer page,
           gui_data.active_script = data;
           gtk_window_set_title (GTK_WINDOW (gui_data.window), title);
           gtk_widget_set_sensitive (gui_data.start_btn, TRUE);
-          free (title);
+          g_free (title);
         }
     }
   /* Scan through runs */
@@ -136,7 +136,7 @@ static gboolean switch_page_callback (GtkNotebook *notebook, gpointer page,
           gui_data.active_run = data;
           gtk_window_set_title (GTK_WINDOW (gui_data.window), title);
           gtk_widget_set_sensitive (gui_data.start_btn, FALSE);
-          free (title);
+          g_free (title);
         }
     }
   return TRUE;
