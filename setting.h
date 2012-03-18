@@ -18,13 +18,13 @@
 #ifndef SETTING_H
 #define SETTING_H
 
-#include "global.h"
-#include "stream.h"
-
 /*! \brief Convienence typedef for struct _setting_t. */
 typedef struct _setting_t setting_t;
 /*! \brief Convienence typedef for struct _setting_list_t. */
 typedef struct _setting_list_t setting_list_t;
+
+#include "global.h"
+#include "stream.h"
 
 /*! \brief Script variable type.
  *

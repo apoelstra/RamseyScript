@@ -19,6 +19,8 @@
 #ifndef PROCESS_H
 #define PROCESS_H
 
+#include "stream.h"
+
 /*! \brief Sets default variables before a script run.
  *
  *  \param [in] in   The input stream to use.

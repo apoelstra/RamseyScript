@@ -17,6 +17,7 @@
 
 #include "../global.h"
 #include "../setting.h"
+#include "../stream.h"
 
 data_collector_t *dump_new (const char *, const global_data_t *);
 void dump_usage (stream_t *out);
