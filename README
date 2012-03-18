@@ -121,6 +121,9 @@ want kept. ``filter'' should be one of:
 
   no-additive-squares: Only recurse on words with no additive squares
 
+   no-schur-solutions: Only recurse on objects with no solutions to
+                       X + Y = Z.
+
 
 
   filter clear
