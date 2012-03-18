@@ -37,7 +37,7 @@ static int _check_recurse (const int *val, int len, int seek, int gap, int ap_le
     return 0;
   else
     {
-      int i = len - 1;
+      int i;
       for (i = len - 1; i >= 0; --i)
         if (val[i] == seek)
           return _check_recurse (val, i, val[i] - gap, gap, ap_len - 1);
@@ -56,8 +56,8 @@ static bool check_n_ap (const filter_t *flt, const ramsey_t *rt)
 
   assert (val != NULL);
 
-  if (priv->ap_length == 1 && len > 0)
-    return 0;
+  if (priv->ap_length == 1)
+    return (len == 0);
 
   min = max = val[0];
   for (i = 0; i < len; ++i)
@@ -86,6 +86,9 @@ static bool cheap_check_n_ap (const filter_t *flt, const ramsey_t *rt)
   bool found = 0;
 
   assert (val != NULL);
+
+  if (priv->ap_length == 1)
+    return (len == 0);
 
   min = max = val[0];
   for (i = 0; i < len; ++i)
