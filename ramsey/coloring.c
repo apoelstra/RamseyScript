@@ -12,6 +12,13 @@
  * If not, see <http://creativecommons.org/publicdomain/zero/1.0/>.
  */
 
+/*! \file coloring.c
+ *  \brief Implementation of the coloring type.
+ *
+ *  A coloring is a partition of the integers [1, N] into r subsets,
+ *  where r (the ``number of colors'') is given, and N is attempted
+ *  to be maximised given some constraints (set by filters).
+ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -23,25 +30,51 @@
 #include "coloring.h"
 #include "sequence.h"
 
-#define DEFAULT_MAX_FILTERS	20
+/*! \brief Default allocation size for colorings. */
 #define DEFAULT_MAX_INTLIST	400
+/*! \brief Default number of filters. */
+#define DEFAULT_MAX_FILTERS	20
 
+/*! \brief Private data for the coloring type. */
 struct _coloring {
+  /*! \brief parent struct */
   ramsey_t parent;
 
+  /*! \brief List of filters set on the coloring (the whole coloring,
+   *         not its constituent sequences). */
   filter_t **filter;
+  /*! \brief Number of filters set. */
   int n_filters;
+  /*! \brief Number of filters allocated. */
   int max_filters;
 
-  int has_symmetry;  /* gap set on each color is the same */
+  /*! \brief Whether the coloring is symmetrical or not.
+   *
+   *  A symmetrical coloring is one in which all colors are, up to
+   *  relabelling, the same. In this case, the recursion saves time
+   *  by not checking colorings which are simply rearrangements of
+   *  each other.
+   *
+   *  An example of a non-symmetrical coloring would be a 2-coloring
+   *  in which blue gaps were restricted to be < 10, and red gaps
+   *  to be < 5. Then the colorings [[1 2] []] and [[] [1 2]], even
+   *  though they are relabellings of each other, will have different
+   *  recursion sub-trees, so they both need to be checked.
+   */
+  int has_symmetry;
+  /*! \brief Number of colors used. */
   int n_cells;
 
-  /* Colors as a word-on-finite-alphabet */
-  int n_int_list;
-  int max_int_list;
+  /*! \brief Representation of coloring as a word on the alphabet [0,(r-1)],
+   *         where r is the number of colors. */
   int *int_list;
+  /*! \brief Actual length of the coloring. */
+  int n_int_list;
+  /*! \brief Allocated length of the coloring. */
+  int max_int_list;
 
-  /* Colors as partitions */
+  /*! \brief Representation of the coloring as an array of sequences (i.e.,
+   *         a partition. */
   ramsey_t **sequence;
 };
 

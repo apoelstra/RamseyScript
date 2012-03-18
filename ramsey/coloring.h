@@ -12,12 +12,32 @@
  * If not, see <http://creativecommons.org/publicdomain/zero/1.0/>.
  */
 
+/*! \file coloring.h
+ *  \brief Defines functions related to the coloring type.
+ */
+
 #ifndef COLORING_H
 #define COLORING_H
 
 #include "ramsey.h"
 
-void *coloring_new (const global_data_t *);
+/*! \brief Create a new coloring.
+ *
+ *  The constructor uses the script variable n-colors to determine
+ *  the number of colors to use. If this is unset, it will fail.
+ *
+ *  \param [in] state  The current state of the program.
+ *
+ *  \return A newly allocated coloring, or NULL on failure.
+ */
+void *coloring_new (const global_data_t *state);
+
+/*! \brief Create a new coloring directly.
+ *
+ *  \param [in] n_colors  The number of colors to use in the coloring.
+ *
+ *  \return A newly allocated coloring, or NULL on failure.
+ */
 void *coloring_new_direct (int n_colors);
 
 #endif
