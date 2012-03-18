@@ -213,10 +213,10 @@ setting_list_t *setting_list_new ()
 {
   struct _setting_list_priv *priv = malloc (sizeof *priv);
   setting_list_t *rv = (setting_list_t *) priv;
-  int i;
 
   if (rv != NULL)
     {
+      int i;
       rv->add_setting = _setting_list_add_setting;
       rv->get_setting = _setting_list_get_setting;
       rv->remove_setting = _setting_list_remove_setting;

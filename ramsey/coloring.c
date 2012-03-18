@@ -118,7 +118,6 @@ static int _coloring_run_filters (const ramsey_t *rt)
 static int _coloring_add_filter (ramsey_t *rt, filter_t *f)
 {
   struct _coloring *c = (struct _coloring *) rt;
-  int i;
   assert (rt && rt->type == TYPE_COLORING);
 
 
@@ -139,6 +138,7 @@ static int _coloring_add_filter (ramsey_t *rt, filter_t *f)
     }
   else if (f->supports (f, TYPE_SEQUENCE))
     {
+      int i;
       for (i = 0; i < c->n_cells; ++i)
         {
           if (i > 0)
