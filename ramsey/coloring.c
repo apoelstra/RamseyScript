@@ -364,7 +364,7 @@ static ramsey_t *_coloring_clone (const ramsey_t *rt)
   c->int_list = malloc (c->max_int_list * sizeof *c->int_list);
   c->sequence = malloc (c->n_cells * sizeof *c->sequence);
 
-  memcpy (c->int_list, old_c->int_list, c->max_int_list * sizeof *c->filter);
+  memcpy (c->int_list, old_c->int_list, c->max_int_list * sizeof *c->int_list);
   for (i = 0; i < c->n_filters; ++i)
     c->filter[i] = old_c->filter[i]->clone (old_c->filter[i]);
   for (i = 0; i < c->n_cells; ++i)
