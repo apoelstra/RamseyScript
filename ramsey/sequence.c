@@ -12,6 +12,12 @@
  * If not, see <http://creativecommons.org/publicdomain/zero/1.0/>.
  */
 
+/*! \file sequence.c
+ *  \brief Implementation of the sequence type.
+ *
+ *  A sequence is a list of integers, which is extended recursively
+ *  to seek a maximum length given constraints (filters).
+ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -22,20 +28,31 @@
 #include "ramsey.h"
 #include "sequence.h"
 
+/*! \brief Default allocation size for sequences. */
 #define DEFAULT_MAX_LENGTH	400
+/*! \brief Default number of filters. */
 #define DEFAULT_MAX_FILTERS	20
 
+/*! \brief Private data for the sequence type. */
 struct _sequence {
+  /*! \brief parent struct. */
   ramsey_t parent;
 
+  /*! \brief List of filters set on the sequence. */
   filter_t **filter;
+  /*! \brief Number of filters set. */
   int n_filters;
+  /*! \brief Number of filters allocated. */
   int max_filters;
 
+  /*! \brief Content of the sequence. */
   int *value;
+  /*! \brief Length of the sequence. */
   int length;
+  /*! \brief Maximum length of the sequence without requiring reallocation. */
   int max_length;
 
+  /*! Set of allowable gap sizes when sequence is being recursively extended. */
   ramsey_t *gap_set;
 };
 
