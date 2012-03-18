@@ -352,7 +352,13 @@ setting_t *setting_new (const char *name, const char *text)
       else if (*scan == '[')
         {
           priv->ramsey_data = ramsey_new_from_parse (scan);
-          rv->type = TYPE_RAMSEY;
+          if (priv->ramsey_data)
+            rv->type = TYPE_RAMSEY;
+          else
+            {
+              free (priv);
+              return NULL;
+            }
         }
     }
 

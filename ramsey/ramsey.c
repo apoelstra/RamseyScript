@@ -90,7 +90,6 @@ ramsey_t *ramsey_new_from_parse (const char *data)
   else
     {
       fprintf (stderr, "Error: ``%s'' is not a valid Ramsey object (could not be parsed).\n", data);
-      rv->destroy (rv);
       return NULL;
     }
 
