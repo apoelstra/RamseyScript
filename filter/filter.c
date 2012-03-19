@@ -46,8 +46,11 @@ const int g_n_filters = sizeof g_filter / sizeof g_filter[0];
 /* end INSTALL FILTERS HERE */
 
 
+/*! \brief Private data for single-function filters. */
 struct _custom_priv {
+  /*! \brief parent struct. */
   filter_t parent;
+  /*! \brief The user-visible name of the filter. */
   const char *name;
 };
 
