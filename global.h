@@ -76,9 +76,9 @@ struct _data_collector_t {
   /*! \brief Reset any internal counters and erase recorded data. */
   void (*reset)   (data_collector_t *);
   /*! \brief Record collector-specific data from the given ramsey_t. */
-  int  (*record)  (data_collector_t *, const ramsey_t *);
+  int  (*record)  (data_collector_t *, const ramsey_t *, stream_t *);
   /*! \brief Print collector state. */
-  void (*output)  (const data_collector_t *);
+  void (*output)  (const data_collector_t *, stream_t *);
   /*! \brief Destroy collector and release associated resources. */
   void (*destroy) (data_collector_t *);
 };

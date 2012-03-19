@@ -339,7 +339,7 @@ void process (struct _global_data *state)
 
               /* Output dump data */
               for (dlist = state->dumps; dlist; dlist = dlist->next)
-                dlist->data->output (dlist->data);
+                dlist->data->output (dlist->data, state->out_stream);
               /* Cleanup */
               seed->destroy (seed);
             }

@@ -19,30 +19,26 @@
 
 #include "target.h"
 
-struct _target_priv {
-  data_collector_t parent;
-
-  stream_t *out;
-};
-
 static const char *_target_get_type (const data_collector_t *dc)
 {
   (void) dc;
   return "any-length";
 }
 
-static int _target_record (data_collector_t *dc, const ramsey_t *ram)
+static int _target_record (data_collector_t *dc, const ramsey_t *ram, stream_t *out)
 {
   long len = ram->get_length (ram);
-  struct _target_priv *priv = (struct _target_priv *) dc;
 
   assert (dc != NULL);
   assert (ram != NULL);
 
-  stream_printf (priv->out, "Found %s (length %3d): ",
-                 ram->get_type (ram), len);
-  ram->print (ram, priv->out);
-  stream_printf (priv->out, "\n");
+  if (out)
+    {
+      stream_printf (out, "Found %s (length %3d): ",
+                     ram->get_type (ram), len);
+      ram->print (ram, out);
+      stream_printf (out, "\n");
+    }
   return 1;
 }
 
@@ -51,9 +47,10 @@ static void _target_reset (data_collector_t *dc)
   (void) dc;
 }
 
-static void _target_output  (const data_collector_t *dc)
+static void _target_output  (const data_collector_t *dc, stream_t *out)
 {
   (void) dc;
+  (void) out;
 }
 
 static void _target_destroy (data_collector_t *dc)
@@ -63,16 +60,15 @@ static void _target_destroy (data_collector_t *dc)
 
 void *target_any_length_new (const global_data_t *state)
 {
-  struct _target_priv *priv = malloc (sizeof *priv);
-  data_collector_t *rv = (data_collector_t *) priv;
+  data_collector_t *rv = malloc (sizeof *rv);
 
+  (void) state;
   if (rv != NULL)
     {
       rv->reset   = _target_reset;
       rv->output  = _target_output;
       rv->destroy = _target_destroy;
 
-      priv->out = state->out_stream;
       rv->get_type = _target_get_type;
       rv->record   = _target_record;
     }

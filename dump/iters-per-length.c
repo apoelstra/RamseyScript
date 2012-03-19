@@ -23,7 +23,6 @@
 struct _dump_priv {
   data_collector_t parent;
 
-  stream_t *out;
   int size;
   long int *data;
 };
@@ -34,10 +33,11 @@ static const char *_dump_get_type (const data_collector_t *dc)
   return "iterations-per-length";
 }
 
-static int _dump_record (data_collector_t *dc, const ramsey_t *ram)
+static int _dump_record (data_collector_t *dc, const ramsey_t *ram, stream_t *out)
 {
   int idx = ram->get_length (ram);
   struct _dump_priv *priv = (struct _dump_priv *) dc;
+  (void) out;
   if (idx >= 0 && idx <= priv->size)
     {
       ++priv->data[idx];
@@ -54,16 +54,19 @@ static void _dump_reset (data_collector_t *dc)
     priv->data[i] = 0;
 }
 
-static void _dump_output  (const data_collector_t *dc)
+static void _dump_output  (const data_collector_t *dc, stream_t *out)
 {
   const struct _dump_priv *priv = (struct _dump_priv *) dc;
   int i;
-  priv->out->open (priv->out, STREAM_APPEND);
-  stream_printf (priv->out, "[ %ld", priv->data[1]);
-  for (i = 2; i < priv->size; ++i)
-    stream_printf (priv->out, ", %ld", priv->data[i]);
-  stream_printf (priv->out, " ]\n");
-  priv->out->close (priv->out);
+  if (out)
+    {
+      out->open (out, STREAM_APPEND);
+      stream_printf (out, "[ %ld", priv->data[1]);
+      for (i = 2; i < priv->size; ++i)
+        stream_printf (out, ", %ld", priv->data[i]);
+      stream_printf (out, " ]\n");
+      out->close (out);
+    }
 }
 
 static void _dump_destroy (data_collector_t *dc)
@@ -111,7 +114,6 @@ void *dump_iters_per_length_new (const global_data_t *state)
       fprintf (stderr, "Out of memory creating dump!\n");
       return NULL;
     }
-  priv->out  = dump_stream;
   priv->size = dump_depth;
   priv->data = malloc ((1 + dump_depth) * sizeof *priv->data);
   if (priv->data == NULL)

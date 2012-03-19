@@ -43,10 +43,10 @@ int recursion_preamble (ramsey_t *rt, global_data_t *state)
     {
       dc_list *dlist;
       for (dlist = state->dumps; dlist; dlist = dlist->next)
-        if (dlist->data->record (dlist->data, rt))
+        if (dlist->data->record (dlist->data, rt, state->out_stream))
           rt->r_stall_index = rt->r_iterations;
       for (dlist = state->targets; dlist; dlist = dlist->next)
-        if (dlist->data->record (dlist->data, rt))
+        if (dlist->data->record (dlist->data, rt, state->out_stream))
           rt->r_stall_index = rt->r_iterations;
 
       ++rt->r_iterations;
