@@ -23,6 +23,7 @@
 struct _dump_priv {
   data_collector_t parent;
 
+  stream_t *out;
   int size;
   long int *data;
 };
@@ -58,15 +59,13 @@ static void _dump_output  (const data_collector_t *dc, stream_t *out)
 {
   const struct _dump_priv *priv = (struct _dump_priv *) dc;
   int i;
-  if (out)
-    {
-      out->open (out, STREAM_APPEND);
-      stream_printf (out, "[ %ld", priv->data[1]);
-      for (i = 2; i < priv->size; ++i)
-        stream_printf (out, ", %ld", priv->data[i]);
-      stream_printf (out, " ]\n");
-      out->close (out);
-    }
+  (void) out;
+  priv->out->open (priv->out, STREAM_APPEND);
+  stream_printf (priv->out, "[ %ld", priv->data[1]);
+  for (i = 2; i < priv->size; ++i)
+    stream_printf (priv->out, ", %ld", priv->data[i]);
+  stream_printf (priv->out, " ]\n");
+  priv->out->close (priv->out);
 }
 
 static void _dump_destroy (data_collector_t *dc)
@@ -114,6 +113,7 @@ void *dump_iters_per_length_new (const setting_list_t *vars)
       fprintf (stderr, "Out of memory creating dump!\n");
       return NULL;
     }
+  priv->out  = dump_stream;
   priv->size = dump_depth;
   priv->data = malloc ((1 + dump_depth) * sizeof *priv->data);
   if (priv->data == NULL)
