@@ -54,7 +54,7 @@ typedef enum _e_setting_type {
 #include "stream.h"
 
 /*! \brief The version that is displayed in the hello message. */
-#define VERSION "0.4"
+#define VERSION "0.5"
 /*! \brief Convienence macro to access script variables. */
 #define SETTING(s) (state->settings->get_setting (state->settings, (s)))
 
