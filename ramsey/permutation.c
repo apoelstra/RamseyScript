@@ -70,9 +70,9 @@ static void _permutation_recurse (ramsey_t *rt, global_data_t *state)
   recursion_postamble (rt);
 }
 
-void *permutation_new (const global_data_t *state)
+void *permutation_new (const setting_list_t *vars)
 {
-  ramsey_t *rv = sequence_new (state);
+  ramsey_t *rv = sequence_new (vars);
 
   if (rv != NULL)
     {

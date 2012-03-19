@@ -17,6 +17,6 @@
 
 #include "ramsey.h"
 
-void *permutation_new (const global_data_t *);
+void *permutation_new (const setting_list_t *);
 
 #endif

@@ -17,6 +17,6 @@
 
 #include "dump.h"
 
-void *dump_iters_per_length_new (const global_data_t *state);
+void *dump_iters_per_length_new (const setting_list_t *);
 
 #endif

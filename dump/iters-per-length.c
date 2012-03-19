@@ -77,12 +77,12 @@ static void _dump_destroy (data_collector_t *dc)
   free (dc);
 }
 
-void *dump_iters_per_length_new (const global_data_t *state)
+void *dump_iters_per_length_new (const setting_list_t *vars)
 {
   struct _dump_priv *priv;
   data_collector_t *rv;
-  const setting_t *dump_depth_set = SETTING ("dump_depth");
-  const setting_t *dump_file_set  = SETTING ("dump_file");
+  const setting_t *dump_depth_set = vars->get_setting (vars, "dump_depth");
+  const setting_t *dump_file_set  = vars->get_setting (vars, "dump_file");
   stream_t *dump_stream;
   int dump_depth = 0;
 

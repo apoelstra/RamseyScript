@@ -417,14 +417,14 @@ void *sequence_new_direct ()
   return rv;
 }
 
-void *sequence_new (const global_data_t *state)
+void *sequence_new (const setting_list_t *vars)
 {
   struct _sequence *rv = sequence_new_direct ();
   if (rv == NULL)
     return NULL;
   else
     {
-      const setting_t *gap_set_set = SETTING ("gap_set");
+      const setting_t *gap_set_set = vars->get_setting (vars, "gap_set");
       if (gap_set_set && gap_set_set->type == TYPE_RAMSEY)
         {
           const ramsey_t *gs = gap_set_set->get_ramsey_value (gap_set_set);

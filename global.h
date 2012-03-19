@@ -65,7 +65,7 @@ struct _parser_t {
   /*! \brief User-visible description of the word. */
   const char *help;
   /*! \brief Constructor for whatever the word represents. */
-  void *(*construct) (const global_data_t *);
+  void *(*construct) (const setting_list_t *);
 };
 
 /*! \brief Object class for targets and data dumps. */

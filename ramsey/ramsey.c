@@ -38,7 +38,7 @@ const parser_t g_ramsey[] = {
 const int g_n_ramseys = sizeof g_ramsey / sizeof g_ramsey[0];
 /* end INSTALL OBJECTS HERE */
 
-ramsey_t *ramsey_new (const char *data, const global_data_t *state)
+ramsey_t *ramsey_new (const char *data, const setting_list_t *vars)
 {
   assert (data != NULL);
   if (data && *data)
@@ -46,7 +46,7 @@ ramsey_t *ramsey_new (const char *data, const global_data_t *state)
       int i;
       for (i = 0; i < g_n_ramseys; ++i)
         if (!strcmp (g_ramsey[i].name, data))
-          return g_ramsey[i].construct (state);
+          return g_ramsey[i].construct (vars);
       fprintf (stderr, "Error: unknown ramsey object type ``%s''.\n", data);
     }
   return NULL;

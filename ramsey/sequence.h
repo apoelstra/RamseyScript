@@ -27,11 +27,11 @@
  *  the sequence by the 'gap-set' script variable. If this is
  *  unset, the sequence will be unable to be recursed.
  *
- *  \param [in] state  The current state of the program.
+ *  \param [in] vars  The table of script variables.
  *
  *  \return A newly allocated coloring, or NULL on failure.
  */
-void *sequence_new (const global_data_t *state);
+void *sequence_new (const setting_list_t *vars);
 
 /*! \brief Create a new sequence directly.
  *

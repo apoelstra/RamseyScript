@@ -56,7 +56,7 @@ struct _global_data *set_defaults (stream_t *in, stream_t *out, stream_t *err)
       /* Set max-length as a target by default.
        * We do this purely for historical reasons */
       rv->targets = malloc (sizeof *rv->targets);
-      rv->targets->data = target_new ("max_length", rv);
+      rv->targets->data = target_new ("max_length", rv->settings);
       rv->targets->next = NULL;
       /**/
     }
@@ -159,7 +159,7 @@ void process (struct _global_data *state)
           /* Add a new filter */
           else if (tok != NULL)
             {
-              filter_t *new_filter = filter_new (tok, state);
+              filter_t *new_filter = filter_new (tok, state->settings);
               if (new_filter != NULL)
                 {
                   filter_list *new_cell = malloc (sizeof *new_cell);
@@ -198,7 +198,7 @@ void process (struct _global_data *state)
           /* Add a new dump */
           else if (tok != NULL)
             {
-              data_collector_t *new_dump = dump_new (tok, state);
+              data_collector_t *new_dump = dump_new (tok, state->settings);
               if (new_dump != NULL)
                 {
                   dc_list *new_cell = malloc (sizeof *new_cell);
@@ -237,7 +237,7 @@ void process (struct _global_data *state)
           /* Add a new target */
           else if (tok != NULL)
             {
-              data_collector_t *new_target = target_new (tok, state);
+              data_collector_t *new_target = target_new (tok, state->settings);
               if (new_target != NULL)
                 {
                   dc_list *new_cell = malloc (sizeof *new_cell);
@@ -260,7 +260,7 @@ void process (struct _global_data *state)
 
           tok = strtok (NULL, " #\t\n");
           if (tok)
-            seed = ramsey_new (tok, state);
+            seed = ramsey_new (tok, state->settings);
 
           if (seed == NULL)
             ramsey_usage (state->out_stream);

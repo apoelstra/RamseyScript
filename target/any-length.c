@@ -58,11 +58,11 @@ static void _target_destroy (data_collector_t *dc)
   free (dc);
 }
 
-void *target_any_length_new (const global_data_t *state)
+void *target_any_length_new (const setting_list_t *vars)
 {
   data_collector_t *rv = malloc (sizeof *rv);
 
-  (void) state;
+  (void) vars;
   if (rv != NULL)
     {
       rv->reset   = _target_reset;

@@ -17,6 +17,6 @@
 
 #include "ramsey.h"
 
-void *lattice_new (const global_data_t *);
+void *lattice_new (const setting_list_t *);
 
 #endif

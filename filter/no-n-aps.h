@@ -17,6 +17,6 @@
 
 #include "filter.h"
 
-void *filter_n_ap_new (const global_data_t *);
+void *filter_n_ap_new (const setting_list_t *);
 
 #endif

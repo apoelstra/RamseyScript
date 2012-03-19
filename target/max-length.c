@@ -73,12 +73,12 @@ static void _target_destroy (data_collector_t *dc)
 }
 
 /* CONSTRUCTOR / DESTRUCTOR */
-void *target_max_length_new (const global_data_t *state)
+void *target_max_length_new (const setting_list_t *vars)
 {
   struct _target_priv *priv = malloc (sizeof *priv);
   data_collector_t *rv = (data_collector_t *) priv;
 
-  (void) state;
+  (void) vars;
   if (rv != NULL)
     {
       rv->reset   = _target_reset;

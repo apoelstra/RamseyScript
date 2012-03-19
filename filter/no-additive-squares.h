@@ -17,6 +17,6 @@
 
 #include "../global.h"
 
-void *filter_additive_square_new (const global_data_t *);
+void *filter_additive_square_new (const setting_list_t *);
 
 #endif

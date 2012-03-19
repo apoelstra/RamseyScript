@@ -17,6 +17,6 @@
 
 #include "../global.h"
 
-void *filter_rainbow_ap_new (const global_data_t *);
+void *filter_rainbow_ap_new (const setting_list_t *);
 
 #endif

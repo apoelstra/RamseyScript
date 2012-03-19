@@ -65,10 +65,10 @@ static bool _filter_set_mode (filter_t *flt, e_filter_mode mode)
 }
 
 /* CONSTRUCTOR / DESTRUCTOR  */
-void *filter_additive_square_new (const global_data_t *state)
+void *filter_additive_square_new (const setting_list_t *vars)
 {
   filter_t *rv = filter_new_generic ();
-  (void) state;
+  (void) vars;
   rv->mode = MODE_LAST_ONLY;
   rv->get_type = _filter_get_type;
   rv->supports = _filter_supports;

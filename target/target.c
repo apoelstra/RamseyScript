@@ -30,7 +30,7 @@ const parser_t g_target[] = {
 const int g_n_targets = sizeof g_target / sizeof g_target[0];
 /* end INSTALL TARGETS HERE */
 
-data_collector_t *target_new (const char *data, const global_data_t *state)
+data_collector_t *target_new (const char *data, const setting_list_t *vars)
 {
   assert (data != NULL);
   if (data && *data)
@@ -38,7 +38,7 @@ data_collector_t *target_new (const char *data, const global_data_t *state)
       int i;
       for (i = 0; i < g_n_targets; ++i)
         if (!strcmp (g_target[i].name, data))
-          return g_target[i].construct (state);
+          return g_target[i].construct (vars);
       fprintf (stderr, "Error: unknown target type ``%s''.\n", data);
     }
   return NULL;

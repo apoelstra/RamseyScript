@@ -17,6 +17,6 @@
 
 #include "../global.h"
 
-void *target_max_length_new (const global_data_t *);
+void *target_max_length_new (const setting_list_t *);
 
 #endif

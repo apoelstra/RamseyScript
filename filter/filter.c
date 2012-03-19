@@ -93,7 +93,7 @@ static void _filter_destroy (filter_t *flt)
   free (flt);
 }
 
-filter_t *filter_new (const char *data, const global_data_t *state)
+filter_t *filter_new (const char *data, const setting_list_t *vars)
 {
   assert (data != NULL);
   if (data && *data)
@@ -101,7 +101,7 @@ filter_t *filter_new (const char *data, const global_data_t *state)
       int i;
       for (i = 0; i < g_n_filters; ++i)
         if (!strcmp (g_filter[i].name, data))
-          return g_filter[i].construct (state);
+          return g_filter[i].construct (vars);
       fprintf (stderr, "Error: unknown filter ``%s''.\n", data);
     }
 

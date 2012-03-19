@@ -122,16 +122,16 @@ static void _filter_destroy (filter_t *flt)
   free (flt);
 }
 
-void *filter_double_n_ap_new (const global_data_t *state)
+void *filter_double_n_ap_new (const setting_list_t *vars)
 {
-  const setting_t *ap_length_set = SETTING ("ap_length");
+  const setting_t *ap_length_set = vars->get_setting (vars, "ap_length");
   if (ap_length_set == NULL)
     {
       fprintf (stderr, "Error: filter requires variable ``ap_length'' set.\n");
       return NULL;
     }
   if (ap_length_set->get_int_value (ap_length_set) == 3)
-    return filter_double_3_ap_new (state);
+    return filter_double_3_ap_new (vars);
   else
     {
       struct _priv *priv = malloc (sizeof *priv);

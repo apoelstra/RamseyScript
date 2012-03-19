@@ -30,7 +30,7 @@ const parser_t g_dump[] = {
 const int g_n_dumps = sizeof g_dump / sizeof g_dump[0];
 /* end INSTALL DUMPS HERE */
 
-data_collector_t *dump_new (const char *data, const global_data_t *state)
+data_collector_t *dump_new (const char *data, const setting_list_t *vars)
 {
   assert (data != NULL);
   if (data && *data)
@@ -38,7 +38,7 @@ data_collector_t *dump_new (const char *data, const global_data_t *state)
       int i;
       for (i = 0; i < g_n_dumps; ++i)
         if (!strcmp (g_dump[i].name, data))
-          return g_dump[i].construct (state);
+          return g_dump[i].construct (vars);
       fprintf (stderr, "Error: unknown dump type ``%s''.\n", data);
     }
   return NULL;

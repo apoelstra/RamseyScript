@@ -26,11 +26,11 @@
  *  The constructor uses the script variable n-colors to determine
  *  the number of colors to use. If this is unset, it will fail.
  *
- *  \param [in] state  The current state of the program.
+ *  \param [in] vars  The table of script variables.
  *
  *  \return A newly allocated coloring, or NULL on failure.
  */
-void *coloring_new (const global_data_t *state);
+void *coloring_new (const setting_list_t *vars);
 
 /*! \brief Create a new coloring directly.
  *

@@ -115,11 +115,11 @@ static void _filter_destroy (filter_t *flt)
   free (flt);
 }
 
-void *filter_gap_set_new (const global_data_t *state)
+void *filter_gap_set_new (const setting_list_t *vars)
 {
   struct _priv *priv;
   filter_t *rv;
-  const setting_t *gap_set_set = SETTING ("gap_set");
+  const setting_t *gap_set_set = vars->get_setting (vars, "gap_set");
   if (gap_set_set == NULL)
     {
       fprintf (stderr, "Error: filter requires variable ``gap_set'' set.\n");
@@ -148,7 +148,6 @@ void *filter_gap_set_new (const global_data_t *state)
   }
   rv = (filter_t *) priv;
 
-  (void) state;
   rv->mode = MODE_LAST_ONLY;
   rv->destroy  = _filter_destroy;
   rv->clone    = _filter_clone;

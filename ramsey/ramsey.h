@@ -145,11 +145,11 @@ struct _ramsey_t {
 /*! \brief Constructor for a Ramsey object
  *
  *  \param [in] data   The name of the object's type (i.e., "sequence" or "coloring").
- *  \param [in] state  The global state of the program.
+ *  \param [in] vars   The table of script variables.
  *
  *  \return A newly-allocated Ramsey object, or NULL on failure.
  */
-ramsey_t *ramsey_new (const char *data, const global_data_t *state);
+ramsey_t *ramsey_new (const char *data, const setting_list_t *vars);
 
 /*! \brief Constructor for a Ramsey object
  *

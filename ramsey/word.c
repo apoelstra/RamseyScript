@@ -59,9 +59,9 @@ static void _word_recurse (ramsey_t *rt, global_data_t *state)
 }
 
 /* CONSTRUCTOR */
-void *word_new (const global_data_t *state)
+void *word_new (const setting_list_t *vars)
 {
-  ramsey_t *rv = sequence_new (state);
+  ramsey_t *rv = sequence_new (vars);
 
   if (rv != NULL)
     {
