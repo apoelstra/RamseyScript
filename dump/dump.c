@@ -21,13 +21,13 @@
 
 /* INSTALL DUMPS HERE */
 #include "iters-per-length.h"
-const parser_t g_dump[] = {
+static const parser_t g_dump[] = {
   { "iterations_per_length", "Output number of iterations spent on each object length.",
     dump_iters_per_length_new },
   { "iters_per_length",      "Synonym of ``iterations-per-length''.",
     dump_iters_per_length_new }
 };
-const int g_n_dumps = sizeof g_dump / sizeof g_dump[0];
+static const int g_n_dumps = sizeof g_dump / sizeof g_dump[0];
 /* end INSTALL DUMPS HERE */
 
 data_collector_t *dump_new (const char *data, const setting_list_t *vars)

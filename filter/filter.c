@@ -30,7 +30,7 @@
 #include "no-odd-lattice-aps.h"
 #include "no-rainbow-aps.h"
 #include "no-schur-solutions.h"
-const parser_t g_filter[] = {
+static const parser_t g_filter[] = {
   { "gap_set",             "Eliminate sequences whose gaps are outside of gap_set.", filter_gap_set_new },
   { "no_double_3_aps",     "Eliminate objects containing double 3-AP's.",  filter_double_3_ap_new },
   { "no_double_n_aps",     "Eliminate objects containing double n-AP's, with n == ap_length.",
@@ -42,7 +42,7 @@ const parser_t g_filter[] = {
   { "no_rainbow_aps",      "Eliminate colorings containing rainbow AP's.", filter_rainbow_ap_new },
   { "no_schur_solutions",  "Eliminate objects with solutions to X + Y = Z.", filter_schur_new }
 };
-const int g_n_filters = sizeof g_filter / sizeof g_filter[0];
+static const int g_n_filters = sizeof g_filter / sizeof g_filter[0];
 /* end INSTALL FILTERS HERE */
 
 

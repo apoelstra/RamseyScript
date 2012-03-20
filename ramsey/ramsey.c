@@ -27,7 +27,7 @@
 #include "permutation.h"
 #include "sequence.h"
 #include "word.h"
-const parser_t g_ramsey[] = {
+static const parser_t g_ramsey[] = {
   { "colorings",   "Partitions of [1, N] for increasing N.",   coloring_new },
   { "partitions",  "Synonym of ``coloring''.",                 coloring_new },
   { "lattices",    "2D lattice of colored points.",            lattice_new },
@@ -35,7 +35,7 @@ const parser_t g_ramsey[] = {
   { "sequences",   "Strictly increasing sequences.",           sequence_new },
   { "words",       "Sequences of words on a given alphabet.",  word_new },
 };
-const int g_n_ramseys = sizeof g_ramsey / sizeof g_ramsey[0];
+static const int g_n_ramseys = sizeof g_ramsey / sizeof g_ramsey[0];
 /* end INSTALL OBJECTS HERE */
 
 ramsey_t *ramsey_new (const char *data, const setting_list_t *vars)

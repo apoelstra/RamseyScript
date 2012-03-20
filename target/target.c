@@ -23,11 +23,11 @@
 /* INSTALL TARGETS HERE */
 #include "max-length.h"
 #include "any-length.h"
-const parser_t g_target[] = {
+static const parser_t g_target[] = {
   { "max_length", "Seek objects of maximal length.", target_max_length_new },
   { "any_length", "Output any valid object.",        target_any_length_new }
 };
-const int g_n_targets = sizeof g_target / sizeof g_target[0];
+static const int g_n_targets = sizeof g_target / sizeof g_target[0];
 /* end INSTALL TARGETS HERE */
 
 data_collector_t *target_new (const char *data, const setting_list_t *vars)
