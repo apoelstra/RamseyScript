@@ -110,6 +110,7 @@ void *dump_iters_per_length_new (const setting_list_t *vars)
   rv = (data_collector_t *) priv;
   if (priv == NULL)
     {
+      dump_stream->destroy (dump_stream);
       fprintf (stderr, "Out of memory creating dump!\n");
       return NULL;
     }
@@ -118,6 +119,7 @@ void *dump_iters_per_length_new (const setting_list_t *vars)
   priv->data = malloc ((1 + dump_depth) * sizeof *priv->data);
   if (priv->data == NULL)
     {
+      dump_stream->destroy (dump_stream);
       fprintf (stderr, "Out of memory creating dump!\n");
       rv->destroy (rv);
       return NULL;
