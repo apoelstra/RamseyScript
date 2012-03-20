@@ -12,6 +12,18 @@
  * If not, see <http://creativecommons.org/publicdomain/zero/1.0/>.
  */
 
+/*! \file lattice.c
+ *  \brief Implementation of the lattice type.
+ *
+ *  A lattice is a 2D array of numbers, which is traversed lengthwise
+ *  and upward, like
+ *  8 9 ...
+ *  4 5 6 7
+ *  0 1 2 3
+ *
+ *  They are used to give a geometric interpretation of various Ramsey
+ *  properties.
+ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -22,20 +34,32 @@
 #include "ramsey.h"
 #include "lattice.h"
 
+/*! \brief Default allocation size for lattices. */
 #define DEFAULT_MAX_LENGTH	400
+/*! \brief Default number of filters. */
 #define DEFAULT_MAX_FILTERS	20
 
+/*! \brief Private data for the lattice type. */
 struct _lattice {
+  /*! \brief parent struct */
   ramsey_t parent;
 
+  /*! \brief List of filters set on the lattice. */
   filter_t **filter;
+  /*! \brief Number of filters set. */
   int n_filters;
+  /*! \brief Number of filters allocated. */
   int max_filters;
 
+  /*! \brief Content of the lattice. */
   int *value;
-  int top_value;  /* actual highest value */
-  int max_value;  /* allocation limit */
+  /*! \brief Maximum length of the lattice without requiring reallocation. */
+  int max_value;
+  /*! \brief Length of the lattice. */
+  int top_value;
+  /*! \brief Number of columns wide the lattice is. */
   int n_columns;
+  /*! \brief Number of colors used for the lattice. */
   int n_colors;
 };
 
@@ -186,7 +210,7 @@ static const void *_lattice_get_priv_data_const (const ramsey_t *rt)
 }
 
 /* APPEND / DEAPPEND */
-int _lattice_append (ramsey_t *rt, int value)
+static int _lattice_append (ramsey_t *rt, int value)
 {
   struct _lattice *lat = (struct _lattice *) rt;
   assert (rt && rt->type == TYPE_LATTICE);
@@ -204,7 +228,7 @@ int _lattice_append (ramsey_t *rt, int value)
   return 1;
 }
 
-int _lattice_deappend (ramsey_t *rt)
+static int _lattice_deappend (ramsey_t *rt)
 {
   struct _lattice *lat = (struct _lattice *) rt;
   assert (rt && rt->type == TYPE_LATTICE);
@@ -215,7 +239,7 @@ int _lattice_deappend (ramsey_t *rt)
   return 1;
 }
 
-int _lattice_cell_append (ramsey_t *rt, int value, int cell)
+static int _lattice_cell_append (ramsey_t *rt, int value, int cell)
 {
   (void) rt;
   (void) value;
@@ -223,7 +247,7 @@ int _lattice_cell_append (ramsey_t *rt, int value, int cell)
   return 0;
 }
 
-int _lattice_cell_deappend (ramsey_t *rt, int cell)
+static int _lattice_cell_deappend (ramsey_t *rt, int cell)
 {
   (void) rt;
   (void) cell;

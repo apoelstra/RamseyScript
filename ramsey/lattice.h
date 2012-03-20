@@ -12,11 +12,25 @@
  * If not, see <http://creativecommons.org/publicdomain/zero/1.0/>.
  */
 
+/*! \file lattice.h
+ *  \brief Defines functions related to the lattice type.
+ */
+
 #ifndef LATTICE_H
 #define LATTICE_H
 
 #include "ramsey.h"
 
-void *lattice_new (const setting_list_t *);
+/*! \brief Create a new lattice.
+ *
+ *  The constructor uses the script variable n-colors to determine
+ *  the number of colors to use, and n-columns to determine the
+ *  width of the lattice.
+ *
+ *  \param [in] vars  The script variable table.
+ *
+ *  \return A newly allocated lattice, or NULL on failure.
+ */
+void *lattice_new (const setting_list_t *vars);
 
 #endif
