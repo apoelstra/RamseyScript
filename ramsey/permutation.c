@@ -12,6 +12,19 @@
  * If not, see <http://creativecommons.org/publicdomain/zero/1.0/>.
  */
 
+/*! \file permutation.c
+ *  \brief Implementation of the permutation type.
+ *
+ *  A permutation is a sequence whose contents are a rearrangement
+ *  of the integers in the interval [1, N], where N is maximised
+ *  recursively given some constraints.
+ *
+ *  The recursion does not proceed by appending elements to the
+ *  end of the permutation, but rather by inserting them in various
+ *  positions in the middle. Therefore, filters are used in MODE_FULL,
+ *  and for most problems, prune-tree will need to be set by
+ *  the user to 0.
+ */
 
 #include <stdio.h>
 #include <stdlib.h>

@@ -12,11 +12,21 @@
  * If not, see <http://creativecommons.org/publicdomain/zero/1.0/>.
  */
 
+/*! \file word.h
+ *  \brief Defines functions related to the word type.
+ */
+
 #ifndef WORD_H
 #define WORD_H
 
 #include "ramsey.h"
 
-void *word_new (const setting_list_t *);
+/*! \brief Create a new word.
+ *
+ *  \param [in] vars  The script variable table.
+ *
+ *  \return A newly allocated word, or NULL on failure.
+ */
+void *word_new (const setting_list_t *vars);
 
 #endif

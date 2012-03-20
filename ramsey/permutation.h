@@ -12,11 +12,21 @@
  * If not, see <http://creativecommons.org/publicdomain/zero/1.0/>.
  */
 
+/*! \file permutation.h
+ *  \brief Defines functions related to the permutation type.
+ */
+
 #ifndef PERMUTATION_H
 #define PERMUTATION_H
 
 #include "ramsey.h"
 
-void *permutation_new (const setting_list_t *);
+/*! \brief Create a new permutation.
+ *
+ *  \param [in] vars  The script variable table.
+ *
+ *  \return A newly allocated permutation, or NULL on failure.
+ */
+void *permutation_new (const setting_list_t *vars);
 
 #endif

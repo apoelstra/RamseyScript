@@ -12,6 +12,13 @@
  * If not, see <http://creativecommons.org/publicdomain/zero/1.0/>.
  */
 
+/*! \file word.c
+ *  \brief Implementation of the word type.
+ *
+ *  A word is a sequence whose elements are simply elements of a
+ *  (numerical) alphabet. There are no restrictions on monotonicity,
+ *  etc, that exist for ordinary sequences.
+ */
 
 #include <stdio.h>
 #include <stdlib.h>
