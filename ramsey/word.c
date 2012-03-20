@@ -37,32 +37,38 @@ static const char *_word_get_type (const ramsey_t *rt)
 }
 
 /* RECURSION */
-static void _word_recurse (ramsey_t *rt, global_data_t *state)
+static void _word_real_recurse (ramsey_t *rt, const int *alphabet,
+                                int alphabet_len, global_data_t *state)
 {
   int i;
-  const int *alphabet;
-  int alphabet_len;
-  assert (rt && rt->type == TYPE_WORD);
-
-  if (!rt->r_alphabet)
-    {
-      fprintf (stderr, "Cannot recurse on words without an alphabet!\n");
-      return;
-    }
-
   if (!recursion_preamble (rt, state))
     return;
 
-  alphabet = rt->r_alphabet->get_priv_data_const (rt->r_alphabet);
-  alphabet_len = rt->r_alphabet->get_length (rt->r_alphabet);
   for (i = 0; i < alphabet_len; ++i)
     {
       rt->append (rt, alphabet[i]);
       rt->recurse (rt, state);
       rt->deappend (rt);
     }
-
   recursion_postamble (rt);
+}
+
+static void _word_recurse (ramsey_t *rt, global_data_t *state)
+{
+  const setting_t *alphabet_set = SETTING ("alphabet");
+
+  assert (rt && rt->type == TYPE_WORD);
+  if (alphabet_set == NULL)
+    fprintf (stderr, "Cannot recurse on words without setting the ``alphabet'' variable!\n");
+  else
+    {
+      const ramsey_t *alphabet = alphabet_set->get_ramsey_value (alphabet_set);
+      if (alphabet == NULL || alphabet->type != TYPE_SEQUENCE)
+        fprintf (stderr, "The ``alphabet'' variable must be a sequence!\n");
+      else
+        _word_real_recurse (rt, alphabet->get_priv_data_const (alphabet),
+                            alphabet->get_length (alphabet), state);
+    }
 }
 
 /* CONSTRUCTOR */

@@ -59,8 +59,6 @@ struct _ramsey_t {
   int r_stall_after;
   /*! \brief Current number of iterations with no progress. */
   int r_stall_index;
-  /*! \brief Alphabet for words. \todo Move this into the word object. */
-  const ramsey_t *r_alphabet;
 
   /* vtable */
   /*! \brief Returns a string describing the object. */
