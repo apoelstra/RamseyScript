@@ -132,6 +132,7 @@ static int _coloring_add_filter (ramsey_t *rt, filter_t *f)
           c->max_filters *= 2;
         }
 
+      c->has_symmetry &= f->get_symmetry (f);
       f->set_mode (f, MODE_LAST_ONLY);
       c->filter[c->n_filters++] = f;
       return 1;
