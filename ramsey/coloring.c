@@ -241,14 +241,8 @@ static void _coloring_print (const ramsey_t *rt, stream_t *out)
   assert (rt && rt->type == TYPE_COLORING);
   assert (out != NULL);
 
-  out->write (out, "[");
-  c->sequence[0]->print (c->sequence[0], out);
-  for (i = 1; i < c->n_cells; ++i)
-    {
-      out->write (out, " ");
-      c->sequence[i]->print (c->sequence[i], out);
-    }
-  out->write (out, "]");
+  for (i = 1; i < c->n_int_list; ++i)
+    stream_printf (out, "%d", c->int_list[i]);
 }
 
 static void _coloring_randomize (ramsey_t *rt, int n)
