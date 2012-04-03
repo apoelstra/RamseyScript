@@ -39,7 +39,7 @@ static int _target_record (data_collector_t *dc, const ramsey_t *ram, stream_t *
   assert (dc != NULL);
   assert (ram != NULL);
 
-  if (len >= priv->max_recorded)
+  if (len > priv->max_recorded)
     {
       if (out)
         {
