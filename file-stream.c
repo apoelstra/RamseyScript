@@ -129,7 +129,7 @@ static int _file_stream_write (stream_t *s, const char *line)
 
   if (priv->mode & (STREAM_WRITE | STREAM_APPEND))
     return fputs (line, priv->fh);
-  return 0;
+  return EOF;
 }
 
 /* DESTRUCTOR */
