@@ -43,7 +43,7 @@ static int _target_record (data_collector_t *dc, const ramsey_t *ram, stream_t *
     {
       if (out)
         {
-          stream_printf (out, "New maximal %s (length %3d): ",
+          stream_printf (out, "Max. %s (len %5d): ",
                          ram->get_type (ram), len);
           ram->print (ram, out);
           stream_printf (out, "\n");
