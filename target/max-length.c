@@ -57,6 +57,8 @@ static void _target_reset (data_collector_t *dc)
 {
   struct _target_priv *priv = (struct _target_priv *) dc;
   priv->max_recorded = 0;
+  if (priv->max_obj)
+    priv->max_obj->destroy (priv->max_obj);
   priv->max_obj = NULL;
 }
 

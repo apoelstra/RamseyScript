@@ -416,6 +416,10 @@ static void _coloring_destroy (ramsey_t *rt)
 
   for (i = 0; i < c->n_cells; ++i)
     c->sequence[i]->destroy (c->sequence[i]);
+  for (i = 0; i < c->n_filters; ++i)
+    c->filter[i]->destroy (c->filter[i]);
+  free (c->filter);
+  free (c->int_list);
   free (c->sequence);
   free (rt);
 }

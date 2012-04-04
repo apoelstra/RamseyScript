@@ -355,6 +355,7 @@ static void _sequence_destroy (ramsey_t *rt)
 
   if (s->gap_set)
     s->gap_set->destroy (s->gap_set);
+  free (s->filter);
   free (s->value);
   free (s);
 }

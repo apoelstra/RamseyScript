@@ -23,7 +23,7 @@
 struct _priv {
   filter_t parent;
 
-  const ramsey_t *gap_set;
+  ramsey_t *gap_set;
   bool has_symmetry;
 };
 
@@ -103,20 +103,27 @@ static bool _filter_set_mode (filter_t *flt, e_filter_mode mode)
 /* CONSTRUCTOR / DESTRUCTOR  */
 static filter_t *_filter_clone (const filter_t *flt)
 {
+  const struct _priv *priv = (const struct _priv *) flt;
   struct _priv *rv = malloc (sizeof *rv);
   assert (flt != NULL);
   if (rv != NULL)
-    memcpy (rv, flt, sizeof *rv);
+    {
+      memcpy (rv, flt, sizeof *rv);
+      rv->gap_set = priv->gap_set->clone (priv->gap_set);
+    }
   return (filter_t *) rv;
 }
 
 static void _filter_destroy (filter_t *flt)
 {
+  struct _priv *priv = (struct _priv *) flt;
+  priv->gap_set->destroy (priv->gap_set);
   free (flt);
 }
 
 void *filter_gap_set_new (const setting_list_t *vars)
 {
+  const ramsey_t *tmp;
   struct _priv *priv;
   filter_t *rv;
   const setting_t *gap_set_set = vars->get_setting (vars, "gap_set");
@@ -131,8 +138,8 @@ void *filter_gap_set_new (const setting_list_t *vars)
       return NULL;
     }
   priv = malloc (sizeof *priv);
-  priv->gap_set = gap_set_set->get_ramsey_value (gap_set_set);
-  priv->gap_set = priv->gap_set->clone (priv->gap_set);   /* lol C */
+  tmp = gap_set_set->get_ramsey_value (gap_set_set);
+  priv->gap_set = tmp->clone (tmp);
   switch (priv->gap_set->type)
   {
   case TYPE_SEQUENCE:
