@@ -334,14 +334,15 @@ void process (struct _global_data *state)
               /* Do recursion */
               recursion_reset (seed, state);
               seed->recurse (seed, state);
-              stream_printf (state->out_stream, "Done. Time taken: %ds. Iterations: %ld\n\n",
-                             (int) (time (NULL) - start), seed->r_iterations);
 
               /* Output dump and target data */
               for (dlist = state->targets; dlist; dlist = dlist->next)
                 dlist->data->output (dlist->data, state->out_stream);
               for (dlist = state->dumps; dlist; dlist = dlist->next)
                 dlist->data->output (dlist->data, state->out_stream);
+
+              stream_printf (state->out_stream, "Time taken: %ds. Iterations: %ld\n#### Done. ####\n\n",
+                             (int) (time (NULL) - start), seed->r_iterations);
               /* Cleanup */
               seed->destroy (seed);
             }
