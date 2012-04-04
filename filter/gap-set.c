@@ -37,6 +37,9 @@ static bool cheap_check_gap_set (const filter_t *f, const ramsey_t *rt)
   assert (f != NULL);
   assert (rt != NULL);
 
+  if (rt->get_length (rt) < 2)
+    return 1;
+
   /* Select the last-modified color, if applicable */
   if (rt->type == TYPE_COLORING)
     {
