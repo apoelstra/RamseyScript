@@ -21,7 +21,7 @@
 
 /* Preamble that doesn't return 0 if filters fail (though it requires
  * the filters to pass to increment recursion counts) */
-int recursion_preamble (ramsey_t *rt, global_data_t *state)
+int recursion_preamble (ramsey_t *rt, const global_data_t *state)
 {
   bool filter_success = rt->run_filters (rt);
 

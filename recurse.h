@@ -28,7 +28,7 @@
  *
  *  \return 1 if recursion should be done, 0 if it should be stopped.
  */
-int recursion_preamble (ramsey_t *rt, global_data_t *state);
+int recursion_preamble (ramsey_t *rt, const global_data_t *state);
 
 /*! \brief Recursion checks to run after ramsey_t->recurse().
  *
