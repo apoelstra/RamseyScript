@@ -228,7 +228,7 @@ static int _sequence_get_maximum (const ramsey_t *rt)
   struct _sequence *s = (struct _sequence *) rt;
   assert (rt && (rt->type == TYPE_SEQUENCE || rt->type == TYPE_WORD ||
                  rt->type == TYPE_PERMUTATION));
-  return s->value[s->length - 1];
+  return (s->length ? s->value[s->length - 1] : 0);
 }
 
 static int _sequence_get_n_cells (const ramsey_t *rt)
