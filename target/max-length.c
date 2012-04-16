@@ -65,7 +65,7 @@ static void _target_reset (data_collector_t *dc)
 static void _target_output  (const data_collector_t *dc, stream_t *out)
 {
   const struct _target_priv *priv = (struct _target_priv *) dc;
-  if (out)
+  if (out && priv->max_obj)
     {
       stream_printf (out, "Max. %s (len %5d): ",
                      priv->max_obj->get_type (priv->max_obj),
