@@ -19,14 +19,10 @@
 #include "ramsey/ramsey.h"
 #include "recurse.h"
 
-/* Preamble that doesn't return 0 if filters fail (though it requires
- * the filters to pass to increment recursion counts) */
-int recursion_preamble (ramsey_t *rt, const global_data_t *state)
+int recursion_preamble_statefree (ramsey_t *rt)
 {
   bool filter_success = rt->run_filters (rt);
 
-  if (state->kill_now)
-    return 0;
   if (rt->r_prune_tree && !filter_success)
     return 0;
   if (rt->r_max_iterations && rt->r_iterations >= rt->r_max_iterations)
@@ -40,20 +36,33 @@ int recursion_preamble (ramsey_t *rt, const global_data_t *state)
       (time (NULL) - rt->r_start_time) > rt->r_max_run_time)
     return 0;
 
-  ++rt->r_depth;
-
   if (filter_success)
     {
-      dc_list *dlist;
-      for (dlist = state->dumps; dlist; dlist = dlist->next)
-        if (dlist->data->record (dlist->data, rt, state->out_stream))
-          rt->r_stall_index = rt->r_iterations;
-      for (dlist = state->targets; dlist; dlist = dlist->next)
-        if (dlist->data->record (dlist->data, rt, state->out_stream))
-          rt->r_stall_index = rt->r_iterations;
-
       ++rt->r_iterations;
+      if (rt->r_depth > rt->r_max_thread_depth)
+        rt->r_max_thread_depth = rt->r_depth;
     }
+
+  ++rt->r_depth;
+  return 1;
+}
+
+/* Preamble that doesn't return 0 if filters fail (though it requires
+ * the filters to pass to increment recursion counts) */
+int recursion_preamble (ramsey_t *rt, const global_data_t *state)
+{
+  dc_list *dlist;
+
+  if (!recursion_preamble_statefree (rt))
+    return 0;
+    
+  for (dlist = state->dumps; dlist; dlist = dlist->next)
+    if (dlist->data->record (dlist->data, rt, state->out_stream))
+      rt->r_stall_index = rt->r_iterations;
+  for (dlist = state->targets; dlist; dlist = dlist->next)
+    if (dlist->data->record (dlist->data, rt, state->out_stream))
+      rt->r_stall_index = rt->r_iterations;
+
   return 1;
 }
 
@@ -67,6 +76,7 @@ void recursion_init (ramsey_t *rt)
 {
   rt->r_iterations =
   rt->r_depth =
+  rt->r_max_thread_depth =
   rt->r_max_iterations =
   rt->r_stall_after =
   rt->r_stall_index =

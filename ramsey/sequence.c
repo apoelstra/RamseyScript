@@ -123,23 +123,18 @@ static int _sequence_add_filter (ramsey_t *rt, filter_t *f)
 /* RECURSION */
 struct _blob { ramsey_t *rt; const global_data_t *state; };
 
-static void *_sequence_real_recurse (void *blob)
+static void *_sequence_real_thread_recurse (void *rtv)
 {
   int i;
   const int *gap_set;
   int gap_set_len;
-  ramsey_t *rt = ((struct _blob *) blob)->rt;
-  const global_data_t *state = ((struct _blob *) blob)->state;
-
-  struct _blob *thread_blob[10];
-  pthread_t thread[10];
-  int thread_idx = 0;
+  ramsey_t *rt = rtv;
 
   struct _sequence *s = (struct _sequence *) rt;
   assert (rt && (rt->type == TYPE_SEQUENCE || rt->type == TYPE_WORD ||
                  rt->type == TYPE_PERMUTATION));
 
-  if (!recursion_preamble (rt, state))
+  if (!recursion_preamble_statefree (rt))
     return rt;
 
   if (s->gap_set == NULL)
@@ -152,43 +147,68 @@ static void *_sequence_real_recurse (void *blob)
   gap_set_len = s->gap_set->get_length (s->gap_set);
   for (i = 0; i < gap_set_len; ++i)
     {
-      int spawn_new = (rt->r_depth < 3);
+      rt->append (rt, rt->get_maximum (rt) + gap_set[i]);
+      _sequence_real_thread_recurse (rt);
+      rt->deappend (rt);
+    }
+
+  recursion_postamble (rt);
+  return rt;
+}
+ 
+static void _sequence_recurse (ramsey_t *rt, const global_data_t *state)
+{
+  int i;
+  const int *gap_set;
+  int gap_set_len;
+
+  pthread_t thread[10];
+  int thread_idx = 0;
+
+  struct _sequence *s = (struct _sequence *) rt;
+  assert (rt && (rt->type == TYPE_SEQUENCE || rt->type == TYPE_WORD ||
+                 rt->type == TYPE_PERMUTATION));
+
+  if (!recursion_preamble (rt, state))
+    return;
+
+  if (s->gap_set == NULL)
+    {
+      fputs ("Error: cannot search sequences without a gap set.\n", stderr);
+      return;
+    }
+
+  gap_set = s->gap_set->get_priv_data_const (s->gap_set);
+  gap_set_len = s->gap_set->get_length (s->gap_set);
+  for (i = 0; i < gap_set_len; ++i)
+    {
+      ramsey_t *thread_rt;
+      int spawn_new = (rt->r_depth == 3);
 
       if (spawn_new)
         {
-          thread_blob[thread_idx] = malloc (sizeof *thread_blob[thread_idx]);
-          if (thread_blob[thread_idx] == NULL)
+          thread_rt = rt->clone (rt);
+
+          if (thread_rt == NULL)
             spawn_new = 0;
           else
-            {
-              thread_blob[thread_idx]->state = state;
-              thread_blob[thread_idx]->rt = rt->clone (rt);
-
-              if (thread_blob[thread_idx]->rt == NULL)
-                {
-                  free (thread_blob[thread_idx]->rt);
-                  spawn_new = 0;
-                }
-              thread_blob[thread_idx]->rt->r_iterations = 0;
-            }
+            thread_rt->r_iterations = 0;
         }
 
       if (spawn_new)
         {
-          struct _sequence *blob_s = (struct _sequence *) thread_blob[thread_idx]->rt;
+          struct _sequence *blob_s = (struct _sequence *) thread_rt;
           if (blob_s->gap_set->type == TYPE_EQUALIZED_LIST)
             equalized_list_increment (blob_s->gap_set, i);
-          thread_blob[thread_idx]->rt->append
-              (thread_blob[thread_idx]->rt,
-               thread_blob[thread_idx]->rt->get_maximum (thread_blob[thread_idx]->rt)
-                 + gap_set[i]);
+          thread_rt->append (thread_rt,
+                             thread_rt->get_maximum (thread_rt) + gap_set[i]);
 
-          if (pthread_create (&thread[thread_idx], NULL, _sequence_real_recurse,
-                              thread_blob[thread_idx]))
+          if (pthread_create (&thread[thread_idx], NULL,
+                              _sequence_real_thread_recurse,
+                              thread_rt))
             {
               fprintf (stderr, "Failed to start thread.\n");
-              thread_blob[thread_idx]->rt->destroy (thread_blob[thread_idx]->rt);
-              free (thread_blob[thread_idx]);
+              thread_rt->destroy (thread_rt);
               spawn_new = 0;
             }
           else
@@ -211,24 +231,19 @@ static void *_sequence_real_recurse (void *blob)
   while (thread_idx--)
     {
       void *res;
+      ramsey_t *res_rt;
+
       if (pthread_join (thread[thread_idx], &res))
         fprintf (stderr, "Failed to catch thread. Bad Things are happening.\n");
+      res_rt = res;
 
-printf ("Got %ld iters from thread..\n", ((ramsey_t *) res)->r_iterations);
-      rt->r_iterations += ((ramsey_t *) res)->r_iterations;
-      ((ramsey_t *) res)->destroy (res);
+      rt->r_iterations += res_rt->r_iterations;
+      if (res_rt->r_max_thread_depth > rt->r_max_thread_depth)
+        rt->r_max_thread_depth = res_rt->r_max_thread_depth;
+      res_rt->destroy (res_rt);
     }
 
   recursion_postamble (rt);
-  return rt;
-}
-
-static void _sequence_recurse (ramsey_t *rt, const global_data_t *state)
-{
-  struct _blob blob;
-  blob.rt = rt;
-  blob.state = state;
-  _sequence_real_recurse (&blob);
 }
 
 /* PRINT / PARSE */

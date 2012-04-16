@@ -116,8 +116,6 @@ struct _global_data {
   bool quiet;
   /*! \brief If we are reading from stdin, output friendlier messages. */
   bool interactive;
-  /*! \brief Hook for 'Stop' command from threads or signals. */
-  bool kill_now;
 
   /*! \brief Abstraction of stdout. */
   stream_t *out_stream;

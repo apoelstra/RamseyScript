@@ -4,7 +4,7 @@ PROJECT(RamseyCalc)
 
 FIND_PACKAGE(PkgConfig)
 
-ADD_DEFINITIONS(-Wall -W -Wextra -Werror --std=c99 -pedantic -g)
+ADD_DEFINITIONS(-Wall -W -Wextra -Werror --std=c99 -pedantic -O3)
 
 FILE(GLOB filters filter/*.c)
 FILE(GLOB targets target/*.c)
