@@ -26,6 +26,8 @@
 #include <assert.h>
 #include <ctype.h>
 
+#include <pthread.h>
+
 #include "ramsey.h"
 #include "coloring.h"
 #include "sequence.h"
@@ -158,12 +160,42 @@ static int _coloring_add_filter (ramsey_t *rt, filter_t *f)
 }
 
 /* RECURSION */
+static void *_coloring_real_thread_recurse (void *rtv)
+{
+  ramsey_t *rt = rtv;
+  struct _coloring *c = rtv;
+  int i;
+
+  assert (rt && rt->type == TYPE_COLORING);
+  
+  if (!recursion_preamble_statefree (rt))
+    return rt; 
+
+  for (i = 0; i < c->n_cells; ++i)
+    {
+      _coloring_cell_append ((ramsey_t *) c, c->n_int_list + 1, i);
+      _coloring_real_thread_recurse (rt);
+      _coloring_cell_deappend ((ramsey_t *) c, i);
+
+      /* Only bother with one empty cell, since by symmetry they'll
+       *  all behave the same. */
+      if (c->has_symmetry && c->sequence[i]->get_length (c->sequence[i]) == 0)
+        break;
+    }
+
+  recursion_postamble (rt);
+  return rt; 
+}
+
 static void _coloring_real_recurse (ramsey_t *rt, int max_value, const global_data_t *state)
 {
   struct _coloring *c = (struct _coloring *) rt;
   const int *base_sequence_values;
   int next_val;
   int i;
+
+  pthread_t thread[10];
+  int thread_idx = 0;
 
   assert (rt && rt->type == TYPE_COLORING);
   assert (state != NULL);
@@ -184,14 +216,61 @@ static void _coloring_real_recurse (ramsey_t *rt, int max_value, const global_da
 
   for (i = 0; i < c->n_cells; ++i)
     {
-      _coloring_cell_append ((ramsey_t *) c, next_val, i);
-      _coloring_real_recurse (rt, max_value + 1, state);
-      _coloring_cell_deappend ((ramsey_t *) c, i);
+      ramsey_t *thread_rt;
+      int spawn_new = (rt->r_depth == 3);
 
-      /* Only bother with one empty cell, since by symmetry they'll
-       *  all behave the same. */
-      if (c->has_symmetry && c->sequence[i]->get_length (c->sequence[i]) == 0)
-        break;
+      if (spawn_new)
+        {   
+          thread_rt = rt->clone (rt);
+
+          if (thread_rt == NULL)
+            spawn_new = 0;
+          else
+            thread_rt->r_iterations = 0;
+        }   
+
+      if (spawn_new)
+        {   
+          _coloring_cell_append (thread_rt, next_val, i);
+          if (pthread_create (&thread[thread_idx], NULL,
+                              _coloring_real_thread_recurse,
+                              thread_rt))
+            {   
+              fprintf (stderr, "Failed to start thread.\n");
+              thread_rt->destroy (thread_rt);
+              spawn_new = 0;
+            }
+          else
+            ++thread_idx;
+        }
+ 
+      if (!spawn_new)
+        {
+          _coloring_cell_append ((ramsey_t *) c, next_val, i);
+          _coloring_real_recurse (rt, max_value + 1, state);
+          _coloring_cell_deappend ((ramsey_t *) c, i);
+
+          /* Only bother with one empty cell, since by symmetry they'll
+           *  all behave the same. */
+          if (c->has_symmetry && c->sequence[i]->get_length (c->sequence[i]) == 0)
+            break;
+        }
+    }
+
+  /* Catch any threads that were spawned */
+  while (thread_idx--)
+    {
+      void *res;
+      ramsey_t *res_rt;
+
+      if (pthread_join (thread[thread_idx], &res))
+        fprintf (stderr, "Failed to catch thread. Bad Things are happening.\n");
+      res_rt = res;
+
+      rt->r_iterations += res_rt->r_iterations;
+      if (res_rt->r_max_thread_depth > rt->r_max_thread_depth)
+        rt->r_max_thread_depth = res_rt->r_max_thread_depth;
+      res_rt->destroy (res_rt);
     }
 
   recursion_postamble (rt);
