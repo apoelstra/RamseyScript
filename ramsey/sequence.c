@@ -121,8 +121,6 @@ static int _sequence_add_filter (ramsey_t *rt, filter_t *f)
 }
 
 /* RECURSION */
-struct _blob { ramsey_t *rt; const global_data_t *state; };
-
 static void *_sequence_real_thread_recurse (void *rtv)
 {
   int i;
