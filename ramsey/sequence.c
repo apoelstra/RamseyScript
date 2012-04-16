@@ -25,6 +25,8 @@
 #include <assert.h>
 #include <ctype.h>
 
+#include <pthread.h>
+
 #include "ramsey.h"
 #include "equalized-list.h"
 #include "sequence.h"
@@ -119,38 +121,114 @@ static int _sequence_add_filter (ramsey_t *rt, filter_t *f)
 }
 
 /* RECURSION */
-static void _sequence_recurse (ramsey_t *rt, global_data_t *state)
+struct _blob { ramsey_t *rt; const global_data_t *state; };
+
+static void *_sequence_real_recurse (void *blob)
 {
   int i;
   const int *gap_set;
   int gap_set_len;
+  ramsey_t *rt = ((struct _blob *) blob)->rt;
+  const global_data_t *state = ((struct _blob *) blob)->state;
+
+  struct _blob *thread_blob[10];
+  pthread_t thread[10];
+  int thread_idx = 0;
+
   struct _sequence *s = (struct _sequence *) rt;
   assert (rt && (rt->type == TYPE_SEQUENCE || rt->type == TYPE_WORD ||
                  rt->type == TYPE_PERMUTATION));
 
   if (!recursion_preamble (rt, state))
-    return;
+    return rt;
 
   if (s->gap_set == NULL)
     {
       fputs ("Error: cannot search sequences without a gap set.\n", stderr);
-      return;
+      return rt;
     }
 
   gap_set = s->gap_set->get_priv_data_const (s->gap_set);
   gap_set_len = s->gap_set->get_length (s->gap_set);
   for (i = 0; i < gap_set_len; ++i)
     {
-      if (s->gap_set->type == TYPE_EQUALIZED_LIST)
-        equalized_list_increment (s->gap_set, i);
-      rt->append (rt, rt->get_maximum (rt) + gap_set[i]);
-      rt->recurse (rt, state);
-      rt->deappend (rt);
-      if (s->gap_set->type == TYPE_EQUALIZED_LIST)
-        equalized_list_decrement (s->gap_set, i);
+      int spawn_new = (rt->r_depth < 3);
+
+      if (spawn_new)
+        {
+          thread_blob[thread_idx] = malloc (sizeof *thread_blob[thread_idx]);
+          if (thread_blob[thread_idx] == NULL)
+            spawn_new = 0;
+          else
+            {
+              thread_blob[thread_idx]->state = state;
+              thread_blob[thread_idx]->rt = rt->clone (rt);
+
+              if (thread_blob[thread_idx]->rt == NULL)
+                {
+                  free (thread_blob[thread_idx]->rt);
+                  spawn_new = 0;
+                }
+              thread_blob[thread_idx]->rt->r_iterations = 0;
+            }
+        }
+
+      if (spawn_new)
+        {
+          struct _sequence *blob_s = (struct _sequence *) thread_blob[thread_idx]->rt;
+          if (blob_s->gap_set->type == TYPE_EQUALIZED_LIST)
+            equalized_list_increment (blob_s->gap_set, i);
+          thread_blob[thread_idx]->rt->append
+              (thread_blob[thread_idx]->rt,
+               thread_blob[thread_idx]->rt->get_maximum (thread_blob[thread_idx]->rt)
+                 + gap_set[i]);
+
+          if (pthread_create (&thread[thread_idx], NULL, _sequence_real_recurse,
+                              thread_blob[thread_idx]))
+            {
+              fprintf (stderr, "Failed to start thread.\n");
+              thread_blob[thread_idx]->rt->destroy (thread_blob[thread_idx]->rt);
+              free (thread_blob[thread_idx]);
+              spawn_new = 0;
+            }
+          else
+            ++thread_idx;
+        }
+
+      if (!spawn_new)
+        {
+          if (s->gap_set->type == TYPE_EQUALIZED_LIST)
+            equalized_list_increment (s->gap_set, i);
+          rt->append (rt, rt->get_maximum (rt) + gap_set[i]);
+          rt->recurse (rt, state);
+          rt->deappend (rt);
+          if (s->gap_set->type == TYPE_EQUALIZED_LIST)
+            equalized_list_decrement (s->gap_set, i);
+        }
+    }
+
+  /* Catch any threads that were spawned */
+  while (thread_idx--)
+    {
+      void *res;
+      if (pthread_join (thread[thread_idx], &res))
+        fprintf (stderr, "Failed to catch thread. Bad Things are happening.\n");
+
+printf ("Got %ld iters from thread..\n", ((ramsey_t *) res)->r_iterations);
+      rt->r_iterations += ((ramsey_t *) res)->r_iterations;
+      ((ramsey_t *) res)->destroy (res);
     }
 
   recursion_postamble (rt);
+  return rt;
+}
+
+static void _sequence_recurse (ramsey_t *rt, const global_data_t *state)
+{
+  struct _blob blob;
+  blob.rt = rt;
+  blob.state = state;
+  _sequence_real_recurse (&blob);
 }
 
 /* PRINT / PARSE */

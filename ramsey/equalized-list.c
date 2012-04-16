@@ -87,7 +87,7 @@ static int _qlist_add_filter (ramsey_t *rt, filter_t *f)
 }
 
 /* RECURSION */
-static void _qlist_recurse (ramsey_t *rt, global_data_t *state)
+static void _qlist_recurse (ramsey_t *rt, const global_data_t *state)
 {
   (void) rt;
   (void) state;
