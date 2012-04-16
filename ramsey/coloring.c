@@ -158,7 +158,7 @@ static int _coloring_add_filter (ramsey_t *rt, filter_t *f)
 }
 
 /* RECURSION */
-static void _coloring_real_recurse (ramsey_t *rt, int max_value, global_data_t *state)
+static void _coloring_real_recurse (ramsey_t *rt, int max_value, const global_data_t *state)
 {
   struct _coloring *c = (struct _coloring *) rt;
   const int *base_sequence_values;
@@ -197,7 +197,7 @@ static void _coloring_real_recurse (ramsey_t *rt, int max_value, global_data_t *
   recursion_postamble (rt);
 }
 
-static void _coloring_recurse (ramsey_t *rt, global_data_t *state)
+static void _coloring_recurse (ramsey_t *rt, const global_data_t *state)
 {
   _coloring_real_recurse (rt, rt->get_length (rt), state);
 }

@@ -102,7 +102,7 @@ struct _ramsey_t {
 
   /*! \brief Recursively search a space of objects, using the given object
    *         as a seed. */
-  void (*recurse)       (ramsey_t *, global_data_t *);
+  void (*recurse)       (ramsey_t *, const global_data_t *);
 
   /*! \brief Returns the length of the object. */
   int (*get_length)  (const ramsey_t *);

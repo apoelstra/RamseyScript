@@ -38,7 +38,7 @@ static const char *_word_get_type (const ramsey_t *rt)
 
 /* RECURSION */
 static void _word_real_recurse (ramsey_t *rt, const int *alphabet,
-                                int alphabet_len, global_data_t *state)
+                                int alphabet_len, const global_data_t *state)
 {
   int i;
   if (!recursion_preamble (rt, state))
@@ -53,7 +53,7 @@ static void _word_real_recurse (ramsey_t *rt, const int *alphabet,
   recursion_postamble (rt);
 }
 
-static void _word_recurse (ramsey_t *rt, global_data_t *state)
+static void _word_recurse (ramsey_t *rt, const global_data_t *state)
 {
   const setting_t *alphabet_set = SETTING ("alphabet");
 

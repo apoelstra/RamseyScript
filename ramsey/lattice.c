@@ -119,7 +119,7 @@ static int _lattice_add_filter (ramsey_t *rt, filter_t *f)
 }
 
 /* RECURSION */
-static void _lattice_recurse (ramsey_t *rt, global_data_t *state)
+static void _lattice_recurse (ramsey_t *rt, const global_data_t *state)
 {
   int i;
   struct _lattice *lat = (struct _lattice *) rt;
