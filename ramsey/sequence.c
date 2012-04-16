@@ -336,6 +336,22 @@ static ramsey_t *_sequence_clone (const ramsey_t *rt)
 
   s->filter = malloc (s->max_filters * sizeof *s->filter);
   s->value  = malloc (s->max_length * sizeof *s->value);
+  if (s->filter == NULL || s->value == NULL)
+    {
+      free (s->filter);
+      free (s->value);
+      free (s);
+      return NULL;
+    }
+  if (old_s->gap_set)
+    {
+      s->gap_set = old_s->gap_set->clone (old_s->gap_set);
+      if (s->gap_set == NULL)
+        {
+          free (s);
+          return NULL;
+        }
+    }
   memcpy (s->value, old_s->value, s->max_length * sizeof *s->value);
   for (i = 0; i < s->n_filters; ++i)
     s->filter[i] = old_s->filter[i]->clone (old_s->filter[i]);
