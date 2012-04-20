@@ -26,8 +26,6 @@
 #include <assert.h>
 #include <ctype.h>
 
-#include <pthread.h>
-
 #include "ramsey.h"
 #include "coloring.h"
 #include "sequence.h"
@@ -216,62 +214,26 @@ static void _coloring_real_recurse (ramsey_t *rt, int max_value, const global_da
 
   for (i = 0; i < c->n_cells; ++i)
     {
-      ramsey_t *thread_rt;
-      int spawn_new = (rt->r_depth == 3);
+      _coloring_cell_append (rt, next_val, i);
+      /* Try to spawn a new thread */
+      if (rt->r_depth == 3 && thread_idx < 10 &&
+          recursion_thread_spawn (&thread[thread_idx], rt,
+                                 _coloring_real_thread_recurse))
+        ++thread_idx;
+      /* Failing that, recurse normally */
+      else
+        _coloring_real_recurse (rt, max_value + 1, state);
 
-      if (spawn_new)
-        {   
-          thread_rt = rt->clone (rt);
-
-          if (thread_rt == NULL)
-            spawn_new = 0;
-          else
-            thread_rt->r_iterations = 0;
-        }   
-
-      if (spawn_new)
-        {   
-          _coloring_cell_append (thread_rt, next_val, i);
-          if (pthread_create (&thread[thread_idx], NULL,
-                              _coloring_real_thread_recurse,
-                              thread_rt))
-            {   
-              fprintf (stderr, "Failed to start thread.\n");
-              thread_rt->destroy (thread_rt);
-              spawn_new = 0;
-            }
-          else
-            ++thread_idx;
-        }
- 
-      if (!spawn_new)
-        {
-          _coloring_cell_append ((ramsey_t *) c, next_val, i);
-          _coloring_real_recurse (rt, max_value + 1, state);
-          _coloring_cell_deappend ((ramsey_t *) c, i);
-
-          /* Only bother with one empty cell, since by symmetry they'll
-           *  all behave the same. */
-          if (c->has_symmetry && c->sequence[i]->get_length (c->sequence[i]) == 0)
-            break;
-        }
+      _coloring_cell_deappend ((ramsey_t *) c, i);
+      /* Only bother with one empty cell, since by symmetry they'll
+       *  all behave the same. */
+      if (c->has_symmetry && c->sequence[i]->get_length (c->sequence[i]) == 0)
+        break;
     }
 
   /* Catch any threads that were spawned */
   while (thread_idx--)
-    {
-      void *res;
-      ramsey_t *res_rt;
-
-      if (pthread_join (thread[thread_idx], &res))
-        fprintf (stderr, "Failed to catch thread. Bad Things are happening.\n");
-      res_rt = res;
-
-      rt->r_iterations += res_rt->r_iterations;
-      if (res_rt->r_max_thread_depth > rt->r_max_thread_depth)
-        rt->r_max_thread_depth = res_rt->r_max_thread_depth;
-      res_rt->destroy (res_rt);
-    }
+    recursion_thread_join (thread[thread_idx], rt);
 
   recursion_postamble (rt);
 }

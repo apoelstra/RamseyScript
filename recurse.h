@@ -21,6 +21,8 @@
 
 #include "global.h"
 
+#include <pthread.h>
+
 /*! \brief Recursion checks to run before ramsey_t->recurse().
  *
  *  \param [in] rt    The Ramsey object that is being recursed on.
@@ -57,5 +59,11 @@ void recursion_init (ramsey_t *rt);
  *  \param [in] state The global state of the program.
  */
 void recursion_reset (ramsey_t *rt, global_data_t *state);
+
+
+int recursion_thread_spawn (pthread_t *thread, const ramsey_t *parent,
+                            void *(*thread_main)(void *));
+
+void recursion_thread_join (pthread_t thread, ramsey_t *parent);
 
 #endif

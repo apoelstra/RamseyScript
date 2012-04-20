@@ -110,3 +110,45 @@ void recursion_reset (ramsey_t *rt, global_data_t *state)
   rt->r_start_time = time (NULL);
 }
 
+int recursion_thread_spawn (pthread_t *thread, const ramsey_t *parent,
+                            void *(*thread_main)(void *))
+{
+  ramsey_t *thread_rt = parent->clone (parent);
+  if (thread_rt == NULL)
+    {
+      fputs ("OOM creating thread.\n", stderr); 
+      return 0;
+    }
+
+  thread_rt->r_iterations = 0;
+  if (pthread_create (thread, NULL, thread_main, thread_rt))
+    {
+      fputs ("Failed creating thread.\n", stderr); 
+      thread_rt->destroy (thread_rt);
+      return 0;
+    }
+
+  return 1;
+}
+
+void recursion_thread_join (pthread_t thread, ramsey_t *parent)
+{
+  void *res;
+
+  if (pthread_join (thread, &res))
+    fputs ("Failed to catch thread. Data has been lost.\n", stderr);
+  else
+    {
+      ramsey_t *res_rt = res;
+      /* Copy iteration counts */
+      parent->r_iterations += res_rt->r_iterations;
+      /* Check if the thread beat the maximum */
+      if (res_rt->r_max_thread_depth > parent->r_max_thread_depth)
+        parent->r_max_thread_depth = res_rt->r_max_thread_depth;
+      /* Cleanup thread data */
+      res_rt->destroy (res_rt);
+    }
+}
+
+
+

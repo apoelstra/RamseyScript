@@ -145,9 +145,13 @@ static void *_sequence_real_thread_recurse (void *rtv)
   gap_set_len = s->gap_set->get_length (s->gap_set);
   for (i = 0; i < gap_set_len; ++i)
     {
+      if (s->gap_set->type == TYPE_EQUALIZED_LIST)
+        equalized_list_increment (s->gap_set, i);
       rt->append (rt, rt->get_maximum (rt) + gap_set[i]);
       _sequence_real_thread_recurse (rt);
       rt->deappend (rt);
+      if (s->gap_set->type == TYPE_EQUALIZED_LIST)
+        equalized_list_decrement (s->gap_set, i);
     }
 
   recursion_postamble (rt);
@@ -180,49 +184,22 @@ static void _sequence_recurse (ramsey_t *rt, const global_data_t *state)
   gap_set_len = s->gap_set->get_length (s->gap_set);
   for (i = 0; i < gap_set_len; ++i)
     {
-      ramsey_t *thread_rt;
-      int spawn_new = (rt->r_depth == 3);
+      if (s->gap_set->type == TYPE_EQUALIZED_LIST)
+        equalized_list_increment (s->gap_set, i);
+      rt->append (rt, rt->get_maximum (rt) + gap_set[i]);
 
-      if (spawn_new)
-        {
-          thread_rt = rt->clone (rt);
+      /* Try to spawn a new thread */
+      if (rt->r_depth == 3 && thread_idx < 10 &&
+          recursion_thread_spawn (&thread[thread_idx], rt,
+                                 _sequence_real_thread_recurse))
+        ++thread_idx;
+      /* Failing that, recurse normally */
+      else
+        rt->recurse (rt, state);
 
-          if (thread_rt == NULL)
-            spawn_new = 0;
-          else
-            thread_rt->r_iterations = 0;
-        }
-
-      if (spawn_new)
-        {
-          struct _sequence *blob_s = (struct _sequence *) thread_rt;
-          if (blob_s->gap_set->type == TYPE_EQUALIZED_LIST)
-            equalized_list_increment (blob_s->gap_set, i);
-          thread_rt->append (thread_rt,
-                             thread_rt->get_maximum (thread_rt) + gap_set[i]);
-
-          if (pthread_create (&thread[thread_idx], NULL,
-                              _sequence_real_thread_recurse,
-                              thread_rt))
-            {
-              fprintf (stderr, "Failed to start thread.\n");
-              thread_rt->destroy (thread_rt);
-              spawn_new = 0;
-            }
-          else
-            ++thread_idx;
-        }
-
-      if (!spawn_new)
-        {
-          if (s->gap_set->type == TYPE_EQUALIZED_LIST)
-            equalized_list_increment (s->gap_set, i);
-          rt->append (rt, rt->get_maximum (rt) + gap_set[i]);
-          rt->recurse (rt, state);
-          rt->deappend (rt);
-          if (s->gap_set->type == TYPE_EQUALIZED_LIST)
-            equalized_list_decrement (s->gap_set, i);
-        }
+      rt->deappend (rt);
+      if (s->gap_set->type == TYPE_EQUALIZED_LIST)
+        equalized_list_decrement (s->gap_set, i);
     }
 
   /* Catch any threads that were spawned */
