@@ -19,6 +19,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <strings.h>
+#include <assert.h>
 
 #include "global.h"
 #include "dump/dump.h"
@@ -60,6 +61,41 @@ struct _global_data *set_defaults (stream_t *in, stream_t *out, stream_t *err)
       rv->targets->next = NULL;
       /**/
     }
+  return rv;
+}
+
+struct _global_data *clone_global_data (const struct _global_data *src)
+{
+  struct _global_data *rv = malloc (sizeof *rv);
+
+  assert (src != NULL);
+
+  if (rv == NULL)
+    return NULL;
+
+  memcpy (rv, src, sizeof *rv);
+#define COPY(what, type)	\
+  if (src->what)		\
+    {				\
+      type *srclist = src->what;	\
+      type *dstlist = malloc (sizeof *dstlist);	\
+      rv->what = dstlist;	\
+      while (srclist)		\
+        {			\
+          dstlist->data = srclist->data->clone (srclist->data);	\
+          dstlist->next = (srclist->next ? malloc (sizeof *dstlist) : NULL);	\
+          srclist = srclist->next;	\
+        }			\
+    }
+
+  COPY (filters, filter_list);
+  COPY (targets, dc_list);
+  COPY (dumps, dc_list);
+#undef COPY
+
+  if (rv->seed)
+    rv->seed = rv->seed->clone (rv->seed);
+
   return rv;
 }
 
