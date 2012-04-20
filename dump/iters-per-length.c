@@ -14,6 +14,7 @@
 
 
 #include <assert.h>
+#include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
 
@@ -76,6 +77,19 @@ static void _dump_destroy (data_collector_t *dc)
   free (dc);
 }
 
+static data_collector_t *_dump_clone (const data_collector_t *src)
+{
+  struct _dump_priv *rv = malloc (sizeof *rv);
+  if (rv == NULL)
+    return NULL;
+
+  memcpy (rv, src, sizeof *src);
+  rv->data = malloc (rv->size * sizeof *rv->data);
+  memcpy (rv->data, ((struct _dump_priv *) src)->data,
+          rv->size * sizeof *rv->data);
+  return (data_collector_t *) rv;
+}
+
 void *dump_iters_per_length_new (const setting_list_t *vars)
 {
   struct _dump_priv *priv;
@@ -128,6 +142,7 @@ void *dump_iters_per_length_new (const setting_list_t *vars)
   /* Actually setup object */
   rv->reset   = _dump_reset;
   rv->output  = _dump_output;
+  rv->clone   = _dump_clone;
   rv->destroy = _dump_destroy;
   rv->get_type = _dump_get_type;
   rv->record   = _dump_record;

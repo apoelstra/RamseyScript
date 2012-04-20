@@ -16,6 +16,7 @@
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "target.h"
 
@@ -75,6 +76,17 @@ static void _target_output  (const data_collector_t *dc, stream_t *out)
     }
 }
 
+static data_collector_t *_target_clone (const data_collector_t *src)
+{
+  struct _target_priv *priv = malloc (sizeof *priv);
+  if (priv == NULL)
+    return NULL;
+  memcpy (priv, src, sizeof *priv);
+  if (priv->max_obj)
+    priv->max_obj = priv->max_obj->clone (priv->max_obj);
+  return (data_collector_t *) priv;
+}
+
 static void _target_destroy (data_collector_t *dc)
 {
   free (dc);
@@ -91,6 +103,7 @@ void *target_max_length_new (const setting_list_t *vars)
     {
       rv->reset   = _target_reset;
       rv->output  = _target_output;
+      rv->clone   = _target_clone;
       rv->destroy = _target_destroy;
 
       priv->max_recorded = 0;
