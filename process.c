@@ -259,13 +259,11 @@ void process (struct _global_data *state)
       /* search <seqences|colorings|words> [seed] */
       else if (strmatch (tok, "search"))
         {
-          ramsey_t *seed = NULL;
-
           tok = strtok (NULL, " #\t\n");
           if (tok)
-            seed = ramsey_new (tok, state->settings);
+            state->seed = ramsey_new (tok, state->settings);
 
-          if (seed == NULL)
+          if (state->seed == NULL)
             ramsey_usage (state->out_stream);
           else
             {
@@ -282,7 +280,7 @@ void process (struct _global_data *state)
 
               /* Apply filters */
               for (flist = state->filters; flist; flist = flist->next)
-                seed->add_filter (seed, flist->data->clone (flist->data));
+                state->seed->add_filter (state->seed, flist->data->clone (flist->data));
               /* Reset dump data */
               for (dlist = state->dumps; dlist; dlist = dlist->next)
                 dlist->data->reset (dlist->data);
@@ -292,15 +290,15 @@ void process (struct _global_data *state)
               /* Parse seed */
               tok = strtok (NULL, "\n");
               if (tok && *tok == '[')
-                seed->parse (seed, tok);
+                state->seed->parse (state->seed, tok);
               else if (tok && strmatch (tok, "random"))
-                seed->randomize (seed, rand_len_set->get_int_value (rand_len_set));
+                state->seed->randomize (state->seed, rand_len_set->get_int_value (rand_len_set));
 
               /* Output header */
               if (!state->quiet)
                 {
                   stream_printf (state->out_stream, "#### Starting %s search ####\n",
-                                 seed->get_type (seed));
+                                 state->seed->get_type (state->seed));
                   if (max_iters_set)
                     stream_printf (state->out_stream, "  Stop after: \t%ld iterations\n",
                                    max_iters_set->get_int_value (max_iters_set));
@@ -337,13 +335,13 @@ void process (struct _global_data *state)
                   stream_printf (state->out_stream, "\n");
                     
                   stream_printf (state->out_stream, "  Seed:\t\t");
-                  seed->print (seed, state->out_stream);
+                  state->seed->print (state->seed, state->out_stream);
                   stream_printf (state->out_stream, "\n");
                 }
 
               /* Do recursion */
-              recursion_reset (seed, state);
-              seed->recurse (seed, state);
+              recursion_reset (state->seed, state);
+              state->seed->recurse (state->seed, state);
 
               /* Output dump and target data */
               if (!state->quiet)
@@ -354,10 +352,10 @@ void process (struct _global_data *state)
                     dlist->data->output (dlist->data, state->out_stream);
 
                   stream_printf (state->out_stream, "Time taken: %ds. Iterations: %ld\n#### Done. ####\n\n",
-                                 (int) (time (NULL) - start), seed->r_iterations);
+                                 (int) (time (NULL) - start), state->seed->r_iterations);
                 }
               /* Cleanup */
-              seed->destroy (seed);
+              state->seed->destroy (state->seed);
             }
         }
       /* Manual recursion */

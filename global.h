@@ -112,6 +112,9 @@ struct _global_data {
   /*! \brief Script target list. */
   dc_list *targets;
 
+  /*! \brief Current recursion state */
+  ramsey_t *seed;
+
   /*! \brief Repress metadata output on 'search' command */
   bool quiet;
   /*! \brief If we are reading from stdin, output friendlier messages. */
