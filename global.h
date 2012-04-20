@@ -80,6 +80,8 @@ struct _data_collector_t {
   int  (*record)  (data_collector_t *, const ramsey_t *, stream_t *);
   /*! \brief Print collector state. */
   void (*output)  (const data_collector_t *, stream_t *);
+  /*! \brief Copy data from another collector (of the same type) into this one. */
+  void (*absorb)  (data_collector_t *, const data_collector_t *);
   /*! \brief Allocates and returns a copy of the collector. */
   struct _data_collector_t *(*clone) (const data_collector_t *);
   /*! \brief Destroy collector and release associated resources. */

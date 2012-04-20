@@ -90,6 +90,16 @@ static data_collector_t *_dump_clone (const data_collector_t *src)
   return (data_collector_t *) rv;
 }
 
+static void _dump_absorb (data_collector_t *dst, const data_collector_t *src)
+{
+  struct _dump_priv *dpriv = (struct _dump_priv *) dst;
+  struct _dump_priv *spriv = (struct _dump_priv *) src;
+  int i;
+
+  for (i = 0; i < dpriv->size && i < spriv->size; ++i)
+    dpriv->data[i] += spriv->data[i];
+}
+
 void *dump_iters_per_length_new (const setting_list_t *vars)
 {
   struct _dump_priv *priv;
@@ -143,6 +153,7 @@ void *dump_iters_per_length_new (const setting_list_t *vars)
   rv->reset   = _dump_reset;
   rv->output  = _dump_output;
   rv->clone   = _dump_clone;
+  rv->absorb  = _dump_absorb;
   rv->destroy = _dump_destroy;
   rv->get_type = _dump_get_type;
   rv->record   = _dump_record;

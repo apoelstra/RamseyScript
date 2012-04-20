@@ -87,6 +87,21 @@ static data_collector_t *_target_clone (const data_collector_t *src)
   return (data_collector_t *) priv;
 }
 
+static void _target_absorb (data_collector_t *dst, const data_collector_t *src)
+{
+  struct _target_priv *dpriv = (struct _target_priv *) dst;
+  struct _target_priv *spriv = (struct _target_priv *) src;
+
+  if (spriv->max_recorded > dpriv->max_recorded)
+    {
+      dpriv->max_recorded = spriv->max_recorded;
+      if (dpriv->max_obj)
+        dpriv->max_obj->destroy (dpriv->max_obj);
+      if (spriv->max_obj)
+        dpriv->max_obj = spriv->max_obj->clone (spriv->max_obj);
+    }
+}
+
 static void _target_destroy (data_collector_t *dc)
 {
   free (dc);
@@ -104,6 +119,7 @@ void *target_max_length_new (const setting_list_t *vars)
       rv->reset   = _target_reset;
       rv->output  = _target_output;
       rv->clone   = _target_clone;
+      rv->absorb  = _target_absorb;
       rv->destroy = _target_destroy;
 
       priv->max_recorded = 0;

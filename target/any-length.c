@@ -62,6 +62,12 @@ static data_collector_t *_target_clone (const data_collector_t *src)
   return rv;
 }
 
+static void _target_absorb (data_collector_t *dst, const data_collector_t *src)
+{
+  (void) dst;
+  (void) src;
+}
+
 static void _target_destroy (data_collector_t *dc)
 {
   free (dc);
@@ -77,6 +83,7 @@ void *target_any_length_new (const setting_list_t *vars)
       rv->reset   = _target_reset;
       rv->output  = _target_output;
       rv->clone   = _target_clone;
+      rv->absorb  = _target_absorb;
       rv->destroy = _target_destroy;
 
       rv->get_type = _target_get_type;
