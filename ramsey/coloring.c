@@ -185,9 +185,9 @@ static void *_coloring_real_thread_recurse (void *rtv)
   return rt; 
 }
 
-static void _coloring_real_recurse (ramsey_t *rt, int max_value, const global_data_t *state)
+static void _coloring_real_recurse (int max_value, const global_data_t *state)
 {
-  struct _coloring *c = (struct _coloring *) rt;
+  struct _coloring *c = (struct _coloring *) state->seed;
   const int *base_sequence_values;
   int next_val;
   int i;
@@ -195,13 +195,13 @@ static void _coloring_real_recurse (ramsey_t *rt, int max_value, const global_da
   pthread_t thread[10];
   int thread_idx = 0;
 
-  assert (rt && rt->type == TYPE_COLORING);
   assert (state != NULL);
+  assert (state->seed && state->seed->type == TYPE_COLORING);
 
   if (c->base_sequence != NULL &&
-      rt->get_length (rt) > c->base_sequence->get_length (c->base_sequence))
+      state->seed->get_length (state->seed) > c->base_sequence->get_length (c->base_sequence))
     return;
-  if (!recursion_preamble (rt, state))
+  if (!recursion_preamble (state))
     return;
 
   if (c->base_sequence != NULL)
@@ -214,15 +214,15 @@ static void _coloring_real_recurse (ramsey_t *rt, int max_value, const global_da
 
   for (i = 0; i < c->n_cells; ++i)
     {
-      _coloring_cell_append (rt, next_val, i);
+      _coloring_cell_append (state->seed, next_val, i);
       /* Try to spawn a new thread */
-      if (rt->r_depth == 3 && thread_idx < 10 &&
-          recursion_thread_spawn (&thread[thread_idx], rt,
+      if (state->seed->r_depth == 3 && thread_idx < 10 &&
+          recursion_thread_spawn (&thread[thread_idx], state->seed,
                                  _coloring_real_thread_recurse))
         ++thread_idx;
       /* Failing that, recurse normally */
       else
-        _coloring_real_recurse (rt, max_value + 1, state);
+        _coloring_real_recurse (max_value + 1, state);
 
       _coloring_cell_deappend ((ramsey_t *) c, i);
       /* Only bother with one empty cell, since by symmetry they'll
@@ -233,14 +233,14 @@ static void _coloring_real_recurse (ramsey_t *rt, int max_value, const global_da
 
   /* Catch any threads that were spawned */
   while (thread_idx--)
-    recursion_thread_join (thread[thread_idx], rt);
+    recursion_thread_join (thread[thread_idx], state->seed);
 
-  recursion_postamble (rt);
+  recursion_postamble (state->seed);
 }
 
-static void _coloring_recurse (ramsey_t *rt, const global_data_t *state)
+static void _coloring_recurse (global_data_t *state)
 {
-  _coloring_real_recurse (rt, rt->get_length (rt), state);
+  _coloring_real_recurse (state->seed->get_maximum (state->seed), state);
 }
 
 /* PRINT / PARSE */

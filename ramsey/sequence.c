@@ -158,7 +158,7 @@ static void *_sequence_real_thread_recurse (void *rtv)
   return rt;
 }
  
-static void _sequence_recurse (ramsey_t *rt, const global_data_t *state)
+static void _sequence_recurse (global_data_t *state)
 {
   int i;
   const int *gap_set;
@@ -167,11 +167,15 @@ static void _sequence_recurse (ramsey_t *rt, const global_data_t *state)
   pthread_t thread[10];
   int thread_idx = 0;
 
-  struct _sequence *s = (struct _sequence *) rt;
-  assert (rt && (rt->type == TYPE_SEQUENCE || rt->type == TYPE_WORD ||
-                 rt->type == TYPE_PERMUTATION));
+  struct _sequence *s = (struct _sequence *) state->seed;
 
-  if (!recursion_preamble (rt, state))
+  assert (state != NULL);
+  assert (state->seed &&
+          (state->seed->type == TYPE_SEQUENCE ||
+           state->seed->type == TYPE_WORD ||
+           state->seed->type == TYPE_PERMUTATION));
+
+  if (!recursion_preamble (state))
     return;
 
   if (s->gap_set == NULL)
@@ -186,39 +190,27 @@ static void _sequence_recurse (ramsey_t *rt, const global_data_t *state)
     {
       if (s->gap_set->type == TYPE_EQUALIZED_LIST)
         equalized_list_increment (s->gap_set, i);
-      rt->append (rt, rt->get_maximum (rt) + gap_set[i]);
+      state->seed->append (state->seed, state->seed->get_maximum (state->seed) + gap_set[i]);
 
       /* Try to spawn a new thread */
-      if (rt->r_depth == 3 && thread_idx < 10 &&
-          recursion_thread_spawn (&thread[thread_idx], rt,
+      if (state->seed->r_depth == 3 && thread_idx < 10 &&
+          recursion_thread_spawn (&thread[thread_idx], state->seed,
                                  _sequence_real_thread_recurse))
         ++thread_idx;
       /* Failing that, recurse normally */
       else
-        rt->recurse (rt, state);
+        state->seed->recurse (state);
 
-      rt->deappend (rt);
+      state->seed->deappend (state->seed);
       if (s->gap_set->type == TYPE_EQUALIZED_LIST)
         equalized_list_decrement (s->gap_set, i);
     }
 
   /* Catch any threads that were spawned */
   while (thread_idx--)
-    {
-      void *res;
-      ramsey_t *res_rt;
+    recursion_thread_join (thread[thread_idx], state->seed);
 
-      if (pthread_join (thread[thread_idx], &res))
-        fprintf (stderr, "Failed to catch thread. Bad Things are happening.\n");
-      res_rt = res;
-
-      rt->r_iterations += res_rt->r_iterations;
-      if (res_rt->r_max_thread_depth > rt->r_max_thread_depth)
-        rt->r_max_thread_depth = res_rt->r_max_thread_depth;
-      res_rt->destroy (res_rt);
-    }
-
-  recursion_postamble (rt);
+  recursion_postamble (state->seed);
 }
 
 /* PRINT / PARSE */

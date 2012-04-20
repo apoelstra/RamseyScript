@@ -53,34 +53,34 @@ static int _permutation_add_filter (ramsey_t *rt, filter_t *f)
 }
 
 /* RECURSION */
-static void _permutation_recurse (ramsey_t *rt, const global_data_t *state)
+static void _permutation_recurse (global_data_t *state)
 {
   int i;
   int *val;
-  assert (rt && rt->type == TYPE_PERMUTATION);
+  assert (state->seed && state->seed->type == TYPE_PERMUTATION);
 
-  if (!recursion_preamble (rt, state))
+  if (!recursion_preamble (state))
     return;
 
   /* Initial iteration -- append next number */
-  rt->append (rt, rt->get_length (rt) + 1);
-  rt->recurse (rt, state);
+  state->seed->append (state->seed, state->seed->get_length (state->seed) + 1);
+  state->seed->recurse (state);
   /* Remaining iterations */
-  val = rt->get_priv_data (rt);
-  for (i = rt->get_length (rt) - 1; i > 0; --i)
+  val = state->seed->get_priv_data (state->seed);
+  for (i = state->seed->get_length (state->seed) - 1; i > 0; --i)
     {
       /* shuffle number into each positition */
       int t = val[i];
       val[i] = val[i - 1];
       val[i - 1] = t;
       /* Recurse */
-      rt->recurse (rt, state);
+      state->seed->recurse (state);
     }
   /* Remove new number, which is now at the start of the array */
-  memmove (&val[0], &val[1], rt->get_length (rt) * sizeof *val);
-  rt->deappend (rt);
+  memmove (&val[0], &val[1], state->seed->get_length (state->seed) * sizeof *val);
+  state->seed->deappend (state->seed);
 
-  recursion_postamble (rt);
+  recursion_postamble (state->seed);
 }
 
 void *permutation_new (const setting_list_t *vars)

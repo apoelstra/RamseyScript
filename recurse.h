@@ -25,12 +25,11 @@
 
 /*! \brief Recursion checks to run before ramsey_t->recurse().
  *
- *  \param [in] rt    The Ramsey object that is being recursed on.
  *  \param [in] state The global state of the program.
  *
  *  \return 1 if recursion should be done, 0 if it should be stopped.
  */
-int recursion_preamble (ramsey_t *rt, const global_data_t *state);
+int recursion_preamble (const global_data_t *state);
 
 
 /*! \brief Recursion checks to run before subthread recursion call
@@ -55,10 +54,9 @@ void recursion_init (ramsey_t *rt);
 
 /*! \brief Set recursion-related variables of a ramsey_t from script variables.
  *
- *  \param [in] rt    The Ramsey object that is being recursed on.
  *  \param [in] state The global state of the program.
  */
-void recursion_reset (ramsey_t *rt, global_data_t *state);
+void recursion_reset (global_data_t *state);
 
 
 int recursion_thread_spawn (pthread_t *thread, const ramsey_t *parent,

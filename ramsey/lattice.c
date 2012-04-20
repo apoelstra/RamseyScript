@@ -119,24 +119,25 @@ static int _lattice_add_filter (ramsey_t *rt, filter_t *f)
 }
 
 /* RECURSION */
-static void _lattice_recurse (ramsey_t *rt, const global_data_t *state)
+static void _lattice_recurse (global_data_t *state)
 {
   int i;
-  struct _lattice *lat = (struct _lattice *) rt;
+  struct _lattice *lat = (struct _lattice *) state->seed;
 
-  assert (rt && rt->type == TYPE_LATTICE);
+  assert (state != NULL);
+  assert (state->seed && state->seed->type == TYPE_LATTICE);
 
-  if (!recursion_preamble (rt, state))
+  if (!recursion_preamble (state))
     return;
 
   for (i = 1; i <= lat->n_colors; ++i)
     {
-      rt->append (rt, i);
-      rt->recurse (rt, state);
-      rt->deappend (rt);
+      state->seed->append (state->seed, i);
+      state->seed->recurse (state);
+      state->seed->deappend (state->seed);
     }
 
-  recursion_postamble (rt);
+  recursion_postamble (state->seed);
 }
 
 /* PRINT / PARSE */

@@ -340,8 +340,8 @@ void process (struct _global_data *state)
                 }
 
               /* Do recursion */
-              recursion_reset (state->seed, state);
-              state->seed->recurse (state->seed, state);
+              recursion_reset (state);
+              state->seed->recurse (state);
 
               /* Output dump and target data */
               if (!state->quiet)
@@ -395,7 +395,7 @@ void process (struct _global_data *state)
                 seed->randomize (seed, rand_len_set->get_int_value (rand_len_set));
 
               /* "Recurse" */
-              recursion_preamble (seed, state);
+              recursion_preamble (state);
 
               /* Cleanup */
               seed->destroy (seed);
