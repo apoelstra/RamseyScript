@@ -61,24 +61,45 @@ struct _global_data *clone_global_data (const struct _global_data *src)
     return NULL;
 
   memcpy (rv, src, sizeof *rv);
-#define COPY(what, type)	\
-  if (src->what)		\
-    {				\
-      type *srclist = src->what;	\
-      type *dstlist = malloc (sizeof *dstlist);	\
-      rv->what = dstlist;	\
-      while (srclist)		\
-        {			\
-          dstlist->data = srclist->data->clone (srclist->data);	\
-          dstlist->next = (srclist->next ? malloc (sizeof *dstlist) : NULL);	\
-          srclist = srclist->next;     \
-        }                      \
+  if (src->filters)
+    {
+      filter_list *srclist = src->filters;
+      filter_list *dstlist = malloc (sizeof *dstlist);
+      rv->filters = dstlist;
+      while (srclist)
+        {
+          dstlist->data = srclist->data->clone (srclist->data);
+          dstlist->next = (srclist->next ? malloc (sizeof *dstlist) : NULL);
+          srclist = srclist->next;
+        }
     }
 
-  COPY (filters, filter_list);
-  COPY (targets, dc_list);
-  COPY (dumps, dc_list);
-#undef COPY
+  if (src->targets)
+    {
+      dc_list *srclist = src->targets;
+      dc_list *dstlist = malloc (sizeof *dstlist);
+      rv->targets = dstlist;
+      while (srclist)
+        {
+          dstlist->data = srclist->data->clone (srclist->data);
+          dstlist->next = (srclist->next ? malloc (sizeof *dstlist) : NULL);
+          srclist = srclist->next;
+        }
+    }
+
+  if (src->dumps)
+    {
+      dc_list *srclist = src->dumps;
+      dc_list *dstlist = malloc (sizeof *dstlist);
+      rv->dumps = dstlist;
+      while (srclist)
+        {
+          dstlist->data = srclist->data->clone (srclist->data);
+          dstlist->data->reset (dstlist->data);
+          dstlist->next = (srclist->next ? malloc (sizeof *dstlist) : NULL);
+          srclist = srclist->next;
+        }
+    }
 
   if (rv->seed)
     rv->seed = rv->seed->clone (rv->seed);
