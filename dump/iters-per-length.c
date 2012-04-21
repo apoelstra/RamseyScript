@@ -83,7 +83,7 @@ static data_collector_t *_dump_clone (const data_collector_t *src)
   if (rv == NULL)
     return NULL;
 
-  memcpy (rv, src, sizeof *src);
+  memcpy (rv, src, sizeof *rv);
   rv->data = malloc (rv->size * sizeof *rv->data);
   memcpy (rv->data, ((struct _dump_priv *) src)->data,
           rv->size * sizeof *rv->data);
