@@ -59,6 +59,11 @@ typedef enum _e_setting_type {
 /*! \brief Convienence macro to access script variables. */
 #define SETTING(s) (state->settings->get_setting (state->settings, (s)))
 
+
+struct _global_data *clone_global_data (const global_data_t *src);
+void absorb_global_data (global_data_t *dst, const global_data_t *src);
+void destroy_global_data (global_data_t *src);
+
 /*! \brief Word that the parser understands. */
 struct _parser_t {
   /*! \brief The actual word. */

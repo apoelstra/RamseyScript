@@ -35,7 +35,7 @@ static const char *_target_get_type (const data_collector_t *dc)
 
 static int _target_record (data_collector_t *dc, const ramsey_t *ram, stream_t *out)
 {
-  long len = ram->r_max_thread_depth;
+  long len = ram->get_length (ram);
   struct _target_priv *priv = (struct _target_priv *) dc;
 
   (void) out;
@@ -60,7 +60,7 @@ static void _target_reset (data_collector_t *dc)
   priv->max_recorded = 0;
   if (priv->max_obj)
     priv->max_obj->destroy (priv->max_obj);
- priv->max_obj = NULL;
+  priv->max_obj = NULL;
 }
 
 static void _target_output  (const data_collector_t *dc, stream_t *out)

@@ -19,43 +19,28 @@
 #include "ramsey/ramsey.h"
 #include "recurse.h"
 
-int recursion_preamble_statefree (ramsey_t *rt)
-{
-  bool filter_success = rt->run_filters (rt);
-
-  if (rt->r_prune_tree && !filter_success)
-    return 0;
-  if (rt->r_max_iterations && rt->r_iterations >= rt->r_max_iterations)
-    return 0;
-  if (rt->r_max_depth && rt->r_depth >= rt->r_max_depth)
-    return 0;
-  if (rt->r_stall_after &&
-      (rt->r_iterations - rt->r_stall_index > rt->r_stall_after))
-    return 0;
-  if (rt->r_max_run_time && rt->r_iterations % 1000 == 0 &&
-      (time (NULL) - rt->r_start_time) > rt->r_max_run_time)
-    return 0;
-
-  if (filter_success)
-    {
-      ++rt->r_iterations;
-      if (rt->r_depth > rt->r_max_thread_depth)
-        rt->r_max_thread_depth = rt->r_depth;
-    }
-
-  ++rt->r_depth;
-  return 1;
-}
-
 /* Preamble that doesn't return 0 if filters fail (though it requires
  * the filters to pass to increment recursion counts) */
 int recursion_preamble (const global_data_t *state)
 {
   dc_list *dlist;
 
-  if (!recursion_preamble_statefree (state->seed))
+  if (state->seed->r_prune_tree && !state->seed->run_filters (state->seed))
     return 0;
-    
+  if (state->seed->r_max_iterations && state->seed->r_iterations >= state->seed->r_max_iterations)
+    return 0;
+  if (state->seed->r_max_depth && state->seed->r_depth >= state->seed->r_max_depth)
+    return 0;
+  if (state->seed->r_stall_after &&
+      (state->seed->r_iterations - state->seed->r_stall_index > state->seed->r_stall_after))
+    return 0;
+  if (state->seed->r_max_run_time && state->seed->r_iterations % 1000 == 0 &&
+      (time (NULL) - state->seed->r_start_time) > state->seed->r_max_run_time)
+    return 0;
+
+  ++state->seed->r_iterations;
+  ++state->seed->r_depth;
+
   for (dlist = state->dumps; dlist; dlist = dlist->next)
     if (dlist->data->record (dlist->data, state->seed, state->out_stream))
       state->seed->r_stall_index = state->seed->r_iterations;
@@ -76,7 +61,6 @@ void recursion_init (ramsey_t *rt)
 {
   rt->r_iterations =
   rt->r_depth =
-  rt->r_max_thread_depth =
   rt->r_max_iterations =
   rt->r_stall_after =
   rt->r_stall_index =
@@ -110,28 +94,28 @@ void recursion_reset (global_data_t *state)
   state->seed->r_start_time = time (NULL);
 }
 
-int recursion_thread_spawn (pthread_t *thread, const ramsey_t *parent,
+int recursion_thread_spawn (pthread_t *thread, const global_data_t *parent,
                             void *(*thread_main)(void *))
 {
-  ramsey_t *thread_rt = parent->clone (parent);
-  if (thread_rt == NULL)
+  global_data_t *thread_state = clone_global_data (parent);
+  if (thread_state == NULL)
     {
       fputs ("OOM creating thread.\n", stderr); 
       return 0;
     }
 
-  thread_rt->r_iterations = 0;
-  if (pthread_create (thread, NULL, thread_main, thread_rt))
+  thread_state->seed->r_iterations = 0;
+  if (pthread_create (thread, NULL, thread_main, thread_state))
     {
       fputs ("Failed creating thread.\n", stderr); 
-      thread_rt->destroy (thread_rt);
+      destroy_global_data (thread_state);
       return 0;
     }
 
   return 1;
 }
 
-void recursion_thread_join (pthread_t thread, ramsey_t *parent)
+void recursion_thread_join (pthread_t thread, global_data_t *parent)
 {
   void *res;
 
@@ -139,14 +123,9 @@ void recursion_thread_join (pthread_t thread, ramsey_t *parent)
     fputs ("Failed to catch thread. Data has been lost.\n", stderr);
   else
     {
-      ramsey_t *res_rt = res;
-      /* Copy iteration counts */
-      parent->r_iterations += res_rt->r_iterations;
-      /* Check if the thread beat the maximum */
-      if (res_rt->r_max_thread_depth > parent->r_max_thread_depth)
-        parent->r_max_thread_depth = res_rt->r_max_thread_depth;
-      /* Cleanup thread data */
-      res_rt->destroy (res_rt);
+      global_data_t *child = res;
+      absorb_global_data (parent, child);
+      destroy_global_data (child);
     }
 }
 

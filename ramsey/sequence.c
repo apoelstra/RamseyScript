@@ -121,46 +121,10 @@ static int _sequence_add_filter (ramsey_t *rt, filter_t *f)
 }
 
 /* RECURSION */
-static void *_sequence_real_thread_recurse (void *rtv)
+static void *_sequence_real_recurse (void *rtv)
 {
   int i;
-  const int *gap_set;
-  int gap_set_len;
-  ramsey_t *rt = rtv;
-
-  struct _sequence *s = (struct _sequence *) rt;
-  assert (rt && (rt->type == TYPE_SEQUENCE || rt->type == TYPE_WORD ||
-                 rt->type == TYPE_PERMUTATION));
-
-  if (!recursion_preamble_statefree (rt))
-    return rt;
-
-  if (s->gap_set == NULL)
-    {
-      fputs ("Error: cannot search sequences without a gap set.\n", stderr);
-      return rt;
-    }
-
-  gap_set = s->gap_set->get_priv_data_const (s->gap_set);
-  gap_set_len = s->gap_set->get_length (s->gap_set);
-  for (i = 0; i < gap_set_len; ++i)
-    {
-      if (s->gap_set->type == TYPE_EQUALIZED_LIST)
-        equalized_list_increment (s->gap_set, i);
-      rt->append (rt, rt->get_maximum (rt) + gap_set[i]);
-      _sequence_real_thread_recurse (rt);
-      rt->deappend (rt);
-      if (s->gap_set->type == TYPE_EQUALIZED_LIST)
-        equalized_list_decrement (s->gap_set, i);
-    }
-
-  recursion_postamble (rt);
-  return rt;
-}
- 
-static void _sequence_recurse (global_data_t *state)
-{
-  int i;
+  global_data_t *state = rtv;
   const int *gap_set;
   int gap_set_len;
 
@@ -176,12 +140,12 @@ static void _sequence_recurse (global_data_t *state)
            state->seed->type == TYPE_PERMUTATION));
 
   if (!recursion_preamble (state))
-    return;
+    return state;
 
   if (s->gap_set == NULL)
     {
       fputs ("Error: cannot search sequences without a gap set.\n", stderr);
-      return;
+      return state;
     }
 
   gap_set = s->gap_set->get_priv_data_const (s->gap_set);
@@ -194,8 +158,8 @@ static void _sequence_recurse (global_data_t *state)
 
       /* Try to spawn a new thread */
       if (state->seed->r_depth == 3 && thread_idx < 10 &&
-          recursion_thread_spawn (&thread[thread_idx], state->seed,
-                                 _sequence_real_thread_recurse))
+          recursion_thread_spawn (&thread[thread_idx], state,
+                                 _sequence_real_recurse))
         ++thread_idx;
       /* Failing that, recurse normally */
       else
@@ -208,9 +172,15 @@ static void _sequence_recurse (global_data_t *state)
 
   /* Catch any threads that were spawned */
   while (thread_idx--)
-    recursion_thread_join (thread[thread_idx], state->seed);
+    recursion_thread_join (thread[thread_idx], state);
 
   recursion_postamble (state->seed);
+  return state;
+}
+
+static void _sequence_recurse (global_data_t *state)
+{
+  _sequence_real_recurse (state);
 }
 
 /* PRINT / PARSE */

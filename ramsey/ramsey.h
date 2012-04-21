@@ -49,8 +49,6 @@ struct _ramsey_t {
   /* Recursion state variables */
   /*! \brief Depth we have recursed to to get this object. */
   int r_depth;
-  /*! \brief Maximum depth we have attained so far. */
-  int r_max_thread_depth;
   /*! \brief Number of recursion calls done to get this object. */
   long r_iterations;
   /*! \brief Maximum allowable recursion depth (may be 0 for no max). */
