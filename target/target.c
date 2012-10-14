@@ -23,9 +23,11 @@
 /* INSTALL TARGETS HERE */
 #include "max-length.h"
 #include "any-length.h"
+#include "fork.h"
 static const parser_t g_target[] = {
   { "max_length", "Seek objects of maximal length.", target_max_length_new },
-  { "any_length", "Output any valid object.",        target_any_length_new }
+  { "any_length", "Output any valid object.",        target_any_length_new },
+  { "fork",       "Output 'search space [target]' for new RamseyScript instances.", target_fork_new }
 };
 static const int g_n_targets = sizeof g_target / sizeof g_target[0];
 /* end INSTALL TARGETS HERE */
