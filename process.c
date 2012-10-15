@@ -167,8 +167,9 @@ void process (struct _global_data *state)
                   new_cell->next = state->filters;
                   new_cell->data = new_filter;
                   state->filters = new_cell;
-                  stream_printf (state->out_stream, "Added filter ``%s''.\n",
-                                 new_filter->get_type (new_filter));
+                  if (!state->quiet)
+                    stream_printf (state->out_stream, "Added filter ``%s''.\n",
+                                   new_filter->get_type (new_filter));
                 }
               else
                 filter_usage (state->out_stream);
@@ -206,8 +207,9 @@ void process (struct _global_data *state)
                   new_cell->next = state->dumps;
                   new_cell->data = new_dump;
                   state->dumps = new_cell;
-                  stream_printf (state->out_stream, "Added dump ``%s''.\n",
-                                 new_dump->get_type (new_dump));
+                  if (!state->quiet)
+                    stream_printf (state->out_stream, "Added dump ``%s''.\n",
+                                   new_dump->get_type (new_dump));
                 }
               else
                 dump_usage (state->out_stream);
@@ -245,8 +247,9 @@ void process (struct _global_data *state)
                   new_cell->next = state->targets;
                   new_cell->data = new_target;
                   state->targets = new_cell;
-                  stream_printf (state->out_stream, "Added target ``%s''.\n",
-                                 new_target->get_type (new_target));
+                  if (!state->quiet)
+                    stream_printf (state->out_stream, "Added target ``%s''.\n",
+                                   new_target->get_type (new_target));
                 }
               else
                 target_usage (state->out_stream);
