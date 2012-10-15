@@ -48,6 +48,7 @@ struct _global_data *set_defaults (stream_t *in, stream_t *out, stream_t *err)
       rv->dumps    = NULL;
       rv->kill_now = 0;
       rv->interactive = 0;
+      rv->quiet    = 0;
 
       rv->in_stream  = in;
       rv->out_stream = out;
@@ -293,61 +294,74 @@ void process (struct _global_data *state)
                 seed->randomize (seed, rand_len_set->get_int_value (rand_len_set));
 
               /* Output header */
-              stream_printf (state->out_stream, "#### Starting %s search ####\n",
-                             seed->get_type (seed));
-              if (max_iters_set)
-                stream_printf (state->out_stream, "  Stop after: \t%ld iterations\n",
-                               max_iters_set->get_int_value (max_iters_set));
-              if (stall_after_set)
-                stream_printf (state->out_stream, "  Stall after: \t%ld iterations\n",
-                               stall_after_set->get_int_value (stall_after_set));
-              if (max_depth_set)
-                stream_printf (state->out_stream, "  Max. depth: \t%ld\n",
-                               max_depth_set->get_int_value (max_depth_set));
-              if (alphabet_set && alphabet_set->type == TYPE_RAMSEY)
+              if (!state->quiet)
                 {
-                  const ramsey_t *alphabet = alphabet_set->get_ramsey_value (alphabet_set);
-                  stream_printf (state->out_stream, "  Alphabet: \t");
-                  alphabet->print (alphabet, state->out_stream);
+                  stream_printf (state->out_stream, "#### Starting %s search ####\n",
+                                 seed->get_type (seed));
+                  if (max_iters_set)
+                    stream_printf (state->out_stream, "  Stop after: \t%ld iterations\n",
+                                   max_iters_set->get_int_value (max_iters_set));
+                  if (stall_after_set)
+                    stream_printf (state->out_stream, "  Stall after: \t%ld iterations\n",
+                                   stall_after_set->get_int_value (stall_after_set));
+                  if (max_depth_set)
+                    stream_printf (state->out_stream, "  Max. depth: \t%ld\n",
+                                   max_depth_set->get_int_value (max_depth_set));
+                  if (alphabet_set && alphabet_set->type == TYPE_RAMSEY)
+                    {
+                      const ramsey_t *alphabet = alphabet_set->get_ramsey_value (alphabet_set);
+                      stream_printf (state->out_stream, "  Alphabet: \t");
+                      alphabet->print (alphabet, state->out_stream);
+                      stream_printf (state->out_stream, "\n");
+                    }
+                  if (gap_set_set && gap_set_set->type == TYPE_RAMSEY)
+                    stream_printf (state->out_stream, "  Gap set: \t%s\n", gap_set_set->get_text (gap_set_set));
+    
+                  stream_printf (state->out_stream, "  Targets: \t");
+                  for (dlist = state->targets; dlist; dlist = dlist->next)
+                    stream_printf (state->out_stream, "%s ", dlist->data->get_type (dlist->data));
+                  stream_printf (state->out_stream, "\n");
+                  stream_printf (state->out_stream, "  Filters: \t");
+                  for (flist = state->filters; flist; flist = flist->next)
+                    stream_printf (state->out_stream, "%s ", flist->data->get_type (flist->data));
+                  stream_printf (state->out_stream, "\n");
+                  stream_printf (state->out_stream, "  Dump data: \t");
+                  for (dlist = state->dumps; dlist; dlist = dlist->next)
+                    stream_printf (state->out_stream, "%s ", dlist->data->get_type (dlist->data));
+                  stream_printf (state->out_stream, "\n");
+                    
+                  stream_printf (state->out_stream, "  Seed:\t\t");
+                  seed->print (seed, state->out_stream);
                   stream_printf (state->out_stream, "\n");
                 }
-              if (gap_set_set && gap_set_set->type == TYPE_RAMSEY)
-                stream_printf (state->out_stream, "  Gap set: \t%s\n", gap_set_set->get_text (gap_set_set));
-
-              stream_printf (state->out_stream, "  Targets: \t");
-              for (dlist = state->targets; dlist; dlist = dlist->next)
-                stream_printf (state->out_stream, "%s ", dlist->data->get_type (dlist->data));
-              stream_printf (state->out_stream, "\n");
-              stream_printf (state->out_stream, "  Filters: \t");
-              for (flist = state->filters; flist; flist = flist->next)
-                stream_printf (state->out_stream, "%s ", flist->data->get_type (flist->data));
-              stream_printf (state->out_stream, "\n");
-              stream_printf (state->out_stream, "  Dump data: \t");
-              for (dlist = state->dumps; dlist; dlist = dlist->next)
-                stream_printf (state->out_stream, "%s ", dlist->data->get_type (dlist->data));
-              stream_printf (state->out_stream, "\n");
-                
-              stream_printf (state->out_stream, "  Seed:\t\t");
-              seed->print (seed, state->out_stream);
-              stream_printf (state->out_stream, "\n");
 
               /* Do recursion */
               recursion_reset (seed, state);
               seed->recurse (seed, state);
 
               /* Output dump and target data */
-              for (dlist = state->targets; dlist; dlist = dlist->next)
-                dlist->data->output (dlist->data, state->out_stream);
-              for (dlist = state->dumps; dlist; dlist = dlist->next)
-                dlist->data->output (dlist->data, state->out_stream);
+              if (!state->quiet)
+                {
+                  for (dlist = state->targets; dlist; dlist = dlist->next)
+                    dlist->data->output (dlist->data, state->out_stream);
+                  for (dlist = state->dumps; dlist; dlist = dlist->next)
+                    dlist->data->output (dlist->data, state->out_stream);
 
-              stream_printf (state->out_stream, "Time taken: %ds. Iterations: %ld\n#### Done. ####\n\n",
-                             (int) (time (NULL) - start), seed->r_iterations);
+                  stream_printf (state->out_stream, "Time taken: %ds. Iterations: %ld\n#### Done. ####\n\n",
+                                 (int) (time (NULL) - start), seed->r_iterations);
+                }
               /* Cleanup */
               seed->destroy (seed);
             }
         }
       /* Interactive mode commands */
+      else if (strmatch (tok, "quiet"))
+        {
+          state->quiet = !state->quiet;
+          if (state->interactive)
+            stream_printf (state->out_stream, "Quiet mode %s.\n",
+                           state->quiet ? "on" : "off");
+        }
       else if (strmatch (tok, "echo"))
         {
           tok = strtok (NULL, "\n");
@@ -365,6 +379,7 @@ void process (struct _global_data *state)
           "  search: recursively explore Ramsey objects\n"
           "  target: set a target\n"
           "\n"
+          "   quiet: supress metadata output.\n"
           "    echo: output some text.\n"
           "    help: display this message.\n"
           "    quit: exit the program.\n"

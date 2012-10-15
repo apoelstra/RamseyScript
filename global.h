@@ -111,6 +111,8 @@ struct _global_data {
   /*! \brief Script target list. */
   dc_list *targets;
 
+  /*! \brief Repress metadata output on 'search' command */
+  bool quiet;
   /*! \brief If we are reading from stdin, output friendlier messages. */
   bool interactive;
   /*! \brief Hook for 'Stop' command from threads or signals. */
