@@ -98,26 +98,27 @@ static char *_file_stream_read_line (stream_t *s)
 
   if (priv->mode & STREAM_READ)
     {
-      int len = DEFAULT_READ_LEN;
+      char *scan = rv;
       do
         {
-          char *mem = realloc (rv, len);
-          if (mem == NULL)
+          char *tmp = realloc (rv, (scan - rv) + DEFAULT_READ_LEN);
+          if (tmp == NULL)
             {
               free (rv);
               return NULL;
             }
+          scan = tmp + (scan - rv);
+          rv = tmp;
 
-          rv = mem;
-          rv[len - 1] = '\n';
-          if (!fgets (rv, len, priv->fh))
+          scan[DEFAULT_READ_LEN - 1] = '\n';
+          if (!fgets (scan, DEFAULT_READ_LEN, priv->fh))
             {
               free (rv);
               return NULL;
             }
-          len *= 2;
+          scan += DEFAULT_READ_LEN - 1;
         }
-      while (rv[len/2 - 1] != '\n');
+      while (scan[0] != '\n');
     }
 
   return rv;
