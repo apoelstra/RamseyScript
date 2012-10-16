@@ -213,6 +213,35 @@ Removes all data dumps.
 
 
 
+===============
+Manual Recursion
+===============
+
+It is possible to operate RamseyScript manually (i.e., when the Ramsey
+objects are obtained externally, and no recursion needs to be done, just
+filtering). This is done using the following three commands:
+
+
+  reset 
+
+Resets all output dumps and filters.
+
+
+
+  process <space> <object> 
+
+Runs filters, outputs and targets on ``object'', which is a Ramsey object
+of type ``space''. ``space'' is any valid search space (see the ``search''
+command).
+
+
+
+  state 
+
+Output all targets and run all output dumps.
+
+
+
 EXAMPLES
 ===================
 
@@ -263,5 +292,16 @@ search permutations
 # (end file)
 
 
+
+## Check some 3-colorings for double-3-aps
+
+target clear
+target any-length
+
+filter no-double-3-aps
+process colorings [[2, 5, 6, 8, 9] [1, 3, 7] [4, 10]]
+process colorings [[2, 5, 6, 8, 9] [1, 3, 7, 10] [4]]
+process colorings [[2, 5, 6] [1, 3, 7, 8, 9, 10] [4]]
+state
 
 

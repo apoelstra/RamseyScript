@@ -103,7 +103,8 @@ void ramsey_usage (stream_t *out)
   int i;
   stream_printf (out,
     "Usage: \n"
-    "  search <space>  Recursively explore a space of Ramsey objects\n"
+    "  search  <space>           Recursively explore a space of Ramsey objects\n"
+    "  process <space> <object>  Run filters on a single given Ramsey object\n"
     "\n"
     "Available spaces:\n");
   for (i = 0; i < g_n_ramseys; ++i)
