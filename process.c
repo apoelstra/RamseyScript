@@ -357,6 +357,57 @@ void process (struct _global_data *state)
               seed->destroy (seed);
             }
         }
+      /* Manual recursion */
+      else if (strmatch (tok, "reset"))
+        {
+          dc_list *dlist;
+          for (dlist = state->targets; dlist; dlist = dlist->next)
+            dlist->data->reset (dlist->data);
+          for (dlist = state->dumps; dlist; dlist = dlist->next)
+            dlist->data->reset (dlist->data);
+        }
+      else if (strmatch (tok, "process"))
+        {
+          ramsey_t *seed = NULL;
+
+          tok = strtok (NULL, " #\t\n");
+          if (tok)
+            seed = ramsey_new (tok, state->settings);
+
+          if (seed == NULL)
+            ramsey_usage (state->out_stream);
+          else
+            {
+              const setting_t *rand_len_set  = SETTING ("random_length");
+
+              /* Apply filters */
+              filter_list *flist;
+              for (flist = state->filters; flist; flist = flist->next)
+                seed->add_filter (seed, flist->data->clone (flist->data));
+              /* Do -not- reset dump data */
+
+              /* Parse "seed" */
+              tok = strtok (NULL, "\n");
+              if (tok && *tok == '[')
+                seed->parse (seed, tok);
+              else if (tok && strmatch (tok, "random"))
+                seed->randomize (seed, rand_len_set->get_int_value (rand_len_set));
+
+              /* "Recurse" */
+              recursion_preamble (seed, state);
+
+              /* Cleanup */
+              seed->destroy (seed);
+            }
+        }
+      else if (strmatch (tok, "state"))
+        {
+          dc_list *dlist;
+          for (dlist = state->targets; dlist; dlist = dlist->next)
+            dlist->data->output (dlist->data, state->out_stream);
+          for (dlist = state->dumps; dlist; dlist = dlist->next)
+            dlist->data->output (dlist->data, state->out_stream);
+        }
       /* Interactive mode commands */
       else if (strmatch (tok, "quiet"))
         {
@@ -381,6 +432,10 @@ void process (struct _global_data *state)
           "  filter: set a filter\n"
           "  search: recursively explore Ramsey objects\n"
           "  target: set a target\n"
+          "\n"
+          "   reset: reset all targets, dumps and filters\n"
+          " process: run targets, dumps and filters on a given object\n"
+          "   state: output state of dumps and targets\n"
           "\n"
           "   quiet: supress metadata output.\n"
           "    echo: output some text.\n"
