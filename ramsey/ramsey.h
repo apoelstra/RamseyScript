@@ -48,17 +48,17 @@ struct _ramsey_t {
   /*! \brief Depth we have recursed to to get this object. */
   int r_depth;
   /*! \brief Number of recursion calls done to get this object. */
-  int r_iterations;
+  long r_iterations;
   /*! \brief Maximum allowable recursion depth (may be 0 for no max). */
   int r_max_depth;
   /*! \brief Maximum allowable iteration count (may be 0 for no max). */
-  int r_max_iterations;
+  long r_max_iterations;
   /*! \brief Whether to prune the recursion tree (see prune-tree section of README) */
   int r_prune_tree;
   /*! \brief Maximum number of iterations with no progress (may be 0 for no max). */
-  int r_stall_after;
+  long r_stall_after;
   /*! \brief Current number of iterations with no progress. */
-  int r_stall_index;
+  long r_stall_index;
 
   /* vtable */
   /*! \brief Returns a string describing the object. */
