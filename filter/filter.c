@@ -25,6 +25,7 @@
 #include "no-double-3-aps.h"
 #include "no-double-n-aps.h"
 #include "no-additive-squares.h"
+#include "no-consecutive-numbers.h"
 #include "no-3-aps.h"
 #include "no-n-aps.h"
 #include "no-odd-lattice-aps.h"
@@ -40,7 +41,8 @@ static const parser_t g_filter[] = {
   { "no_n_aps",            "Eliminate objects containing n-AP's, with n == ap_length", filter_n_ap_new },
   { "no_odd_lattice_aps",  "Eliminate lattices containing monochromatic lines.", filter_odd_lattice_ap_new },
   { "no_rainbow_aps",      "Eliminate colorings containing rainbow AP's.", filter_rainbow_ap_new },
-  { "no_schur_solutions",  "Eliminate objects with solutions to X + Y = Z.", filter_schur_new }
+  { "no_schur_solutions",  "Eliminate objects with solutions to X + Y = Z.", filter_schur_new },
+  { "no_consecutive_numbers", "Eliminate objects with consecutive numbers.", filter_consecutive_new }
 };
 static const int g_n_filters = sizeof g_filter / sizeof g_filter[0];
 /* end INSTALL FILTERS HERE */
