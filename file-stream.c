@@ -189,6 +189,8 @@ stream_t *file_stream_new (const char *filename)
     {
       struct _file_stream *priv;
       rv = _file_stream_new_real ();
+      if (rv == NULL)
+        return NULL;
       priv = (struct _file_stream *) rv;
       priv->filename = malloc (strlen (filename) + 1);
       if (priv->filename)
