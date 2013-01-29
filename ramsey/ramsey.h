@@ -19,6 +19,8 @@
 #ifndef RAMSEY_H
 #define RAMSEY_H
 
+#include <time.h>
+
 #include "../global.h"
 #include "../stream.h"
 #include "../recurse.h"
@@ -59,6 +61,10 @@ struct _ramsey_t {
   long r_stall_after;
   /*! \brief Current number of iterations with no progress. */
   long r_stall_index;
+  /*! \brief The time (in seconds) that the recursion was started */
+  time_t r_start_time;
+  /*! \brief Maximum allowable runtime (in seconds) */
+  long r_max_run_time;
 
   /* vtable */
   /*! \brief Returns a string describing the object. */

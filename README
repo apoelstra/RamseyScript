@@ -49,6 +49,9 @@ Sets a variable. Not all variables are effective for each search space.
      max-depth: The maximum depth to search the space.
                 Default value: (none)
 
+  max-run-time: The maximum time (in seconds) to search before stopping.
+                Default value: (none)
+
 max-iterations: The number of iterations to run before stopping.
                 Default value: (none)
 

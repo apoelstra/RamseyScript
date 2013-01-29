@@ -36,6 +36,9 @@ int recursion_preamble (ramsey_t *rt, global_data_t *state)
   if (rt->r_stall_after &&
       (rt->r_iterations - rt->r_stall_index > rt->r_stall_after))
     return 0;
+  if (rt->r_max_run_time && rt->r_iterations % 1000 == 0 &&
+      (time (NULL) - rt->r_start_time) > rt->r_max_run_time)
+    return 0;
 
   ++rt->r_depth;
 
@@ -68,7 +71,9 @@ void recursion_init (ramsey_t *rt)
   rt->r_stall_after =
   rt->r_stall_index =
   rt->r_max_depth =
+  rt->r_max_run_time =
   rt->r_prune_tree = 0;
+
 }
 
 void recursion_reset (ramsey_t *rt, global_data_t *state)
@@ -77,6 +82,7 @@ void recursion_reset (ramsey_t *rt, global_data_t *state)
   const setting_t *max_depth_set = SETTING ("max_depth");
   const setting_t *stall_after_set = SETTING ("stall_after");
   const setting_t *prune_tree_set  = SETTING ("prune_tree");
+  const setting_t *max_run_time_set = SETTING ("max_run_time");
 
   recursion_init (rt);
 
@@ -88,5 +94,9 @@ void recursion_reset (ramsey_t *rt, global_data_t *state)
     rt->r_stall_after = stall_after_set->get_int_value (stall_after_set);
   if (prune_tree_set)
     rt->r_prune_tree = prune_tree_set->get_int_value (prune_tree_set);
+  if (max_run_time_set)
+    rt->r_max_run_time = max_run_time_set->get_int_value (max_run_time_set);
+
+  rt->r_start_time = time (NULL);
 }
 
