@@ -85,7 +85,7 @@ ramsey_t *ramsey_new_from_parse (const char *data)
             ++n_colors;
           ++scan;
         }
-      rv = coloring_new_direct (n_colors);
+      rv = coloring_new_direct (n_colors, NULL);
     }
   else
     {

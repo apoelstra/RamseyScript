@@ -34,10 +34,12 @@ void *coloring_new (const setting_list_t *vars);
 
 /*! \brief Create a new coloring directly.
  *
- *  \param [in] n_colors  The number of colors to use in the coloring.
+ *  \param [in] n_colors       The number of colors to use in the coloring.
+ *  \param [in] base_sequence  The sequence to color. Defaults to [1 ...]
+ *                             if NULL is passed in.
  *
  *  \return A newly allocated coloring, or NULL on failure.
  */
-void *coloring_new_direct (int n_colors);
+void *coloring_new_direct (int n_colors, const ramsey_t *base_sequence);
 
 #endif

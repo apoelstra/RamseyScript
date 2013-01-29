@@ -27,6 +27,10 @@ Sets a variable. Not all variables are effective for each search space.
      ap_length: The length of AP's filtered out by the no-double-n-ap filter
                 Default value: (none)
 
+ base_sequence: A sequence that will be used instead of 1, 2, 3, ... when
+                creating colorings. If unset, the positive integers will be
+                used.
+
      dump-file: The file to output dump output (see 'dump'), or "-" to use
                 stdout.
                 Default value: -

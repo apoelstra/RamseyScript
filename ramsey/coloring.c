@@ -64,6 +64,8 @@ struct _coloring {
   int has_symmetry;
   /*! \brief Number of colors used. */
   int n_cells;
+  /*! \brief Base sequence, or NULL if we are just using consecutive numbers */
+  ramsey_t *base_sequence;
 
   /*! \brief Representation of coloring as a word on the alphabet [0,(r-1)],
    *         where r is the number of colors. */
@@ -159,17 +161,30 @@ static int _coloring_add_filter (ramsey_t *rt, filter_t *f)
 static void _coloring_real_recurse (ramsey_t *rt, int max_value, global_data_t *state)
 {
   struct _coloring *c = (struct _coloring *) rt;
+  const int *base_sequence_values;
+  int next_val;
   int i;
 
   assert (rt && rt->type == TYPE_COLORING);
   assert (state != NULL);
 
+  if (c->base_sequence != NULL &&
+      rt->get_length (rt) > c->base_sequence->get_length (c->base_sequence))
+    return;
   if (!recursion_preamble (rt, state))
-    return; 
+    return;
+
+  if (c->base_sequence != NULL)
+    {
+      base_sequence_values = c->base_sequence->get_priv_data_const (c->base_sequence);
+      next_val = base_sequence_values[max_value];
+    }
+  else
+    next_val = max_value + 1;
 
   for (i = 0; i < c->n_cells; ++i)
     {
-      _coloring_cell_append ((ramsey_t *) c, max_value + 1, i);
+      _coloring_cell_append ((ramsey_t *) c, next_val, i);
       _coloring_real_recurse (rt, max_value + 1, state);
       _coloring_cell_deappend ((ramsey_t *) c, i);
 
@@ -184,7 +199,7 @@ static void _coloring_real_recurse (ramsey_t *rt, int max_value, global_data_t *
 
 static void _coloring_recurse (ramsey_t *rt, global_data_t *state)
 {
-  _coloring_real_recurse (rt, rt->get_maximum (rt), state);
+  _coloring_real_recurse (rt, rt->get_length (rt), state);
 }
 
 /* PRINT / PARSE */
@@ -398,6 +413,11 @@ static ramsey_t *_coloring_clone (const ramsey_t *rt)
   c->int_list = malloc (c->max_int_list * sizeof *c->int_list);
   c->sequence = malloc (c->n_cells * sizeof *c->sequence);
 
+  if (old_c->base_sequence)
+    c->base_sequence = old_c->base_sequence->clone (old_c->base_sequence);
+  else
+    c->base_sequence = NULL;
+
   memcpy (c->int_list, old_c->int_list, c->max_int_list * sizeof *c->int_list);
   for (i = 0; i < c->n_filters; ++i)
     c->filter[i] = old_c->filter[i]->clone (old_c->filter[i]);
@@ -414,6 +434,8 @@ static void _coloring_destroy (ramsey_t *rt)
 
   assert (rt && rt->type == TYPE_COLORING);
 
+  if (c->base_sequence)
+    c->base_sequence->destroy (c->base_sequence);
   for (i = 0; i < c->n_cells; ++i)
     c->sequence[i]->destroy (c->sequence[i]);
   for (i = 0; i < c->n_filters; ++i)
@@ -424,7 +446,7 @@ static void _coloring_destroy (ramsey_t *rt)
   free (rt);
 }
 
-void *coloring_new_direct (int n_colors)
+void *coloring_new_direct (int n_colors, const ramsey_t *base_sequence)
 {
   struct _coloring *c = malloc (sizeof *c);
   ramsey_t *rv = (ramsey_t *) c;
@@ -472,6 +494,10 @@ void *coloring_new_direct (int n_colors)
 
   c->has_symmetry = 1;
   c->n_cells = n_colors;
+  if (base_sequence)
+    c->base_sequence = base_sequence->clone (base_sequence);
+  else
+    c->base_sequence = NULL;
   c->sequence = malloc (c->n_cells * sizeof *c->sequence);
   if (c->sequence == NULL || c->filter == NULL || c->int_list == NULL)
     {
@@ -494,11 +520,14 @@ void *coloring_new_direct (int n_colors)
 void *coloring_new (const setting_list_t *vars)
 {
   const setting_t *n_colors_set = vars->get_setting (vars, "n_colors");
+  const setting_t *base_sequence_set = vars->get_setting (vars, "base_sequence");
   if (n_colors_set == NULL)
     {
       fprintf (stderr, "Error: coloring requires variable ``n_colors'' set.\n");
       return NULL;
     }
-  return coloring_new_direct (n_colors_set->get_int_value (n_colors_set));
+  return coloring_new_direct (n_colors_set->get_int_value (n_colors_set),
+                              base_sequence_set == NULL ? NULL :
+                              base_sequence_set->get_ramsey_value (base_sequence_set));
 }
 
