@@ -55,6 +55,9 @@ Sets a variable. Not all variables are effective for each search space.
 max-iterations: The number of iterations to run before stopping.
                 Default value: (none)
 
+      n-colors: The number of colors to use when searching colorings.
+                Default value: 3
+
     prune-tree: Whether or not the search tree should be pruned; i.e., if some
                 element is filtered out, should new elements be built from it?
 
@@ -68,16 +71,13 @@ max-iterations: The number of iterations to run before stopping.
            
                 Default value: 1
 
-   stall-after: Like max-iterations, but resets its counter every time a target
-                (e.g., new object of maximum length) is reached.
-                Default value: (none)
-
-      n-colors: The number of colors to use when searching colorings.
-                Default value: 3
-
  random-length: If the seed is set to RANDOM on a supported space, this
                 sets the length of the generated seed.
                 Default value: 10
+
+   stall-after: Like max-iterations, but resets its counter every time a target
+                (e.g., new object of maximum length) is reached.
+                Default value: (none)
 
 
 
