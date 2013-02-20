@@ -294,7 +294,10 @@ void equalized_list_increment (ramsey_t *rt, int index)
   while (index < (ql->size - 1) &&
          ql->count[index] > ql->count[index + 1])
     {
+      int s = ql->value[index];
       int t = ql->count[index];
+      ql->value[index] = ql->value[index + 1];
+      ql->value[index + 1] = s;
       ql->count[index] = ql->count[index + 1];
       ql->count[index + 1] = t;
       ++index;
@@ -313,9 +316,12 @@ void equalized_list_decrement (ramsey_t *rt, int index)
   --ql->count[index];
   /* Bubble it into the right place */
   while (index > 0 &&
-         ql->count[index] > ql->count[index - 1])
+         ql->count[index] < ql->count[index - 1])
     {
+      int s = ql->value[index];
       int t = ql->count[index];
+      ql->value[index] = ql->value[index - 1];
+      ql->value[index - 1] = s;
       ql->count[index] = ql->count[index - 1];
       ql->count[index - 1] = t;
       --index;
