@@ -26,6 +26,7 @@
 #include <ctype.h>
 
 #include "ramsey.h"
+#include "equalized-list.h"
 #include "sequence.h"
 
 /*! \brief Default allocation size for sequences. */
@@ -140,9 +141,13 @@ static void _sequence_recurse (ramsey_t *rt, global_data_t *state)
   gap_set_len = s->gap_set->get_length (s->gap_set);
   for (i = 0; i < gap_set_len; ++i)
     {
+      if (s->gap_set->type == TYPE_EQUALIZED_LIST)
+        equalized_list_increment (s->gap_set, i);
       rt->append (rt, rt->get_maximum (rt) + gap_set[i]);
       rt->recurse (rt, state);
       rt->deappend (rt);
+      if (s->gap_set->type == TYPE_EQUALIZED_LIST)
+        equalized_list_decrement (s->gap_set, i);
     }
 
   recursion_postamble (rt);
@@ -448,7 +453,8 @@ void *sequence_new (const setting_list_t *vars)
       if (gap_set_set && gap_set_set->type == TYPE_RAMSEY)
         {
           const ramsey_t *gs = gap_set_set->get_ramsey_value (gap_set_set);
-          rv->gap_set = gs->clone (gs);
+          if (gs->type == TYPE_SEQUENCE || gs->type == TYPE_EQUALIZED_LIST)
+            rv->gap_set = gs->clone (gs);
         }
     }
   return rv;

@@ -279,6 +279,49 @@ static int _qlist_cell_deappend (ramsey_t *rt, int cell)
 }
 
 
+/* PUBLIC INCREMENT/DECREMENT FUNCTIONS */
+void equalized_list_increment (ramsey_t *rt, int index)
+{
+  struct _qlist *ql = (struct _qlist *) rt;
+  assert (rt && rt->type == TYPE_EQUALIZED_LIST);
+
+  if (index < 0 || index > ql->size)
+    return;
+
+  /* Increment the index */
+  ++ql->count[index];
+  /* Bubble it into the right place */
+  while (index < (ql->size - 1) &&
+         ql->count[index] > ql->count[index + 1])
+    {
+      int t = ql->count[index];
+      ql->count[index] = ql->count[index + 1];
+      ql->count[index + 1] = t;
+      ++index;
+    }
+}
+
+void equalized_list_decrement (ramsey_t *rt, int index)
+{
+  struct _qlist *ql = (struct _qlist *) rt;
+  assert (rt && rt->type == TYPE_EQUALIZED_LIST);
+
+  if (index < 0 || index > ql->size)
+    return;
+
+  /* Decrement the index */
+  --ql->count[index];
+  /* Bubble it into the right place */
+  while (index > 0 &&
+         ql->count[index] > ql->count[index - 1])
+    {
+      int t = ql->count[index];
+      ql->count[index] = ql->count[index - 1];
+      ql->count[index - 1] = t;
+      --index;
+    }
+}
+
 /* CONSTRUCTOR / DESTRUCTOR */
 static void _qlist_empty (ramsey_t *rt)
 {

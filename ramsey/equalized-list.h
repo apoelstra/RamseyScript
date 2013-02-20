@@ -29,4 +29,26 @@
  */
 void *equalized_list_new (const setting_list_t *vars);
 
+/*! \brief Increment a counter for an equalized list member.
+ *
+ *  If incrementing this counter causes the member to have a
+ *  higher count than anyone after him, he will be moved toward
+ *  the end of the list.
+ *
+ *  The net result will be that get_priv_data_const will always
+ *  have the least popular members first.
+ */
+void equalized_list_increment (ramsey_t *rt, int index);
+
+/*! \brief Decrement a counter for an equalized list member.
+ *
+ *  If decrementing this counter causes the member to have a
+ *  lower count than anyone after him, he will be moved toward
+ *  the beginning of the list.
+ *
+ *  The net result will be that get_priv_data_const will always
+ *  have the least popular members first.
+ */
+void equalized_list_decrement (ramsey_t *rt, int index);
+
 #endif
