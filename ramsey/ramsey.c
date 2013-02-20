@@ -23,6 +23,7 @@
 
 /* INSTALL OBJECTS HERE */
 #include "coloring.h"
+#include "equalized-list.h"
 #include "lattice.h"
 #include "permutation.h"
 #include "sequence.h"
@@ -87,6 +88,9 @@ ramsey_t *ramsey_new_from_parse (const char *data)
         }
       rv = coloring_new_direct (n_colors, NULL);
     }
+  /* An equalized list? */
+  else if (*scan == '=')
+    rv = equalized_list_new (NULL);
   else
     {
       fprintf (stderr, "Error: ``%s'' is not a valid Ramsey object (could not be parsed).\n", data);

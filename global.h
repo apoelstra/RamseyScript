@@ -38,7 +38,8 @@ typedef enum _e_ramsey_type {
                            into sequences. */
   TYPE_WORD,          /*!< Word -- sequence on fixed alphabet. */
   TYPE_PERMUTATION,   /*!< Permutation -- rearrangement of [1, N]. */
-  TYPE_LATTICE        /*!< Lattice -- 2D array of integers */
+  TYPE_LATTICE,       /*!< Lattice -- 2D array of integers */
+  TYPE_EQUALIZED_LIST /*!< Equalized list -- ``balanced gapset'' */
 } e_ramsey_type;
 
 /*! \brief Type ID's for script variables. */

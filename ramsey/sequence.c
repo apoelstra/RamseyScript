@@ -176,6 +176,9 @@ static const char *_sequence_parse (ramsey_t *rt, const char *data)
     ++data;
   if (*data == '[')
     ++data;
+  /* [= is the opener for an equalized list */
+  if (*data == '=')
+    ++data;
 
   while ((value = strtol (data, (char **) &data, 0)))
     {
