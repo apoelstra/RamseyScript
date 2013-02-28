@@ -36,6 +36,7 @@ struct _global_data *set_defaults (stream_t *in, stream_t *out, stream_t *err)
       rv->filters  = NULL;
       rv->dumps    = NULL;
       rv->interactive = 0;
+      rv->quiet = 0;
 
       rv->in_stream  = in;
       rv->out_stream = out;
