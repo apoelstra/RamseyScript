@@ -39,7 +39,7 @@ static int _dump_record (data_collector_t *dc, const ramsey_t *ram, stream_t *ou
   int idx = ram->get_length (ram);
   struct _dump_priv *priv = (struct _dump_priv *) dc;
   (void) out;
-  if (idx >= 0 && idx <= priv->size)
+  if (idx >= 0 && idx < priv->size)
     {
       ++priv->data[idx];
       return 1;
@@ -51,7 +51,7 @@ static void _dump_reset (data_collector_t *dc)
 {
   const struct _dump_priv *priv = (struct _dump_priv *) dc;
   int i;
-  for (i = 0; i <= priv->size; ++i)
+  for (i = 0; i < priv->size; ++i)
     priv->data[i] = 0;
 }
 
@@ -103,7 +103,7 @@ void *dump_iters_per_length_new (const setting_list_t *vars)
           dump_stream = stdout_stream_new ();
         }
     }
-  dump_depth = dump_depth_set->get_int_value (dump_depth_set);
+  dump_depth = 1 + dump_depth_set->get_int_value (dump_depth_set);
 
   /* Allocate memory */
   priv = malloc (sizeof *priv);
@@ -116,7 +116,7 @@ void *dump_iters_per_length_new (const setting_list_t *vars)
     }
   priv->out  = dump_stream;
   priv->size = dump_depth;
-  priv->data = malloc ((1 + dump_depth) * sizeof *priv->data);
+  priv->data = malloc (dump_depth * sizeof *priv->data);
   if (priv->data == NULL)
     {
       dump_stream->destroy (dump_stream);
