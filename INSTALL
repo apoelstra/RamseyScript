@@ -4,25 +4,21 @@ INSTALLING FROM SOURCE
 
 Chances are, you can just type
 
-  cmake && make
+  cmake . && make
 
-and that will build the program. It will produce
-two output files, ramsey-cli and ramsey-gtk. The
-first is the command-line version, and the second
-a Gtk wrapper.
+and that will build the program. This will produce the command line
+application, ramsey-cli.
 
-If you have changed things, and need to rebuild,
-you might want to try deleting CMakeCache.txt to
-force cmake to find new files:
+If you have changed things and need to rebuild, you might want to
+try deleting CMakeCache.txt to force cmake to find new files:
 
   rm CMakeCache.txt
-  cmake && make
+  cmake . && make
 
 
 
-To cross-compile, obtain a toolchain file for your platform
-(search the Internet, or modify the following). Then give it
-to cmake like:
+To cross-compile, obtain a toolchain file for your platform (search
+the Internet, or modify the following). Then give it to cmake like:
 
   rm CMakeCache.txt
   cmake -DCMAKE_TOOLCHAIN_FILE=Toolchain-win32.cmake
@@ -30,7 +26,6 @@ to cmake like:
 
 
 For reference, here is my Toolchain-win32.cmake file.
-
 
 #### START #####
 # the name of the target operating system
