@@ -341,7 +341,7 @@ filtering). This is done using the following three commands:
 
   reset 
 
-Resets all output dumps and filters.
+Resets all output dumps and targets.
 
 
 
