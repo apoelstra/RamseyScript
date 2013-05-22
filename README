@@ -238,6 +238,9 @@ want kept. ``filter'' should be one of:
 
   no-additive-squares: Only recurse on words with no additive squares
 
+no-pythagorean-triples: Only recurse on objects with no solutions to
+                        X^2 + Y^2 = Z^2.
+
    no-schur-solutions: Only recurse on objects with no solutions to
                        X + Y = Z.
 
