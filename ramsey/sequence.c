@@ -336,7 +336,7 @@ static ramsey_t *_sequence_clone (const ramsey_t *rt)
   struct _sequence *s = malloc (sizeof *s);
   int i;
 
-  assert (rt && rt->type == TYPE_SEQUENCE);
+  assert (rt && (rt->type == TYPE_SEQUENCE || rt->type == TYPE_PERMUTATION || rt->type == TYPE_WORD));
   if (s == NULL)
     return NULL;
 
