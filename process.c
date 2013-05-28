@@ -90,12 +90,10 @@ void process (struct _global_data *state)
       /* skip comments and blank lines */
       if (tok == NULL || *tok == '#')
         {
-          free (buf);
-          continue;
+          /**/
         }
-
       /* set <variable> <value> */
-      if (strmatch (tok, "set"))
+      else if (strmatch (tok, "set"))
         {
           const char *name = strtok (NULL, " #\t\n");
           const char *text = strtok (NULL, "#\n");
