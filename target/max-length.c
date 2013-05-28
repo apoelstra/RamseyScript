@@ -22,6 +22,7 @@
 struct _target_priv {
   data_collector_t parent;
 
+  int verbose;
   ramsey_t *max_obj;
   long max_recorded;
 };
@@ -48,6 +49,8 @@ static int _target_record (data_collector_t *dc, const ramsey_t *ram, stream_t *
         priv->max_obj->destroy (priv->max_obj);
       priv->max_obj = ram->clone (ram);
       priv->max_recorded = len;
+      if (priv->verbose)
+        dc->output (dc, out);
       return 1;
     }
   return 0;
@@ -86,13 +89,13 @@ void *target_max_length_new (const setting_list_t *vars)
   struct _target_priv *priv = malloc (sizeof *priv);
   data_collector_t *rv = (data_collector_t *) priv;
 
-  (void) vars;
   if (rv != NULL)
     {
       rv->reset   = _target_reset;
       rv->output  = _target_output;
       rv->destroy = _target_destroy;
 
+      priv->verbose = !!vars->get_setting (vars, "verbose");
       priv->max_recorded = 0;
       priv->max_obj = NULL;
       rv->get_type = _target_get_type;
